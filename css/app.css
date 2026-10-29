@@ -97,10 +97,7 @@ nav button.on::before{background:var(--accent);box-shadow:0 0 8px var(--accent)}
 #s-tuner{padding:0.75rem 0.5rem}
 .ppcase{width:min(720px,100%);margin:0 auto;padding:0;background:none;border-radius:0}
 .ppplate{position:relative;border-radius:14px;padding:26px 24px;display:flex;flex-direction:column;gap:16px;background:#2e2a25;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.6)}
-.ppscrew{position:absolute;width:18px;height:18px}
 .pphead{display:flex;justify-content:space-between;align-items:flex-end;padding:0 6px;gap:12px}
-.ppbrand{font-size:30px;font-weight:600;letter-spacing:.22em;line-height:1;text-transform:none}
-.ppmodel{font-size:12px;letter-spacing:.32em;color:var(--muted);margin-top:4px}
 .pppower{display:flex;align-items:center;gap:10px;font-size:13px;letter-spacing:.22em;color:var(--muted)}
 .pppower i{width:14px;height:14px;border-radius:50%;background:#3a2520}.pppower i.on{background:#ff6a3d;box-shadow:0 0 10px #ff6a3d}
 svg.ppdial{display:block;width:100%;height:auto}
@@ -141,9 +138,8 @@ svg.ppdial{display:block;width:100%;height:auto}
 .seg.ppbtns button.on{background:#3e3832;color:#e9dcc0;box-shadow:inset 0 -5px 0 #1a1714,0 4px 8px rgba(0,0,0,.5)}
 .ppbtns button.on .led{background:var(--accent);box-shadow:0 0 8px var(--accent)}
 .ppbtns.two button{font-size:13px;letter-spacing:.1em}
-@media(max-width:560px){.ppcase{padding:8px}.ppplate{padding:22px 12px}.ppbrand{font-size:22px}.ppmodel{font-size:10px;letter-spacing:.2em}.ppreadouts{grid-template-columns:1fr 1fr}.ppreadouts .pplcd:first-child{grid-column:span 2}.ppoct .ppn i{font-size:8px}.pplamps{padding:12px 10px;gap:6px}.pplamps>div{font-size:11px;letter-spacing:.06em;gap:6px}.pplamp{width:20px;height:20px}.pplamp.big{width:22px;height:22px}.ppbtns button{font-size:13px;letter-spacing:.08em;min-height:54px}.ppbtns.two button{font-size:11px}.ppoctrow>span{font-size:11px;letter-spacing:.15em}}
-/* compact layout: no screws, no title row, no framing border */
-.ppscrew,.pphead>div:first-child,.pppower>span{display:none}
+@media(max-width:560px){.ppcase{padding:8px}.ppplate{padding:22px 12px}.ppreadouts{grid-template-columns:1fr 1fr}.ppreadouts .pplcd:first-child{grid-column:span 2}.ppoct .ppn i{font-size:8px}.pplamps{padding:12px 10px;gap:6px}.pplamps>div{font-size:11px;letter-spacing:.06em;gap:6px}.pplamp{width:20px;height:20px}.pplamp.big{width:22px;height:22px}.ppbtns button{font-size:13px;letter-spacing:.08em;min-height:54px}.ppbtns.two button{font-size:11px}.ppoctrow>span{font-size:11px;letter-spacing:.15em}}
+/* compact layout: no title row, no framing border */
 .pphead{position:absolute;top:8px;right:10px;padding:0;z-index:1}
 .pppower{font-size:0}
 @media(max-width:560px){

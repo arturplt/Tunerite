@@ -5,12 +5,14 @@ Snap and Flatpak browsers on Linux often cannot open the sound system's MIDI por
 This script reads the keyboard device directly (falling back to `amidi` from alsa-utils) and sends the notes to the page over
 Server-Sent Events. The page picks it up by itself when it is opened from this server.
 
-    python3 tools/midi_bridge.py [port] [device]     # default port 8000, device auto-detected with amidi -l (e.g. hw:2,0,0)
+    python3 tools/midi_bridge.py [--https] [--local] [port] [device]     # default port 8000, device auto-detected with amidi -l (e.g. hw:2,0,0)
 
 Open http://localhost:8000 in any browser, then press Connect under Settings > Keyboard.
-Listens on 127.0.0.1 only and serves only the app files, not the rest of the folder.
+By default it also listens on the local network and prints the address to open on a phone (--local: this computer only).
+A phone's browser only allows the microphone on HTTPS, so add --https for a self-signed certificate (needs openssl; accept the browser's warning once).
+Serves only the app files, not the rest of the folder.
 """
-import fcntl, http.server, json, os, queue, re, shutil, subprocess, sys, threading, time
+import fcntl, http.server, json, os, queue, re, shutil, socket, ssl, subprocess, sys, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_FILES = {"/": "index.html", "/index.html": "index.html", "/manifest.webmanifest": "manifest.webmanifest", "/icon.svg": "icon.svg", "/sw.js": "sw.js", "/lame.min.js": "lame.min.js"}
@@ -20,8 +22,12 @@ for folder in ("css", "js"):      # the app's own stylesheets and scripts, and n
             rel = os.path.relpath(os.path.join(dirpath, n), ROOT).replace(os.sep, "/")
             APP_FILES["/" + rel] = rel
 TYPES = {".html": "text/html; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".js": "text/javascript", ".css": "text/css"}
-port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-want_dev = sys.argv[2] if len(sys.argv) > 2 else None
+flags = {a for a in sys.argv[1:] if a.startswith("--")}
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+port = int(args[0]) if args else 8000
+want_dev = args[1] if len(args) > 1 else None
+use_https, local_only = "--https" in flags, "--local" in flags
+CERT_DIR = os.path.join(ROOT, "tools", ".cert")      # generated on first --https run, not committed
 
 state = {"device": None, "name": None, "reader": None, "error": None}
 VERSION = 2      # 1 read amidi line by line, which delays every note until the next one arrives; 2 reads the device directly
@@ -130,8 +136,51 @@ def reader():
         broadcast([0xB0, 123, 0])               # keyboard went away: tell the page to release every note
         time.sleep(2)
 
+def lan_ip():
+    """The address other devices on the network can reach this computer at. Connecting a UDP socket sends nothing; it only picks the outgoing interface."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("10.255.255.255", 1))
+            return s.getsockname()[0]
+    except Exception:
+        pass
+    try:
+        for ip in subprocess.run(["hostname", "-I"], capture_output=True, text=True, timeout=5).stdout.split():
+            if "." in ip:
+                return ip
+    except Exception:
+        pass
+    return None
+
+def make_cert(ip):
+    """Self-signed certificate for localhost and this computer's address, kept in tools/.cert."""
+    crt, key = os.path.join(CERT_DIR, "cert.pem"), os.path.join(CERT_DIR, "key.pem")
+    if not (os.path.exists(crt) and os.path.exists(key)):
+        os.makedirs(CERT_DIR, exist_ok=True)
+        san = "subjectAltName=DNS:localhost,IP:127.0.0.1" + (",IP:" + ip if ip else "")
+        subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "825", "-subj", "/CN=tunerite",
+                        "-addext", san, "-keyout", key, "-out", crt], check=True, capture_output=True)
+    return crt, key
+
+class Server(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+    def handle_error(self, request, client_address): pass      # a phone dropping a connection or refusing the self-signed certificate is not worth a traceback
+
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, *a): pass
+
+    def setup(self):
+        if use_https:       # the handshake runs here, on the connection's own thread, so a phone that opens a connection and says nothing cannot block the others
+            self.request.settimeout(10)
+            self.request.do_handshake()
+            self.request.settimeout(None)
+        super().setup()
+
+    def handle(self):
+        try:
+            super().handle()
+        except (ssl.SSLError, ConnectionError, socket.timeout):
+            pass
 
     def do_GET(self):
         path = self.path.split("?")[0]
@@ -165,8 +214,27 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     threading.Thread(target=reader, daemon=True).start()
-    srv = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print("App and MIDI bridge on http://localhost:%d  (Ctrl+C to stop)" % port, flush=True)
+    ip = None if local_only else lan_ip()
+    srv = Server(("127.0.0.1" if local_only else "0.0.0.0", port), Handler)
+    scheme = "http"
+    if use_https:
+        try:
+            crt, key = make_cert(ip)
+        except Exception as e:
+            sys.exit("Could not create a certificate (is openssl installed?): %s" % e)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(crt, key)
+        srv.socket = ctx.wrap_socket(srv.socket, server_side=True, do_handshake_on_connect=False)
+        scheme = "https"
+    print("\nTunerite is running (Ctrl+C to stop)")
+    print("  This computer: %s://localhost:%d" % (scheme, port))
+    if ip:
+        print("  Phone (same Wi-Fi): %s://%s:%d" % (scheme, ip, port))
+        if not use_https:
+            print("  Note: a phone browser blocks the microphone on plain http. Restart with --https to use it.")
+    elif not local_only:
+        print("  Could not work out this computer's network address; run `hostname -I` and use that with port %d." % port)
+    print(flush=True)
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
