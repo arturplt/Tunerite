@@ -213,11 +213,11 @@ const Engine = {
   },
   /* Built-in General MIDI drum kit for when no SoundFont drums are available: every sound is a pitched sine sweep and/or filtered noise. */
   drum(note, when, vel, dest, nopool) {
-    const c = this.ctx, parts = [], v = Math.pow(clamp(vel || 100, 1, 127) / 127, 1.3), out = dest || this.master;
+    const c = this.ctx, parts = [], tail = { t: when }, v = Math.pow(clamp(vel || 100, 1, 127) / 127, 1.3), out = dest || this.master;
     if (!this.noiseBuf) { const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; this.noiseBuf = b; }
     const env = (g, peak, dur) => { g.gain.setValueAtTime(0.0001, when); g.gain.linearRampToValueAtTime(peak, when + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, when + dur); };
-    const tone = (f0, f1, dur, peak) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(f0, when); o.frequency.exponentialRampToValueAtTime(f1, when + dur); env(g, peak * v, dur); o.connect(g); g.connect(out); o.start(when); o.stop(when + dur + 0.05); parts.push({ g, s: o }); };
-    const noise = (type, f, dur, peak) => { const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain(); s.buffer = this.noiseBuf; fl.type = type; fl.frequency.value = f; env(g, peak * v, dur); s.connect(fl); fl.connect(g); g.connect(out); s.start(when, Math.random() * 0.5); s.stop(when + dur + 0.05); parts.push({ g, s }); };
+    const tone = (f0, f1, dur, peak) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(f0, when); o.frequency.exponentialRampToValueAtTime(f1, when + dur); env(g, peak * v, dur); o.connect(g); g.connect(out); o.start(when); o.stop(when + dur + 0.05); parts.push({ g, s: o }); tail.t = Math.max(tail.t, when + dur + 0.05); };
+    const noise = (type, f, dur, peak) => { const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain(); s.buffer = this.noiseBuf; fl.type = type; fl.frequency.value = f; env(g, peak * v, dur); s.connect(fl); fl.connect(g); g.connect(out); s.start(when, Math.random() * 0.5); s.stop(when + dur + 0.05); parts.push({ g, s }); tail.t = Math.max(tail.t, when + dur + 0.05); };
     if (note === 35 || note === 36) { tone(150, 45, 0.28, 0.9); noise('lowpass', 400, 0.03, 0.3); }
     else if (note === 38 || note === 40) { tone(220, 120, 0.12, 0.35); noise('highpass', 1800, 0.18, 0.5); }
     else if (note === 37) { tone(800, 600, 0.03, 0.4); noise('highpass', 3000, 0.03, 0.3); }
@@ -229,13 +229,13 @@ const Engine = {
     else if (note >= 41 && note <= 50) { const f = 90 + (note - 41) * 18; tone(f * 1.6, f, 0.25, 0.7); }
     else if (note === 56) { tone(800, 790, 0.15, 0.4); tone(540, 535, 0.15, 0.4); }
     else tone(1000, 900, 0.04, 0.3);
-    const h = { stop() { const n = c.currentTime; parts.forEach(p => { try { p.g.gain.cancelScheduledValues(n); p.g.gain.setValueAtTime(p.g.gain.value, n); p.g.gain.linearRampToValueAtTime(0, n + 0.02); p.s.stop(n + 0.03); } catch (e) {} }); }, release() {} };
+    const h = { stop() { const n = c.currentTime; parts.forEach(p => { try { p.g.gain.cancelScheduledValues(n); p.g.gain.setValueAtTime(p.g.gain.value, n); p.g.gain.linearRampToValueAtTime(0, n + 0.04); p.s.stop(n + 0.05); } catch (e) {} }); }, release() {} };
     if (nopool) return h;       // an offline render keeps every hit
-    /* Like the pitched notes: past 24 hits still sounding, the oldest is faded out, which mostly means the long cymbal tails of a busy kit. */
+    /* Like the pitched notes: past 32 hits still sounding (each counted until its own tail ends), the oldest is faded out. */
     const now = c.currentTime, V = this.drumLive || (this.drumLive = []);
     for (let i = V.length - 1; i >= 0; i--) if (V[i].end < now) V.splice(i, 1);
-    V.push({ h, end: when + 1.2 });
-    while (V.length > 24) { try { V.shift().h.stop(); } catch (e) {} }
+    V.push({ h, end: tail.t });
+    while (V.length > 32) { try { V.shift().h.stop(); } catch (e) {} }
     return h;
   },
   click(when, freq, vol, dur) {
