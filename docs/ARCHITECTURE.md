@@ -1,6 +1,6 @@
 # Architecture
 
-One file, three layers, all in `index.html`.
+Three layers. The page is `index.html`; its code is split into plain script files under `js/` (pure logic in `js/core/`), loaded in order by script tags, sharing one global scope as the single file did.
 
 ```
  microphone ─▶ AudioWorklet (analyse: decimate + YIN, 50×/s) ─▶ main thread

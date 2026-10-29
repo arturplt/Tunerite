@@ -4,7 +4,7 @@
 ```sh
 node tests/core.test.js
 ```
-Loads the `CORE` block from `index.html` and checks:
+Loads the files in `js/core/` (the `CORE` block) and checks:
 - Note maths and A4 reference handling.
 - YIN accuracy (< 5¢) on sines from G2 to G5 at 48 kHz, plus 44.1 kHz; sawtooth waves (no octave errors); noise at ~20 dB SNR; silence.
 - Tracker: gate, brief jumps to overtones (octave, twelfth, double octave) rejected and sustained ones accepted after 6 frames, real leaps accepted after 3, outlier smoothing.

@@ -14,7 +14,12 @@ import fcntl, http.server, json, os, queue, re, shutil, subprocess, sys, threadi
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_FILES = {"/": "index.html", "/index.html": "index.html", "/manifest.webmanifest": "manifest.webmanifest", "/icon.svg": "icon.svg", "/sw.js": "sw.js", "/lame.min.js": "lame.min.js"}
-TYPES = {".html": "text/html; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".js": "text/javascript"}
+for folder in ("css", "js"):      # the app's own stylesheets and scripts, and nothing else in the folder
+    for dirpath, _, names in os.walk(os.path.join(ROOT, folder)):
+        for n in names:
+            rel = os.path.relpath(os.path.join(dirpath, n), ROOT).replace(os.sep, "/")
+            APP_FILES["/" + rel] = rel
+TYPES = {".html": "text/html; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".js": "text/javascript", ".css": "text/css"}
 port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 want_dev = sys.argv[2] if len(sys.argv) > 2 else None
 

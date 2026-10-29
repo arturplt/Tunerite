@@ -35,6 +35,8 @@ if not (os.path.exists(cert) and os.path.exists(stamp) and open(stamp).read() ==
 web = tempfile.mkdtemp(prefix="pitch-perfect-")
 for f in APP_FILES:
     shutil.copy(os.path.join(ROOT, f), web)       # snapshot; restart to pick up edits
+for d in ("css", "js"):
+    shutil.copytree(os.path.join(ROOT, d), os.path.join(web, d))
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k): super().__init__(*a, directory=web, **k)

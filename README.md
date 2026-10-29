@@ -2,7 +2,7 @@
 
 A mobile-first singing trainer that runs in the phone's browser. It plays a target note, you sing it, and you watch your pitch move in real time. It then scores accuracy, steadiness and attack.
 
-Everything is one static page (`index.html`). No build step, no server code, no accounts. Audio never leaves the device.
+Everything is one static page (`index.html`) plus plain script and style files in `js/` and `css/`. No build step, no server code, no accounts. Audio never leaves the device.
 
 ## Run it
 
@@ -37,7 +37,10 @@ Opening `index.html` directly from disk works in most desktop browsers. Use **he
 
 | File | Purpose |
 |---|---|
-| `index.html` | The whole app. The `CORE` block holds pure logic (pitch, scoring, exercises) and is unit tested. |
+| `index.html` | The page: markup, and the script tags that load `js/` in order. |
+| `css/app.css` | All styles. |
+| `js/core/*.js` | Pure logic with no DOM or Web Audio (pitch, scoring, exercises, MIDI and song model, library, SoundFont reading). Unit tested. |
+| `js/*.js` | The app: audio engine, tuner, practice, sequencer, editor, drum grid, wiring. Loaded in the order `index.html` lists. |
 | `manifest.webmanifest`, `icon.svg`, `sw.js` | Optional: install to home screen and work offline. The app runs fine without them. |
 | `tests/core.test.js` | Unit tests for the core (`node tests/core.test.js`, no dependencies). |
 | `docs/ARCHITECTURE.md` | How the pieces fit, data flow, timing and latency. |

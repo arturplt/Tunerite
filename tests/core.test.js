@@ -1,8 +1,9 @@
 // Run with: node tests/core.test.js
-// Loads the CORE block out of index.html so the tests exercise the code that ships.
+// Loads the pure CORE files (js/core/*.js) the page loads, in the same order, so the tests exercise the code that ships.
 const fs = require('fs'), path = require('path'), assert = require('assert');
-const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-const core = html.split('/* CORE:BEGIN */')[1].split('/* CORE:END */')[0];
+const CORE_FILES = ['pitch', 'scoring', 'exercises', 'midi-import', 'song', 'progress', 'library', 'soundfont-read'];
+const core = CORE_FILES.map(f => fs.readFileSync(path.join(__dirname, '..', 'js', 'core', f + '.js'), 'utf8').replace(/^"use strict";\n/, '')).join('\n')
+  .split('/* CORE:BEGIN */')[1].split('/* CORE:END */')[0];
 const C = new Function(core + `; return { freqToMidi, midiToFreq, noteName, centsOff, analyse, PitchTracker, scoreEvent, aggregate, starsFor,
   buildExercise, parseMidi, newSong, newSongTrack, parseSong, writeSong, songSegs, songSec, songTick, songToUnits, gridTicks, snapTick, songSnapshot, songRestore, EditHistory, sortNotes, notesTranspose, notesQuantize, notesCopy, notesPaste, songEndTick, songBarLines, songBeats, framesToNotes, songTrackChannels, songFreeChannel, songAddTrack, songDeleteTrack, songMoveTrack, songSetProgram, songSetChannel, songTempoAt, songSetTempo, songRemoveTempo, songBarStart, songSetTimeSig, songRemoveTimeSig, keyName, songSetKey, songCtrlEvents, songSetCtrl, songRemoveCtrl, songClearCtrl, songNew, songAutomation, encodeWav, lastLoud, melodyFromNotes, buildCustom, EXERCISES, computeStreak, describeDeviation, TOLERANCE, HOP, targetAt,
   chordName, analyseTake, countIssues, adaptivePlan, ISSUES, refine, detectNotes, describeKeys, intervalName, buildPianoSteps, chordMatches, pianoSummary, pianoRoot, libraryItems, libraryFilter, SING_META, PIANO_LIB, LEVELS, parseSoundFont, soundFontVoices,
