@@ -1,0 +1,5 @@
+tools/.cert/
+.smoke/
+.~lock.*
+shots/
+.t*.html
