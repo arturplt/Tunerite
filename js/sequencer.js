@@ -148,7 +148,7 @@ const Seq = {
     if (t.drums && Steps.silent(t, n.midi)) return;
     const vel = n.vel || 90; let pre = -1, kit = !!r.kit, syn = r.synth;
     if (r.preset != null) { if (SF.cache.has(r.preset)) pre = r.preset; else if (t.drums) kit = true; else syn = synthFor(t.program); }
-    const h = kit ? Engine.drum(n.midi, when, vel, t.strip)
+    const h = kit ? Engine.drum(n.midi, when, vel, t.strip, this.rendering)
       : Engine.playNote(n.midi, when, t.drums ? Math.max(dur, 0.4) : dur, { preset: pre, synth: syn || 'soft', vel, dest: t.strip, seq: true, bend: t.bendSrc || undefined, nopool: this.rendering, sustain: syn === 'organ', gain: pre >= 0 ? 0.2 : 0.2 * (0.45 + 0.55 * vel / 127) });
     if (h) this.nodes.push({ h, end: when + dur + 1.5 });
   },
@@ -353,15 +353,16 @@ const Seq = {
   },
   /* Level meters: one per track plus the master, read from analyser taps; bars fall back smoothly. */
   meters() {
-    const level = (an, buf) => { an.getFloatTimeDomainData(buf); let m = 0; for (let i = 0; i < buf.length; i++) { const a = Math.abs(buf[i]); if (a > m) m = a; } return m; };
+    const now = performance.now(), dt = now - (this.mAt || 0); if (dt < 50) return; this.mAt = now;       // reading the analysers costs a copy each: 20 times a second is smooth enough for a bar
+    const fall = 0.03 * Math.min(dt, 200) / 16.7, level = (an, buf) => { an.getFloatTimeDomainData(buf); let m = 0; for (let i = 0; i < buf.length; i++) { const a = Math.abs(buf[i]); if (a > m) m = a; } return m; };
     const frac = pk => pk > 0.0005 ? clamp((20 * Math.log10(pk) + 54) / 54, 0, 1) : 0, show = (el, f) => { el.style.width = (f * 100).toFixed(1) + '%'; el.className = f > 0.93 ? 'clip' : f > 0.78 ? 'hot' : ''; };
     const cards = $$('#sqTracks .sqtrack'); if (!this.mbuf) this.mbuf = new Float32Array(256);
     this.tracks.forEach((t, k) => {
       const el = cards[k] && cards[k].querySelector('.sqm i'); if (!el) return;
-      const f = this.playing && t.an ? frac(level(t.an, this.mbuf)) : 0; t.lvl = Math.max(f, (t.lvl || 0) - 0.03); show(el, t.lvl);
+      const f = this.playing && t.an ? frac(level(t.an, this.mbuf)) : 0; t.lvl = Math.max(f, (t.lvl || 0) - fall); show(el, t.lvl);
     });
     const an = Engine.outAn, mel = $('#sqMeter i'); if (!an || !mel) return; if (!this.obuf || this.obuf.length !== an.fftSize) this.obuf = new Float32Array(an.fftSize);
-    const pk = level(an, this.obuf), f = frac(pk); this.mlvl = Math.max(f, (this.mlvl || 0) - 0.03); show(mel, this.mlvl);
+    const pk = level(an, this.obuf), f = frac(pk); this.mlvl = Math.max(f, (this.mlvl || 0) - fall); show(mel, this.mlvl);
     if (pk >= 0.98) { this.clipT = performance.now(); } $('#sqMeter').classList.toggle('clip', performance.now() - (this.clipT || -1e9) < 2000);
   },
   ovDown(e) {

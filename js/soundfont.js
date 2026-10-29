@@ -45,7 +45,7 @@ const SF = {
     this.bufs = m; this.ready = m.size > 0;
   },
   play(midi, when, dur, o) {
-    const c = Engine.ctx, st = Store.data.settings, sf = this.sf, vel = clamp(Math.round(o.vel || 100), 1, 127), pi = o.preset != null ? o.preset : this.preset, bufs = pi === this.preset ? this.bufs : this.cache.get(pi), vs = bufs ? soundFontVoices(sf, pi, Math.round(midi), vel) : [];
+    const c = Engine.ctx, st = Store.data.settings, sf = this.sf, vel = clamp(Math.round(o.vel || 100), 1, 127), pi = o.preset != null ? o.preset : this.preset, bufs = pi === this.preset ? this.bufs : this.cache.get(pi), all = bufs ? soundFontVoices(sf, pi, Math.round(midi), vel) : [], vs = o.nopool ? all : all.slice(0, o.seq ? 2 : 4);      // each layer is a source, a gain and maybe a panner: a song of many tracks keeps a stereo pair, an offline render keeps all
     if (!vs.length) return null;
     const out = c.createGain(); out.gain.value = (o.gain == null ? 0.25 : o.gain) * 1.8 * (0.35 + 0.65 * Math.pow(vel / 127, 1.4)); out.connect(o.dest || Engine.master);
     const a4f = st.a4 / 440, parts = [];

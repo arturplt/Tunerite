@@ -65,16 +65,6 @@ const Spec = {
     // a piano's bass notes sit only ~1.6 Hz apart (A0 27.5, A#0 29.1), so wide ranges need a 4x longer window than a voice
     if (Engine.analyser) Engine.analyser.fftSize = m === 'voice' || m === 'whistle' ? 16384 : 32768;
   },
-  bounds() {
-    const R = getRange(), a4 = Store.data.settings.a4;
-    if (this.mode === 'piano') return { lo: 21, hi: 108 };
-    if (this.mode === 'whistle') return { lo: 60, hi: Math.min(120, Math.floor(freqToMidi((Engine.ctx ? Engine.ctx.sampleRate / 2 : 22050) * 0.999, a4))) };
-    if (this.mode === 'max') {                                     // up to the highest pitch the mic stream can carry (Nyquist)
-      const ny = Engine.ctx ? Engine.ctx.sampleRate / 2 : 22050;
-      return { lo: 21, hi: Math.floor(freqToMidi(ny * 0.999, a4)) };
-    }
-    return { lo: Math.max(24, R.lo - 4), hi: Math.min(100, R.hi + 4) };
-  },
   /* The waterfall shares its columns with the piano below it: every pitch sits straight above its own key, and time rises from the keys. */
   draw(midi) {
     const cv = $('#specCv'), an = Engine.specAn || Engine.analyser; if (!an) return;

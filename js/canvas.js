@@ -6,7 +6,6 @@ function fitCanvas(cv) {
   const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { g, w, h };
 }
-function centsColor(a) { return a < 10 ? '#9ccc65' : a < 25 ? '#ffb020' : '#ff5d5d'; }
 const isBlack = m => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12);
 
 /* Piano roll. x(t) = nowX + (t - rel) * pps, so one function draws both the live scroll and the static results view. */
