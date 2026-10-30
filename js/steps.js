@@ -60,7 +60,7 @@ const Steps = {
   silent(t, midi) { const r = this.rm.get(t.tid); return !!r && (r.solo.size ? !r.solo.has(midi) : r.mute.has(midi)); },
   flip(k, m) { const tr = Ed.track; if (!tr) return; const set = this.rowState(tr.id)[k]; if (set.has(m)) set.delete(m); else set.add(m); this.sig = ''; },
   build(G) {
-    const g = $('#stGrid'); g.innerHTML = ''; g.style.gridTemplateColumns = 'minmax(84px,150px) repeat(' + G.n + ',minmax(0,1fr))'; g.style.gridTemplateRows = 'auto repeat(' + this.ROWS.length + ',minmax(26px,1fr))';
+    const g = $('#stGrid'); g.innerHTML = ''; g.style.gridTemplateColumns = 'minmax(calc(84px*var(--k)),calc(150px*var(--k))) repeat(' + G.n + ',minmax(0,1fr))'; g.style.gridTemplateRows = 'auto repeat(' + this.ROWS.length + ',minmax(26px,1fr))';
     const per = G.n % 4 === 0 ? 4 : G.n % 3 === 0 ? 3 : 2; this.cells = []; this.mbtn = [];
     g.appendChild(document.createElement('div'));
     for (let i = 0; i < G.n; i++) { const d = document.createElement('div'); d.className = 'dmnum'; d.textContent = i % per === 0 ? i / per + 1 : '·'; g.appendChild(d); }

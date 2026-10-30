@@ -1,8 +1,11 @@
 "use strict";
+/* The volume slider is squared, so the quiet half of it has fine steps, and the output stage sits 6 dB under full scale: earbuds were too loud at the old default. */
+const volGain = v => v * v, OUT_TRIM = 0.5;
 /* ---- Audio engine ---- */
 const Engine = {
   ctx: null, stream: null, master: null, node: null, inst: 'voice', tracker: null, listeners: new Set(), ready: false, level: -90, lat: 0,
   async start() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'play-and-record'; } catch (e) {}      // iOS: keeps the volume buttons on the app's sound while the microphone is open
     if (this.ready) { await this.ctx.resume(); return; }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('This browser has no microphone support (it needs HTTPS or localhost).');
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -74,7 +77,7 @@ const Engine = {
   },
   applySettings() {
     const s = Store.data.settings;
-    if (this.master) { this.master.gain.setTargetAtTime(s.vol, this.ctx.currentTime, 0.02); this.clickBus.gain.setTargetAtTime(s.vol, this.ctx.currentTime, 0.02); this.setFx(); }      // eased, so dragging the slider does not click
+    if (this.master) { this.master.gain.setTargetAtTime(volGain(s.vol), this.ctx.currentTime, 0.02); this.clickBus.gain.setTargetAtTime(volGain(s.vol), this.ctx.currentTime, 0.02); this.setFx(); }      // eased, so dragging the slider does not click
     if (this.tracker) { this.tracker.a4 = s.a4; this.tracker.gate = Math.pow(10, s.gateDb / 20); }
     if (this.node && this.inst !== s.inst) {                       // piano: wider pitch range (A0 to C8) and a 2x longer window so bass notes fit
       this.inst = s.inst; const cfg = { voice: { N: 2048, fmin: 65, fmax: 1100, dec: 0 }, piano: { N: 4096, fmin: 26, fmax: 4400, dec: 0 }, whistle: { N: 2048, fmin: 400, fmax: 4600, dec: 1 } }[s.inst] || { N: 2048, fmin: 65, fmax: 1100, dec: 0 }, N = cfg.N;
@@ -86,14 +89,14 @@ const Engine = {
      Many voices add up past full scale; the compressor and clipper keep that smooth instead of hard-clipping (the crackle). */
   buildFx() {
     const c = this.ctx, mk = n => c.createGain(), bus = mk(), comp = c.createDynamicsCompressor(), sat = c.createWaveShaper();
-    this.master = mk(); this.master.gain.value = Store.data.settings.vol;
-    this.clickBus = mk(); this.clickBus.gain.value = Store.data.settings.vol; /* connected below, after the compressor exists */
+    this.master = mk(); this.master.gain.value = volGain(Store.data.settings.vol);
+    this.clickBus = mk(); this.clickBus.gain.value = volGain(Store.data.settings.vol); /* connected below, after the compressor exists */
     this.outAn = c.createAnalyser(); this.outAn.smoothingTimeConstant = 0.3; this.master.connect(this.outAn);      // taps the app's own sound before the speakers, for the blue half of the spectrogram
     comp.threshold.value = -14; comp.knee.value = 12; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.2;
     const N = 4096, cv = new Float32Array(N);
     for (let i = 0; i < N; i++) { const x = i / (N - 1) * 2 - 1, a = Math.abs(x), y = a < 0.8 ? a : 0.8 + 0.2 * Math.tanh((a - 0.8) / 0.2); cv[i] = x < 0 ? -y : y; }
     sat.curve = cv; sat.oversample = '2x';
-    this.master.connect(bus); this.chainFx(bus, comp); comp.connect(sat); sat.connect(c.destination);
+    this.master.connect(bus); this.chainFx(bus, comp); comp.connect(sat); const trim = mk(); trim.gain.value = OUT_TRIM; sat.connect(trim); trim.connect(c.destination);
     this.clickBus.connect(comp);      // metronome and cues skip every effect but share the same output stage as the notes
     this.rvSend = mk(); this.rvWet = mk(); this.conv = c.createConvolver(); this.rvKind = '';
     this.master.connect(this.rvSend); this.rvSend.connect(this.conv); this.conv.connect(this.rvWet); this.rvWet.connect(bus);

@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#24211e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=Share+Tech+Mono&display=swap" media="print" onload="this.media='all'">
 <title>Pitch Perfect</title>
@@ -181,7 +184,7 @@
     <div class="dawlcd"><small>TEMPO</small><span class="dawtempo"><input id="sqTempo" type="range" min="50" max="150" step="5" value="100" aria-label="Tempo"><output id="sqTempoOut">100%</output></span></div>
     <div class="dawlcd" id="sqMeter" title="Output level. Turns red for a moment if the sound clips."><small>LEVEL</small><div class="sqm" style="width:110px"><i></i></div></div>
     <div class="dawlcd dawsong"><small>SONG</small><b id="sqSong">No song loaded</b></div>
-    <div class="dawgrp"><button class="sqb" id="sqFull" title="Full screen">⛶</button><i id="sqLed" class="dawled" title="Playing"></i></div>
+    <div class="dawgrp"><button class="sqb" id="sqSide" title="Show or hide the tracks panel to give the editor more room" aria-pressed="true">☰ Tracks</button><button class="sqb" id="sqFull" title="Focus mode: hide everything but the basic controls, the editor and the timeline">⛶ Focus</button><i id="sqLed" class="dawled" title="Playing"></i></div>
   </header>
   <p class="dawempty" id="sqEmpty">No song yet. <b>Open</b> a MIDI file or start a <b>New</b> song, then add tracks and drums.</p>
   <div id="sqBody" class="dawbody" hidden>
@@ -272,7 +275,8 @@
   <!-- SETTINGS -->
   <section id="s-settings" class="screen">
     <h1>Settings</h1>
-    <div class="setting"><span>Interface size<br><small class="muted">Text and buttons</small></span><select id="setUi"><option value="normal">Normal</option><option value="large">Large</option><option value="xl">Extra large</option></select></div>
+    <div class="setting"><span>Interface size<br><small class="muted">Text and buttons</small></span><select id="setUi"><option value="normal">Normal</option><option value="large">Large</option><option value="xl">Extra large</option><option value="xxl">Huge</option></select></div>
+    <div class="setting"><span>Full screen<br><small class="muted" id="fsHint">Hides the address bar</small></span><button class="btn" id="btnFs">⛶ Full screen</button></div>
     <div class="setting"><span>Difficulty</span><select id="setDiff"><option value="easy">Easy ±50¢</option><option value="medium">Medium ±25¢</option><option value="hard">Hard ±10¢</option></select></div>
     <div class="setting" style="display:block;padding:0.625rem 0"><span>Tempo <b id="tempoVal">100%</b><br><small class="muted">Speed of the exercises. Slow down to learn, speed up to challenge yourself.</small></span><input type="range" id="setTempo" min="50" max="150" step="5" style="width:100%"></div>
     <div class="setting"><span>Hear the exercise first</span><input type="checkbox" id="setHear"></div>
@@ -324,8 +328,8 @@
 <div id="o-start" class="overlay on">
   <h1 style="font-size:2rem">Pitch Perfect</h1>
   <p class="muted">A singing trainer. It needs your microphone to hear your pitch.<br>Use headphones so the mic doesn't pick up the reference tone.</p>
-  <button class="btn primary" id="btnStart" style="min-width:13.75rem;min-height:3.75rem;font-size:1.2rem">Tap to start</button>
   <p id="startErr" class="banner" hidden></p>
+  <button class="btn primary" id="btnStart" style="min-width:13.75rem;min-height:3.75rem;font-size:1.2rem">Tap to start</button>
 </div>
 
 <!-- RANGE FINDER -->

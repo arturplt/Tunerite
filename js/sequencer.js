@@ -323,13 +323,13 @@ const Seq = {
     const sig = [w, h, len.toFixed(2), n, solo].concat(this.tracks.map(t => t.notes.length + (t.mute ? 'm' : '') + (t.solo ? 's' : '') + t.name)).join('|');
     if (sig !== this.ovSig || !this.ovCv) {
       this.ovSig = sig; const dpr = window.devicePixelRatio || 1, o = this.ovCv || (this.ovCv = document.createElement('canvas')); o.width = Math.round(w * dpr); o.height = Math.round(h * dpr);
-      const c = o.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#141417'; c.fillRect(0, 0, w, h); c.fillStyle = '#26262c'; c.fillRect(0, 0, w, RH); c.fillStyle = '#6e6e7a'; c.font = '9px system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillText('LOOP', 8, RH / 2);
+      const c = o.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#141417'; c.fillRect(0, 0, w, h); c.fillStyle = '#26262c'; c.fillRect(0, 0, w, RH); c.fillStyle = '#6e6e7a'; c.font = Math.round(9 * UIK) + 'px system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillText('LOOP', 8, RH / 2);
         if (this.song) songBarLines(this.song, 0, songTick(this.song, len) + 1).forEach(b => { const x = X(songSec(this.song, b.tick)); if (x >= lab) { c.fillStyle = '#3a3a42'; c.fillRect(Math.round(x), 0, 1, RH); if (b.bar % 4 === 1) { c.fillStyle = '#8a8a96'; c.fillText(String(b.bar), x + 2, RH / 2); } } });
       this.tracks.forEach((t, k) => {
         const y0 = RH + k * lh, col = SEQ_COLORS[t.i % SEQ_COLORS.length], dim = t.mute || (solo && !t.solo);
         c.fillStyle = k % 2 ? '#18181c' : '#1b1b20'; c.fillRect(0, y0, w, lh); c.fillStyle = '#0e0e10'; c.fillRect(0, y0 + lh - 1, w, 1);
         c.fillStyle = col; c.globalAlpha = dim ? 0.3 : 1; c.fillRect(0, y0, 4, lh - 1);
-        c.fillStyle = '#b8b8c2'; c.font = '600 10px system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillText(t.name.length > 9 ? t.name.slice(0, 8) + '…' : t.name, 9, y0 + lh / 2);
+        c.fillStyle = '#b8b8c2'; c.font = '600 ' + Math.round(10 * UIK) + 'px system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillText(t.name.length > 9 ? t.name.slice(0, 8) + '…' : t.name, 9, y0 + lh / 2);
         c.fillStyle = col; c.globalAlpha = dim ? 0.2 : 0.9;
         const span = Math.max(1, t.hi - t.lo), pad = 3, ph = Math.max(2, lh - 2 * pad);
         t.notes.forEach(nt => { const x = X(nt.start), nw = Math.max(1, nt.dur / len * (w - lab - 4)); if (t.drums) c.fillRect(x, y0 + pad + ((nt.midi * 7) % Math.max(1, ph - 2)), Math.max(1, nw), 2); else c.fillRect(x, y0 + pad + (1 - (nt.midi - t.lo) / span) * (ph - 3), nw, 3); });

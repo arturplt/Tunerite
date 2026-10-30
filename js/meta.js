@@ -16,9 +16,9 @@ const Meta = {
   draw() {
     const cv = $('#edMeta'), song = Ed.song; if (!song || !Ed.geo || cv.hidden) return;
     const { g, w, h } = fitCanvas(cv), G = Ed.geo, X = t => Ed.X(t); this.hits = [];
-    g.fillStyle = '#1b1b20'; g.fillRect(0, 0, w, h); g.fillStyle = '#26262c'; g.fillRect(0, 0, G.keyW, h); g.fillStyle = '#6e6e7a'; g.font = '600 9px system-ui,sans-serif'; g.textBaseline = 'middle'; g.fillText('TEMPO', 3, h / 4); g.fillText('METER', 3, h * 3 / 4);
+    g.fillStyle = '#1b1b20'; g.fillRect(0, 0, w, h); g.fillStyle = '#26262c'; g.fillRect(0, 0, G.keyW, h); g.fillStyle = '#6e6e7a'; g.font = '600 ' + Math.round(9 * UIK) + 'px system-ui,sans-serif'; g.textBaseline = 'middle'; g.fillText('TEMPO', 3, h / 4); g.fillText('METER', 3, h * 3 / 4);
     g.fillStyle = '#0e0e10'; g.fillRect(0, h / 2, w, 1);
-    g.save(); g.beginPath(); g.rect(G.keyW, 0, w - G.keyW, h); g.clip(); g.font = '700 11px system-ui,sans-serif';
+    g.save(); g.beginPath(); g.rect(G.keyW, 0, w - G.keyW, h); g.clip(); g.font = '700 ' + Math.round(11 * UIK) + 'px system-ui,sans-serif';
     const flag = (kind, tick, txt, row, col, ghost) => {
       const x = X(tick), tw = g.measureText(txt).width + 12, y = row * h / 2 + 2, hh = h / 2 - 4;
       g.globalAlpha = ghost ? 0.5 : 1; g.fillStyle = col; g.fillRect(x, y, 2, hh); g.fillRect(x, y, tw, hh); g.fillStyle = '#17171a'; g.fillText(txt, x + 7, y + hh / 2 + 0.5); g.globalAlpha = 1;

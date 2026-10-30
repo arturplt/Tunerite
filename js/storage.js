@@ -4,8 +4,9 @@
    UIK is the same factor for the things drawn on canvases. */
 let UIK = 1.35;
 function applyUiSize() {
-  UIK = { normal: 1, large: 1.35, xl: 1.6 }[Store.data.settings.uiSize] || 1.35;
+  UIK = { normal: 1, large: 1.35, xl: 1.6, xxl: 2 }[Store.data.settings.uiSize] || 1.35;
   document.documentElement.style.fontSize = (16 * UIK) + 'px';
+  document.documentElement.style.setProperty('--k', UIK / 1.35);      // Compose is sized in px at the default (Large) size; this scales it with the setting
 }
 const DEFAULTS = { diff: 'medium', a4: 440, hear: true, drone: false, cues: true, guide: 'fade', vol: 0.8, gateDb: -42, wait: false, find: 1, inst: 'voice', midiOn: false, specLine: true, tempo: 100, uiSize: 'large', pxShow: true, pxAny: false, timbre: 'soft', micId: '', kbSound: true, kbPlay: true, sfName: '', sfPreset: 0, guideRoot: 'auto', guideNames: 'pl', guideFirst: true, reverb: 'off', chorus: false, specSynth: true, fxTrem: 'off', fxVib: 'off', fxDelay: 'off', fxWide: false, fxTone: 'neutral', fxPhase: 'off', fxDrive: 'off', fxOct: 'off', fxHuman: false };
 const Store = {

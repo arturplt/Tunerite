@@ -34,8 +34,19 @@ function bind() {
     pop.onclick = close; document.addEventListener('click', close); document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }); }
   $('#sqSave').onclick = () => Seq.exportMid(); $('#sqWav').onclick = () => Seq.exportWav(); $('#sqMp3').onclick = () => Seq.exportWav('mp3'); $('#sqLoad').onclick = () => Seq.projects(); $('#pjImport').onclick = () => { $('#o-proj').classList.remove('on'); $('#sqFile').click(); }; $('#pjNew').onclick = () => { $('#o-proj').classList.remove('on'); Ed.newSong(); }; $('#pjClose').onclick = () => $('#o-proj').classList.remove('on'); $('#sqFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) Seq.loadFile(f); };
   $('#sqPlay').onclick = () => Seq.toggle(); $('#sqStop').onclick = () => Seq.stop(); $('#sqRew').onclick = () => Seq.seek(0);
-  $('#sqFull').onclick = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else $('#s-seq').requestFullscreen(); } catch (e) {} };
-  document.addEventListener('fullscreenchange', () => { const f = document.fullscreenElement === $('#s-seq'); $('#sqFull').textContent = f ? '⛶ Exit' : '⛶ Full'; if (UI.screen === 'seq') Seq.render(); });
+  const fsOk = !!document.documentElement.requestFullscreen, standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+  if (standalone) $('#btnFs').closest('.setting').hidden = true;
+  else if (!fsOk) { $('#btnFs').hidden = true; $('#fsHint').textContent = 'This browser cannot hide its address bar. Use Share, then Add to Home Screen, and open Pitch Perfect from there.'; }
+  $('#btnFs').onclick = async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); try { await screen.orientation.unlock(); } catch (e) {} } } catch (e) { toast('Full screen was refused by the browser.'); } };
+  document.addEventListener('fullscreenchange', () => { $('#btnFs').textContent = document.fullscreenElement ? '⛶ Exit full screen' : '⛶ Full screen'; });
+  const sideOff = (() => { try { return localStorage.getItem('pp-seq-side') === 'off'; } catch (e) { return false; } })();
+  const showSide = on => { $('#sqBody').classList.toggle('noside', !on); $('#sqSide').classList.toggle('on', on); $('#sqSide').setAttribute('aria-pressed', on); try { localStorage.setItem('pp-seq-side', on ? 'on' : 'off'); } catch (e) {} };
+  showSide(!sideOff);
+  $('#sqSide').onclick = () => showSide($('#sqBody').classList.contains('noside'));
+  /* Focus mode: hides the bottom navigation, the song and file controls and the tracks panel, so the editor and the timeline get the screen. */
+  const setFocus = on => { document.body.classList.toggle('focus', on); $('#sqFull').textContent = on ? '✕ Exit focus' : '⛶ Focus'; $('#sqFull').classList.toggle('on', on); if (UI.screen === 'seq') Seq.render(); };
+  $('#sqFull').onclick = () => setFocus(!document.body.classList.contains('focus'));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('focus')) setFocus(false); });
   $('#sqLoop').title = 'Repeat the song, or the region you drag in the strip above the tracks'; $('#sqLoop').onclick = e => { Seq.loop = !Seq.loop; e.currentTarget.classList.toggle('on', Seq.loop); Seq.save(); };
   $('#sqTempo').oninput = e => { $('#sqTempoOut').textContent = e.target.value + '%'; }; $('#sqTempo').onchange = e => Seq.setTempo(e.target.value / 100);
   { const cv = $('#seqCv'); cv.onpointerdown = e => Seq.ovDown(e); cv.onpointermove = e => Seq.ovMove(e); cv.onpointerup = () => Seq.ovUp(); cv.onpointercancel = () => { Seq.ovDrag = null; Seq.ovMode = null; Seq.ovReg = null; }; }
@@ -139,6 +150,7 @@ function bind() {
   };
   $('#btnStart').onclick = async () => {
     const err = $('#startErr'); err.hidden = true;
+    if (matchMedia('(pointer: coarse)').matches && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});      // phones and tablets only; the tap is the gesture the browser needs
     try { await Engine.start(); } catch (e) { err.textContent = e.message; err.hidden = false; return; }
     SFUI.restore(); Seq.restore(); Engine.listMics(); Spec.setMode(instMode(Store.data.settings.inst)); $('#specLine').checked = Store.data.settings.specLine !== false; $('#specSynth').checked = Store.data.settings.specSynth !== false;
     if (Store.data.settings.midiOn) Midi.connect(false);
