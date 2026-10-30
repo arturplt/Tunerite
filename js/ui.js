@@ -46,9 +46,10 @@ const UI = {
     // exercise list
     const best = {}; S.history.forEach(h => { best[h.ex] = Math.max(best[h.ex] || 0, h.score); });
     const list = $('#exList'); list.textContent = '';
-    let group = '', host = list;
+    const hosts = new Map();      // one fold per group, even when a group's exercises are not next to each other in the list
     EXERCISES.forEach(e => {
-      if (e.group !== group) { group = e.group; const f = fold(group, 'ex:' + group); list.appendChild(f); host = f.body; }
+      if (!hosts.has(e.group)) { const f = fold(e.group, 'ex:' + e.group); list.appendChild(f); hosts.set(e.group, f.body); }
+      const host = hosts.get(e.group);
       const b = document.createElement('button'); b.className = 'card';
       const bt = document.createElement('span'); bt.className = 'best'; bt.textContent = best[e.id] != null ? 'Best ' + best[e.id] : '';
       const t = document.createElement('div'); t.className = 't'; t.textContent = e.name;
