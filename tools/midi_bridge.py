@@ -21,6 +21,11 @@ for folder in ("css", "js"):      # the app's own stylesheets and scripts, and n
         for n in names:
             rel = os.path.relpath(os.path.join(dirpath, n), ROOT).replace(os.sep, "/")
             APP_FILES["/" + rel] = rel
+def app_script(path):
+    """A stylesheet or script added after the server started: still the app's own files, and nothing outside css/ and js/."""
+    if not (path.startswith("/css/") or path.startswith("/js/")): return None
+    full = os.path.realpath(os.path.join(ROOT, path[1:])); top = os.path.realpath(os.path.join(ROOT, path[1:].split("/")[0]))
+    return os.path.relpath(full, ROOT).replace(os.sep, "/") if full.startswith(top + os.sep) and os.path.isfile(full) else None
 TYPES = {".html": "text/html; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".js": "text/javascript", ".css": "text/css"}
 flags = {a for a in sys.argv[1:] if a.startswith("--")}
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
@@ -204,7 +209,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             finally:
                 with lock: clients.remove(q)
             return
-        name = APP_FILES.get(path)
+        name = APP_FILES.get(path) or app_script(path)
         if not name:
             self.send_error(404); return
         with open(os.path.join(ROOT, name), "rb") as f:

@@ -233,7 +233,12 @@
       <div class="dawview">
         <canvas id="edCv"></canvas>
         <canvas id="voxCv" hidden title="Spectrogram of the voice recording. Drag to scroll, wheel to zoom, tap to move the playhead."></canvas>
-        <button class="sqb on" id="voxGhost" hidden title="Show the other tracks over the spectrogram: notes as bars, other voices as lines">Others</button>
+        <div id="voxBar" hidden>
+          <button class="sqb on" id="voxGhost" title="Show the other tracks over the spectrogram: notes as bars, other voices as lines">Others</button>
+          <button class="sqb" id="voxDbg" title="Pitch debug: what the pitch detector heard, the note it is pulled to, and a few counts">Debug</button>
+          <button class="sqb" id="voxSave" title="Save the pitch data of this recording as a file" hidden>Save data</button>
+          <label class="voxq" title="Spectrogram detail: a longer window shows pitch more precisely, a shorter one shows timing more precisely"><span>Detail <b id="voxQv">4096</b></span><input type="range" id="voxQ" min="0" max="4" step="1" value="3" aria-label="Spectrogram detail"></label>
+        </div>
         <div id="edSteps" hidden>
           <div class="edgrp stbar"><button class="sqb" data-st="prev" aria-label="Previous bar">◀</button><b id="stBar">Bar 1</b><button class="sqb" data-st="next" aria-label="Next bar">▶</button>
             <select id="stDiv" class="edsel" aria-label="Steps per bar"><option value="8">1/8</option><option value="12">1/8 triplet</option><option value="16" selected>1/16</option><option value="24">1/16 triplet</option><option value="32">1/32</option></select>
@@ -454,6 +459,7 @@
 <script src="js/sequencer.js"></script>
 <script src="js/knobs.js"></script>
 <script src="js/editor.js"></script>
+<script src="js/tune.js"></script>
 <script src="js/vox.js"></script>
 <script src="js/recorder.js"></script>
 <script src="js/midi-file.js"></script>

@@ -39,10 +39,10 @@ const Seq = {
     this.song = song || null; this.name = name; this.bpm = parsed.bpm; this.length = Math.max.apply(null, [0].concat(this.tracks.map(t => t.end)));
     const mel = this.tracks.filter(t => !t.drums); this.lo = mel.length ? Math.min.apply(null, mel.map(t => t.lo)) - 1 : 48; this.hi = mel.length ? Math.max.apply(null, mel.map(t => t.hi)) + 1 : 84;
     if (this.hi - this.lo < 12) this.hi = this.lo + 12;
-    this.vox = []; Vox.restore(sv.vox);
+    if (!prev) { this.vox = []; Vox.restore(sv.vox); }      // an edit of the same song (prev given) keeps the recordings that are already loaded
     this.base = 0; this.tempo = sv.tempo || 1; this.sing = sv.sing != null && this.tracks[sv.sing] ? sv.sing : -1; this.loop = !!sv.loop; this.loopA = sv.loopA != null && sv.loopB > sv.loopA ? sv.loopA : null; this.loopB = this.loopA != null ? sv.loopB : null;
   },
-  save() { Store.data.seq = Object.assign(Store.data.seq || {}, { name: this.name, sing: this.sing, tempo: this.tempo, loop: this.loop, loopA: this.loopA, loopB: this.loopB, vox: this.vox.map(v => ({ id: v.id, name: v.name, start: v.start, vol: v.vol, pan: v.panv || 0, mute: v.mute, solo: v.solo, fx: v.fx || null })), tracks: this.tracks.map(t => ({ inst: t.inst, vol: t.vol, pan: t.panv || 0, fx: t.fx || null, mute: t.mute, solo: t.solo })) }); Store.save(); },
+  save() { Store.data.seq = Object.assign(Store.data.seq || {}, { name: this.name, sing: this.sing, tempo: this.tempo, loop: this.loop, loopA: this.loopA, loopB: this.loopB, vox: this.vox.map(v => ({ id: v.id, name: v.name, start: v.start, vol: v.vol, pan: v.panv || 0, mute: v.mute, solo: v.solo, fx: v.fx || null, tune: v.tune || null })), tracks: this.tracks.map(t => ({ inst: t.inst, vol: t.vol, pan: t.panv || 0, fx: t.fx || null, mute: t.mute, solo: t.solo })) }); Store.save(); },
   /* Which sound a track plays: a SoundFont preset (index), a built-in voice, or the drum kit. */
   res(t) {
     const c = t.inst;
@@ -341,7 +341,7 @@ const Seq = {
     this.load(songToUnits(this.song), this.name, this.song, u => old[u.tid + ':' + u.ch]);
     this.loop = loop; this.loopA = lA; this.loopB = lB; this.tempo = tempo; this.sing = singKey ? this.tracks.findIndex(t => key(t) === singKey) : -1;
     if (this.sing >= 0) { const mono = melodyFromNotes(this.tracks[this.sing].notes); if (mono.length >= 3) { Store.data.midi = { name: this.name, bpm: this.bpm, notes: mono, t0: mono.t0 }; this.save(); } }
-    this.base = clamp(p, 0, this.maxPos); this.render(); this.sync(); if (was && this.length > 0) this.start(this.base);
+    this.base = clamp(p, 0, this.maxPos); this.render(); this.sync(); Vox.refollow(); if (was && this.length > 0) this.start(this.base);
   },
   /* Writes the (edited) song as a Standard MIDI File and offers it as a download. */
   exportMid() { if (!this.song) return toast('Load a MIDI file first.', 2500); this.download(writeSong(this.song), 'audio/midi', 'mid'); this.dirty = false; },

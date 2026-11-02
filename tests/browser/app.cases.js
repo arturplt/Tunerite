@@ -232,3 +232,108 @@ T.test('track effects: gate, de-esser, mid EQ, synced echo, auto-pan, lo-fi', as
   Seq.setFx(t, 'apan', 1); T.eq(n('StereoPannerNode'), 1, 'auto-pan'); Seq.setFx(t, 'lofi', 1); T.ok(t.fxn.some(x => x.constructor.name === 'WaveShaperNode' && x.curve && x.curve.length === 2048), 'lo-fi shaper');
   ['gate', 'deess', 'midgain', 'echo', 'apan', 'lofi'].forEach(k => Seq.setFx(t, k, k === 'midgain' ? 0.5 : 0)); T.eq(t.fxn.filter(x => x.constructor.name !== 'GainNode').length, 0, 'everything leaves the path when at rest'); Seq.setTempo(1); Seq.halt();
 });
+T.test('pitch correction: a sung 450 Hz is pulled to 440 Hz, timing and loudness stay', async () => {
+  await audio(); scene(); const sr = 48000, N = sr * 2, ph = i => 2 * Math.PI * 450 * i / sr;
+  const data = new Float32Array(N).map((_, i) => 0.3 * (Math.sin(ph(i)) + 0.5 * Math.sin(2 * ph(i)) + 0.25 * Math.sin(3 * ph(i)))), v = Vox.add({ data, sr }, 0);
+  const t = Vox.tuneOf(v); t.amt = 1; t.spd = 1; t.scale = 'chrom'; await Vox.runTune(v); T.ok(v.tuned, 'a corrected copy exists'); T.eq(v.tuned.length, data.length, 'same length, so the timing is kept');
+  const out = v.tuned.getChannelData(0), fr = out.slice(sr * 0.8, sr * 0.8 + 2048), r = analyse(fr, sr, 65, 1100); T.near(r.f, 440, 3, 'now at ' + r.f + ' Hz');
+  const rms = a => Math.sqrt(a.reduce((s, x) => s + x * x, 0) / a.length), q = rms(Array.from(out.slice(sr * 0.5, sr * 1.5))) / rms(Array.from(data.slice(sr * 0.5, sr * 1.5))); T.near(q, 1, 0.15, 'loudness ' + q);
+  t.amt = 0; await Vox.runTune(v); T.eq(v.tuned, null, 'amount 0 goes back to the original'); Seq.vox = []; Seq.render();
+});
+T.test('pitch correction: snaps to the chosen scale only', () => {
+  const maj = new Set([0, 2, 4, 5, 7, 9, 11]); T.eq(Tune.snap(60.9, maj, 0), 60, 'a bit above C goes down to C in C major, not up to D'); T.eq(Tune.snap(63.4, maj, 0), 64, 'between D sharp and E: E');
+  T.eq(Tune.snap(61.2, null, 0), 61, 'chromatic keeps the semitone'); T.eq(Tune.snap(66, new Set([0, 3, 5, 7, 10]), 9), 67, 'A minor pentatonic has no F sharp: the nearest allowed note is G');
+});
+/* A synthetic singing voice: a glottal pulse train with vibrato and a slow drift around 450 Hz, three formants, and a breathy "s" between the phrases. */
+function synthVoice(sr, dur, o) {
+  o = o || {};
+  const N = Math.round(sr * dur), x = new Float32Array(N), res = (f, bw) => { const r = Math.exp(-Math.PI * bw / sr); return { a: 1 - 2 * r * Math.cos(2 * Math.PI * f / sr) + r * r, b: 2 * r * Math.cos(2 * Math.PI * f / sr), c: -r * r, y1: 0, y2: 0 }; }, F = [res(o.f1 || 700, o.f1 ? 60 : 110), res(1200, 120), res(2600, 160)];
+  const g = p => p < 0.6 ? 0.5 * (1 - Math.cos(Math.PI * p / 0.6)) : p < 0.8 ? Math.cos(Math.PI / 2 * (p - 0.6) / 0.2) : 0; let ph = 0, gp = 0, seed = 1; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 * 2 - 1; };
+  for (let i = 0; i < N; i++) {
+    const t = i / sr, u = t % 1, ff = o.melody ? o.melody(t) * (1 + 0.012 * Math.sin(2 * Math.PI * 5.5 * t)) : 447 * (1 + 0.012 * Math.sin(2 * Math.PI * 5.5 * t)) * (1 + 0.015 * Math.sin(2 * Math.PI * 0.7 * t)); const f = ff * (1 + (o.jitter ? o.jitter * rnd() : 0)); let s;
+    if (u < 0.8) { ph = (ph + f / sr) % 1; const v = g(ph); s = (v - gp) * 12 + (o.breath ? rnd() * o.breath : 0); gp = v; s *= Math.min(1, u / 0.03, (0.8 - u) / 0.03); } else if (u > 0.84 && u < 0.97) s = rnd() * 0.12; else s = 0;
+    let y = s; F.forEach(r => { const q = r.a * y + r.b * r.y1 + r.c * r.y2; r.y2 = r.y1; r.y1 = q; y = q; }); x[i] = y;
+  }
+  let pk = 0; for (let i = 0; i < N; i++) pk = Math.max(pk, Math.abs(x[i])); for (let i = 0; i < N; i++) x[i] = x[i] * (o.level || 0.5) / pk + (o.floor ? rnd() * o.floor : 0) + (o.rumble ? o.rumble * Math.sin(2 * Math.PI * 17 * i / sr) : 0); return x;
+}
+/* How well a stretch of audio repeats itself one period later (1 = a perfect periodic tone), and the biggest jump between neighbouring samples. */
+function periodicity(x, sr, a, b) {
+  let tot = 0, n = 0; for (let s = a; s + 1536 < b; s += 512) {
+    let best = 0, e0 = 0; for (let i = 0; i < 1024; i++) e0 += x[s + i] * x[s + i]; if (e0 / 1024 < 1e-4) continue;
+    for (let lag = Math.round(sr / 800); lag < Math.round(sr / 200); lag++) { let c = 0, e1 = 0; for (let i = 0; i < 1024; i++) { c += x[s + i] * x[s + i + lag]; e1 += x[s + i + lag] * x[s + i + lag]; } best = Math.max(best, c / Math.sqrt(e0 * e1 + 1e-12)); }
+    tot += best; n++;
+  } return n ? tot / n : 0;
+}
+T.test('pitch correction: quality on a synthetic voice', async () => {
+  await audio(); scene(); const sr = 48000, x = synthVoice(sr, 4), buf = new AudioBuffer({ length: x.length, sampleRate: sr, numberOfChannels: 1 }); buf.copyToChannel(x, 0);
+  const out = (await Tune.process(buf, { amount: 1, speed: 1, set: null, root: 0, a4: 440 })).getChannelData(0), f0 = await Tune.track(out, sr), fin = await Tune.track(x, sr);
+  const off = f => { const m = 69 + 12 * Math.log2(f / 440); return Math.abs(m - Math.round(m)) * 100; }, mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+  const dIn = mean(Array.from(fin).filter(f => f > 0).map(off)), dOut = mean(Array.from(f0).filter(f => f > 0).map(off));
+  const pi = periodicity(x, sr, 0, x.length), po = periodicity(out, sr, 0, out.length); let jin = 0, jout = 0; for (let i = 2; i < x.length; i++) { jin = Math.max(jin, Math.abs(x[i] - 2 * x[i - 1] + x[i - 2])); jout = Math.max(jout, Math.abs(out[i] - 2 * out[i - 1] + out[i - 2])); }
+  const msg = `off the note: in ${dIn.toFixed(1)} -> out ${dOut.toFixed(1)} cents; periodicity in ${pi.toFixed(3)} out ${po.toFixed(3)}; jump ratio ${(jout / jin).toFixed(2)}; voiced frames in ${Array.from(fin).filter(f => f > 0).length} out ${Array.from(f0).filter(f => f > 0).length}`;
+  T.ok(dOut < 10 && po > pi * 0.95 && jout < jin * 1.4, msg);
+});
+T.test('pitch correction: quality on a messy sung melody', async () => {
+  await audio(); scene(); const sr = 48000, notes = [261.6, 293.7, 329.6, 392], cents = 30;      // a C D E G melody sung 30 cents sharp, with 60 ms slides, breath, jitter and a noise floor
+  const mel = t => { const k = Math.min(3, Math.floor(t / 1)), i = Math.floor(t), fr = t - i, a = notes[Math.min(3, i)] * Math.pow(2, cents / 1200), b = notes[Math.min(3, i + 1)] * Math.pow(2, cents / 1200); return fr > 0.7 ? a * Math.pow(b / a, Math.min(1, (fr - 0.7) / 0.1)) : a; };
+  const x = synthVoice(sr, 4, { melody: mel, jitter: 0.006, breath: 0.15, level: 0.08, floor: 0.002 }), buf = new AudioBuffer({ length: x.length, sampleRate: sr, numberOfChannels: 1 }); buf.copyToChannel(x, 0);
+  const out = (await Tune.process(buf, { amount: 1, speed: 0.7, set: null, root: 0, a4: 440 })).getChannelData(0), f0 = await Tune.track(out, sr), fin = await Tune.track(x, sr);
+  const off = f => { const m = 69 + 12 * Math.log2(f / 440); return Math.abs(m - Math.round(m)) * 100; }, mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+  const vin = Array.from(fin).filter(f => f > 0), vout = Array.from(f0).filter(f => f > 0), pi = periodicity(x, sr, 0, x.length), po = periodicity(out, sr, 0, out.length);
+  const msg = `off the note: in ${mean(vin.map(off)).toFixed(1)} -> out ${mean(vout.map(off)).toFixed(1)} cents; periodicity in ${pi.toFixed(3)} out ${po.toFixed(3)}; voiced frames in ${vin.length} out ${vout.length}`;
+  T.ok(mean(vout.map(off)) < 16 && po > pi * 0.9 && Math.abs(vout.length - vin.length) < vin.length * 0.1, msg);
+});
+T.test('pitch correction: a low voice with a strong second harmonic and rumble', async () => {
+  await audio(); scene(); const sr = 48000, notes = [130.8, 146.8, 164.8, 196], cents = 30;
+  const mel = t => { const i = Math.floor(t), fr = t - i, a = notes[Math.min(3, i)] * Math.pow(2, cents / 1200), b = notes[Math.min(3, i + 1)] * Math.pow(2, cents / 1200); return fr > 0.7 ? a * Math.pow(b / a, Math.min(1, (fr - 0.7) / 0.1)) : a; };
+  const x = synthVoice(sr, 4, { melody: mel, jitter: 0.004, breath: 0.1, level: 0.1, floor: 0.002, f1: 262, rumble: 0.02 }), buf = new AudioBuffer({ length: x.length, sampleRate: sr, numberOfChannels: 1 }); buf.copyToChannel(x, 0);
+  const out = (await Tune.process(buf, { amount: 1, speed: 0.35, set: null, root: 0, a4: 440 })).getChannelData(0), f0 = await Tune.track(out, sr), fin = await Tune.track(x, sr);
+  const off = f => { const m = 69 + 12 * Math.log2(f / 440); return Math.abs(m - Math.round(m)) * 100; }, mean = a => a.reduce((s, v) => s + v, 0) / a.length, med = a => a.slice().sort((p, q) => p - q)[a.length >> 1];
+  const vin = Array.from(fin).filter(f => f > 0), vout = Array.from(f0).filter(f => f > 0), pi = periodicity(x, sr, 0, x.length), po = periodicity(out, sr, 0, out.length);
+  const msg = `input pitch median ${med(vin).toFixed(0)} Hz (sung ${notes[0] * 1.017 | 0}..), off note in ${mean(vin.map(off)).toFixed(0)} -> out ${mean(vout.map(off)).toFixed(0)} cents; periodicity ${pi.toFixed(2)} -> ${po.toFixed(2)}; voiced in ${vin.length} out ${vout.length}; range ${Math.min(...vout).toFixed(0)}..${Math.max(...vout).toFixed(0)} Hz`;
+  T.ok(Math.min(...vout) > 110 && Math.max(...vout) < 230 && mean(vout.map(off)) < 20 && po > pi * 0.85, msg);
+});
+T.test('pitch correction: the voice view also draws the untouched pitch as a white line', async () => {
+  await audio(); scene(); const sr = 48000, v = Vox.add({ data: synthVoice(sr, 2), sr }, 0); Ed.on = true; Vox.tuneOf(v).amt = 1; await Vox.runTune(v); Vox.select(v);
+  for (let i = 0; i < 6 && !(v.spec && v.spec.ready && v.ospec && v.ospec.ready); i++) { Vox.draw(); await T.wait(300); } T.ok(v.ospec && v.ospec.ready, 'the original was analysed too'); Vox.draw(); Seq.vox = []; Seq.render();
+});
+T.test('pitch tracking: a held note with a weak fundamental does not jump an octave back and forth', async () => {
+  const sr = 48000, N = sr * 3, x = new Float32Array(N); let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 * 2 - 1; };
+  for (let i = 0; i < N; i++) { const t = i / sr, w = 2 * Math.PI * 220 * t, a1 = 0.1 + 0.25 * (0.5 + 0.5 * Math.sin(2 * Math.PI * 3 * t)); let v = a1 * Math.sin(w) + 1.0 * Math.sin(2 * w + 0.7) + 0.5 * Math.sin(3 * w + 1.9) + 0.3 * Math.sin(4 * w) + 0.15 * Math.sin(5 * w + 2); x[i] = 0.2 * v + 0.01 * rnd(); }
+  const d = await Tune.trackDetail(x, sr), flips = a => { let n = 0, prev = 0; for (let f = 0; f < a.length; f++) if (a[f] > 0) { if (prev && Math.abs(12 * Math.log2(a[f] / prev)) >= 9) n++; prev = a[f]; } return n; };
+  const v = Array.from(d.f0).filter(f => f > 0); T.ok(v.length > d.F * 0.8, 'the note is found: ' + v.length + '/' + d.F);
+  const fl = flips(d.f0); T.ok(fl === 0, `octave jumps: plain detector ${flips(d.raw)}, after the path ${fl}; median ${v.sort((a, b) => a - b)[v.length >> 1].toFixed(0)} Hz`);
+});
+T.test('voice view: spectrogram detail slider and pitch debug', async () => {
+  await audio(); scene(); const sr = 48000, v = Vox.add({ data: synthVoice(sr, 3), sr }, 0); Ed.on = true; Vox.select(v);
+  T.eq(Vox.N, 4096, 'the default detail'); [0, 1, 2, 3, 4].forEach((q, i) => { Vox.setDetail(q); T.eq(Vox.N, [512, 1024, 2048, 4096, 8192][i]); }); T.eq(v.spec, null, 'changing the detail drops the old picture');
+  Vox.setDetail(2); for (let i = 0; i < 8 && !(v.spec && v.spec.ready); i++) { Vox.draw(); await T.wait(300); } T.ok(v.spec.ready && v.spec.N === 2048 && v.spec.H === 512, 'analysed at 2048 with a quarter-window hop');
+  Vox.dbgOn = true; for (let i = 0; i < 10 && !v.dbg; i++) { Vox.draw(); await T.wait(300); } T.ok(v.dbg && v.dbg.F > 10, 'the pitch data was made'); Vox.draw(); T.eq($('#voxSave').hidden, false, 'the save button appears');
+  Vox.dbgOn = false; Vox.setDetail(3); Seq.vox = []; Seq.render();
+});
+T.test('pitch correction: following a track pulls the voice to its notes, in the voice\'s octave', async () => {
+  await audio(); const song = scene(s => { s.tracks[0].notes.length = 0; [[62, 0], [64, 960]].forEach(([m, t]) => s.tracks[0].notes.push({ midi: m, tick: t, dur: 900, vel: 90, ch: 0 })); });
+  const tr = Seq.tracks[0], sr = 48000, mel = t => (t < 1 ? 146.8 : 164.8) * 1.03, v = Vox.add({ data: synthVoice(sr, 2, { melody: mel, level: 0.2 }), sr }, 0);      // sung a little sharp: D3 then E3, while the track has D4 then E4
+  const tn = Vox.tuneOf(v); tn.amt = 1; tn.spd = 1; tn.scale = 'trk:' + tr.tid + ':' + tr.ch; const o = Vox.tuneOpts(v); T.ok(o.notes && o.notes.length === 2, 'the track\'s notes were found');
+  T.eq(Tune.targetFor(50.5, 0.5, o), 50, 'D3 is pulled to D, in the voice\'s octave, not to D4'); T.eq(Tune.targetFor(52.6, 1.5, o), 52, 'E3 in the second half'); T.eq(Tune.targetFor(52.6, 0.95, o), 50, 'at 0.95 s the D has just ended and the E is about to start: the one nearer in time wins');
+  T.eq(Tune.targetFor(52.6, 5, o), null, 'far from every note: left alone');
+  await Vox.runTune(v); T.ok(v.tuned && v.dbg && v.dbg.target.some(x => x === 50) && v.dbg.target.some(x => x === 52), 'the debug data shows both target notes'); Seq.vox = []; Seq.render();
+});
+T.test('pitch correction: range, vibrato, slides, max shift, fine tune and dry mix', async () => {
+  const sr = 48000, H = Tune.H, F = 200, mk = (fn) => { const a = new Float32Array(F); for (let f = 0; f < F; f++) a[f] = 440 * Math.pow(2, (fn(f * H / sr) - 69) / 12); return a; };
+  const base = { amount: 1, speed: 1, set: null, root: 0, a4: 440 }, at = (p, f) => p.corr[f] * 100;
+  let p = Tune.plan(mk(() => 69.3), sr, base); T.near(at(p, 100), -30, 0.1, 'a note 30 cents sharp is pulled down by 30');
+  p = Tune.plan(mk(() => 69.3), sr, Object.assign({}, base, { range: 20 })); T.near(at(p, 100), -10, 0.1, 'with a 20 cent dead zone only the 10 cents beyond it are removed');
+  p = Tune.plan(mk(() => 69.15), sr, Object.assign({}, base, { range: 20 })); T.near(at(p, 100), 0, 0.01, 'inside the dead zone nothing happens');
+  const vib = mk(t => 69.1 + 0.3 * Math.sin(2 * Math.PI * 5.5 * t)), flat = Tune.plan(vib, sr, base), kept = Tune.plan(vib, sr, Object.assign({}, base, { human: 1 }));
+  const rng = (q) => { let lo = 1e9, hi = -1e9; for (let f = 60; f < 140; f++) { const m = 69.1 + 0.3 * Math.sin(2 * Math.PI * 5.5 * f * H / sr) + q.corr[f]; lo = Math.min(lo, m); hi = Math.max(hi, m); } return hi - lo; };
+  T.ok(rng(flat) < 0.05, 'without humanize the vibrato is flattened: ' + rng(flat).toFixed(2)); T.ok(rng(kept) > 0.45, 'with humanize it stays: ' + rng(kept).toFixed(2));
+  const slide = mk(t => 62 + 8 * t / (200 * H / sr) * 10), s0 = Tune.plan(slide, sr, base), s1 = Tune.plan(slide, sr, Object.assign({}, base, { slides: 1 })); T.ok(Math.abs(s1.corr[100]) < Math.abs(s0.corr[100]) * 0.2 + 0.01, 'a fast slide is left alone with Slides at full: ' + s1.corr[100].toFixed(2) + ' vs ' + s0.corr[100].toFixed(2));
+  p = Tune.plan(mk(() => 69.45), sr, Object.assign({}, base, { maxShift: 0.2 })); T.near(at(p, 100), -20, 0.1, 'the largest correction is limited'); p = Tune.plan(mk(() => 69), sr, Object.assign({}, base, { fine: 25 })); T.near(at(p, 100), 25, 0.1, 'fine tune moves the target');
+  await audio(); const x = synthVoice(sr, 2), buf = new AudioBuffer({ length: x.length, sampleRate: sr, numberOfChannels: 1 }); buf.copyToChannel(x, 0);
+  const wet = (await Tune.process(buf, base)).getChannelData(0), mixed = (await Tune.process(buf, Object.assign({}, base, { dry: 0.5 }))).getChannelData(0); let ok = true; for (let i = 5000; i < 90000; i += 997) if (Math.abs(mixed[i] - (0.5 * x[i] + 0.5 * wet[i])) > 1e-5) ok = false; T.ok(ok, 'dry 0.5 is half original, half corrected');
+});
+T.test('voice view: the A/B button switches between the original and the corrected voice', async () => {
+  await audio(); scene(); const sr = 48000, v = Vox.add({ data: synthVoice(sr, 2), sr }, 0); Vox.tuneOf(v).amt = 1; await Vox.runTune(v); T.ok(v.tuned);
+  T.eq(Vox.pb(v), v.tuned); v.bypass = true; T.eq(Vox.pb(v), v.buf, 'bypass plays the original'); v.bypass = false; Seq.vox = []; Seq.render();
+});
