@@ -6,6 +6,7 @@
 const Rec = {
   state: 'idle', src: 'keys', song: null, tr: null, T0: 0, base: 0, startTick: 0, tempo: 1, lat: 0, ch: 0, nextTick: 0, timer: 0, act: new Map(), got: [], ctrl: [], bends: [], frames: [], lastBend: 0, listener: null,
   get metro() { return Store.data.settings.recMetro !== false; },
+  get clickGain() { const v = Store.data.settings.recClickVol; return (v == null ? 0.6 : v) / 0.6; },
   get count() { return Store.data.settings.recCount !== false; },
   get snap() { return !!Store.data.settings.recQ; },
   toggle() { if (this.state === 'idle') this.start(); else this.stop(); },
@@ -23,7 +24,7 @@ const Rec = {
     this.act.clear(); this.got = []; this.ctrl = []; this.bends = []; this.frames = [];
     const beatSec = (songSec(song, this.startTick + beat) - this.base) / this.tempo, lead = this.count ? ts.num * beatSec : 0.3;
     this.T0 = c.currentTime + 0.2 + lead; this.nextTick = this.startTick;
-    if (this.count) for (let k = 0; k < ts.num; k++) Engine.click(this.T0 - (ts.num - k) * beatSec, k === 0 ? 1320 : 880, k === 0 ? 0.2 : 0.12);
+    if (this.count) for (let k = 0; k < ts.num; k++) Engine.click(this.T0 - (ts.num - k) * beatSec, k === 0 ? 1320 : 880, (k === 0 ? 0.2 : 0.12) * this.clickGain);
     this.state = 'count'; Engine.keepAwake(true);
     if (Seq.loaded) Seq.start(this.base, { at: this.T0 });
     if (this.src === 'voice') { this.listener = fr => { if (this.state === 'rec') this.frames.push({ t: fr.t, m: fr.midi }); }; Engine.listeners.add(this.listener); if (this.metro) toast('Use headphones, or the click will be recorded too.', 3500); }
@@ -40,7 +41,7 @@ const Rec = {
     if (this.metro) {
       const hi = songTick(song, this.base + (now + 0.35 - this.T0) * this.tempo);
       if (hi > this.nextTick) {
-        songBeats(song, this.nextTick, hi).forEach(b => { const when = this.T0 + (songSec(song, b.tick) - this.base) / this.tempo; if (when >= now - 0.01) Engine.click(when, b.down ? 1320 : 880, b.down ? 0.2 : 0.12); });
+        songBeats(song, this.nextTick, hi).forEach(b => { const when = this.T0 + (songSec(song, b.tick) - this.base) / this.tempo; if (when >= now - 0.01) Engine.click(when, b.down ? 1320 : 880, (b.down ? 0.2 : 0.12) * this.clickGain); });
         this.nextTick = hi;
       }
     }

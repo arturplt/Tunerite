@@ -4,7 +4,7 @@
           tracks:[{name, notes:[{midi,tick,dur,vel,ch}], ctrl:[{tick,ch,cc,val}], bends:[{tick,ch,val}], progs:[{tick,ch,val}], meta:[{tick,type,data}]}]}
    Times are in ticks (ppq ticks per quarter note). tempos and timeSigs always start at tick 0. meta keeps text, lyric, marker and cue events. */
 function newSong(ppq) {
-  return { name: '', ppq: ppq || 480, tempos: [{ tick: 0, us: 500000 }], timeSigs: [{ tick: 0, num: 4, den: 4 }], keySigs: [], tracks: [] };
+  return { name: '', ppq: ppq || 480, tempos: [{ tick: 0, us: 500000 }], timeSigs: [{ tick: 0, num: 4, den: 4 }], keySigs: [], markers: [], tracks: [] };
 }
 let SONG_ID = 1;   // every track gets an id that is not written to the file, so the mixer can tell tracks apart after they are reordered or restored by undo
 function newSongTrack(name) { return { id: SONG_ID++, name: name || '', notes: [], ctrl: [], bends: [], progs: [], meta: [] }; }
@@ -33,7 +33,8 @@ function parseSong(u8) {
         else if (type === 0x58 && l >= 2) song.timeSigs.push({ tick, num: u8[p], den: Math.pow(2, u8[p + 1]) });
         else if (type === 0x59 && l >= 2) song.keySigs.push({ tick, sf: (u8[p] << 24) >> 24, mi: u8[p + 1] ? 1 : 0 });
         else if (type === 0x03) { if (!tr.name) tr.name = text(p, p + l); }
-        else if (type === 0x01 || type === 0x05 || type === 0x06 || type === 0x07) tr.meta.push({ tick, type, data: Array.from(u8.subarray(p, p + l)) });
+        else if (type === 0x06) (song.markers = song.markers || []).push({ tick, name: text(p, p + l) });
+        else if (type === 0x01 || type === 0x05 || type === 0x07) tr.meta.push({ tick, type, data: Array.from(u8.subarray(p, p + l)) });
         p += l;
       } else if (st === 0xf0 || st === 0xf7) { p += vlq(); }
       else {
@@ -55,7 +56,7 @@ function parseSong(u8) {
     song.tracks.push(tr);
   }
   const clean = (arr, def) => { arr.sort((a, b) => a.tick - b.tick); const o = []; arr.forEach(e => { if (o.length && o[o.length - 1].tick === e.tick) o[o.length - 1] = e; else o.push(e); }); if (!o.length || o[0].tick > 0) o.unshift(Object.assign({ tick: 0 }, def)); return o; };
-  song.tempos = clean(song.tempos, { us: 500000 }); song.timeSigs = clean(song.timeSigs, { num: 4, den: 4 }); song.keySigs.sort((a, b) => a.tick - b.tick);
+  song.tempos = clean(song.tempos, { us: 500000 }); song.timeSigs = clean(song.timeSigs, { num: 4, den: 4 }); song.keySigs.sort((a, b) => a.tick - b.tick); song.markers.sort((a, b) => a.tick - b.tick);
   return song;
 }
 /* Standard MIDI File, type 1: a conductor track (name, tempo, time and key signature) and then one track per song track. */
@@ -77,6 +78,7 @@ function writeSong(song) {
   song.tempos.forEach(t => cond.push(meta(t.tick, 1, 0x51, [(t.us >> 16) & 255, (t.us >> 8) & 255, t.us & 255])));
   song.timeSigs.forEach(t => cond.push(meta(t.tick, 1, 0x58, [t.num, Math.round(Math.log2(t.den)), 24, 8])));
   song.keySigs.forEach(k => cond.push(meta(k.tick, 1, 0x59, [k.sf & 255, k.mi ? 1 : 0])));
+  (song.markers || []).forEach(m => cond.push(meta(m.tick, 1, 0x06, str(m.name))));
   const chunks = [chunk(cond)];
   song.tracks.forEach(tr => {
     const ev = [], ev1 = (tick, ord, bytes) => ev.push({ tick: Math.max(0, Math.round(tick)), ord, bytes });
@@ -285,6 +287,74 @@ function notesCopy(notes) {
 function notesPaste(track, clip, tick) {
   if (!clip) return []; const made = clip.items.map(c => ({ midi: c.midi, tick: tick + c.dt, dur: c.dur, vel: c.vel, ch: c.ch }));
   made.forEach(n => track.notes.push(n)); sortNotes(track); return made;
+}
+/* ---- Split, glue, legato and velocity shaping ---- */
+/* Cuts every note that spans the tick into two; returns the new right-hand halves. */
+function notesSplit(track, notes, at) {
+  const made = []; notes.forEach(n => { if (n.tick < at && n.tick + n.dur > at) { const r = Object.assign({}, n, { tick: at, dur: n.tick + n.dur - at }); n.dur = at - n.tick; made.push(r); } });
+  made.forEach(n => track.notes.push(n)); sortNotes(track); return made;
+}
+/* Joins the selected notes of the same pitch and channel into one long note each (from the first start to the last end). Returns the notes that remain. */
+function notesGlue(track, notes) {
+  const groups = {}; notes.forEach(n => { (groups[n.ch + ':' + n.midi] = groups[n.ch + ':' + n.midi] || []).push(n); });
+  const gone = new Set(), kept = [];
+  Object.keys(groups).forEach(k => {
+    const a = groups[k].sort((x, y) => x.tick - y.tick), first = a[0]; if (a.length < 2) return kept.push(first);
+    first.dur = Math.max.apply(null, a.map(n => n.tick + n.dur)) - first.tick; a.slice(1).forEach(n => gone.add(n)); kept.push(first);
+  });
+  track.notes = track.notes.filter(n => !gone.has(n)); return kept;
+}
+/* Stretches each note up to the next start among the selected notes (chords move together); the last note stays as it is. */
+function notesLegato(notes) {
+  const starts = Array.from(new Set(notes.map(n => n.tick))).sort((a, b) => a - b);
+  notes.forEach(n => { const nx = starts.find(t => t > n.tick); if (nx != null) n.dur = nx - n.tick; });
+}
+/* Multiplies velocities by pct/100 and adds `add`, keeping 1..127. */
+function notesVelScale(notes, pct, add) { notes.forEach(n => { n.vel = Math.max(1, Math.min(127, Math.round((n.vel == null ? 90 : n.vel) * pct / 100 + (add || 0)))); }); }
+/* Slides velocity from `from` at the earliest start to `to` at the latest start. */
+function notesVelRamp(notes, from, to) {
+  if (!notes.length) return; const t0 = Math.min.apply(null, notes.map(n => n.tick)), t1 = Math.max.apply(null, notes.map(n => n.tick));
+  notes.forEach(n => { const f = t1 > t0 ? (n.tick - t0) / (t1 - t0) : 0; n.vel = Math.max(1, Math.min(127, Math.round(from + (to - from) * f))); });
+}
+/* ---- Bars: insert and delete time, markers, duplicate track ---- */
+function songBarTicks(song, tick) { const ts = song.timeSigs.filter(x => x.tick <= tick).pop() || song.timeSigs[0]; return song.ppq * 4 * ts.num / ts.den; }
+/* Length in ticks of n bars starting at the tick (which should be a bar start). */
+function songBarSpan(song, at, n) { let len = 0; for (let i = 0; i < n; i++) len += songBarTicks(song, at + len); return len; }
+function songMarkers(song) { return song.markers || (song.markers = []); }
+function songSetMarker(song, tick, name) {
+  tick = Math.max(0, Math.round(tick)); const a = songMarkers(song), i = a.findIndex(m => m.tick === tick);
+  if (i >= 0) a[i].name = name; else a.push({ tick, name }); a.sort((x, y) => x.tick - y.tick);
+}
+function songRemoveMarker(song, tick) { const a = songMarkers(song), i = a.findIndex(m => m.tick === tick); if (i < 0) return false; a.splice(i, 1); return true; }
+/* Opens a gap of `len` ticks at `at`: later notes, controllers, tempo, meter, key and markers move along. A note that spans `at` keeps its place. */
+function songInsertTime(song, at, len) {
+  if (len <= 0) return; const mv = e => { if (e.tick >= at) e.tick += len; }, mvAfter = e => { if (e.tick > at) e.tick += len; };
+  song.tracks.forEach(t => { t.notes.forEach(mv); t.ctrl.forEach(mv); t.bends.forEach(mv); t.progs.forEach(e => { if (e.tick > at) e.tick += len; }); t.meta.forEach(mv); });
+  song.tempos.forEach(mvAfter); song.timeSigs.forEach(mvAfter); song.keySigs.forEach(mvAfter); songMarkers(song).forEach(mv);
+}
+/* Removes the ticks [at, at+len): notes that start inside go, ones that run into it are shortened, everything after moves back. */
+function songDeleteTime(song, at, len) {
+  if (len <= 0) return; const end = at + len, mv = e => { if (e.tick >= end) e.tick -= len; }, inside = e => !(e.tick >= at && e.tick < end);
+  song.tracks.forEach(t => {
+    t.notes = t.notes.filter(inside); t.notes.forEach(n => { if (n.tick < at && n.tick + n.dur > at) n.dur = Math.max(1, n.tick + n.dur > end ? n.dur - len : at - n.tick); else mv(n); });
+    ['ctrl', 'bends', 'meta'].forEach(f => { t[f] = t[f].filter(inside); t[f].forEach(mv); });
+    t.progs.forEach(e => { if (e.tick >= at && e.tick < end && e.tick > 0) e.tick = at; else mv(e); });
+  });
+  const collapse = (arr, same) => {     // the setting in force where the cut ends carries on from the cut
+    const eff = arr.filter(e => e.tick <= end).pop(), prev = arr.filter(e => e.tick < at).pop(), keep = arr.filter(e => e.tick < at || e.tick > end);
+    keep.forEach(e => { if (e.tick > end) e.tick -= len; });
+    if (eff && eff.tick >= at && !(prev && same(prev, eff))) keep.push(Object.assign({}, eff, { tick: at }));
+    arr.length = 0; keep.sort((a, b) => a.tick - b.tick).forEach(e => arr.push(e));
+  };
+  collapse(song.tempos, (a, b) => a.us === b.us); collapse(song.timeSigs, (a, b) => a.num === b.num && a.den === b.den); collapse(song.keySigs, (a, b) => a.sf === b.sf && a.mi === b.mi);
+  const mk = songMarkers(song); song.markers = mk.filter(inside); song.markers.forEach(mv);
+}
+/* A copy of the track right after it, on its own channel (drums stay on 10). Returns the new index, or -1. */
+function songDuplicateTrack(song, ti) {
+  const src = song.tracks[ti]; if (!src) return -1; const t = newSongTrack((src.name || 'Track ' + (ti + 1)) + ' copy');
+  ['notes', 'ctrl', 'bends', 'progs', 'meta'].forEach(f => { t[f] = src[f].map(e => Object.assign({}, e, e.data ? { data: e.data.slice() } : null)); });
+  const chs = songTrackChannels(t); if (chs.length === 1 && chs[0] !== 9) songSetChannel(t, songFreeChannel(song));
+  song.tracks.splice(ti + 1, 0, t); return ti + 1;
 }
 function songEndTick(song) { let e = 0; song.tracks.forEach(t => t.notes.forEach(n => { if (n.tick + n.dur > e) e = n.tick + n.dur; })); return e; }
 /* Bar lines between two ticks, following time-signature changes: [{tick, bar}] with bar counting from 1. */

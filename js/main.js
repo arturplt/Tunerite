@@ -39,6 +39,14 @@ function bind() {
   { const pop = $('#sqSavePop'), mb = $('#sqSaveMenu'), close = () => { pop.hidden = true; mb.setAttribute('aria-expanded', 'false'); };
     mb.onclick = e => { e.stopPropagation(); pop.hidden = !pop.hidden; mb.setAttribute('aria-expanded', String(!pop.hidden)); };
     pop.onclick = close; document.addEventListener('click', close); document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }); }
+  { const menus = $$('#sqEdit [data-menu]'), closeAll = except => menus.forEach(m => { if (m === except) return; const p = m.querySelector('.dawpop'); p.hidden = true; m.querySelector('button').setAttribute('aria-expanded', 'false'); });
+    menus.forEach(m => { const b = m.querySelector('button'), p = m.querySelector('.dawpop');
+      b.onclick = e => { e.stopPropagation(); closeAll(m); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); p.style.left = '0'; p.style.right = 'auto';
+        if (!p.hidden) { const r = p.getBoundingClientRect(); if (r.right > innerWidth - 4) { p.style.left = 'auto'; p.style.right = '0'; } } };
+      p.onclick = e => e.stopPropagation(); });
+    document.addEventListener('click', () => closeAll(null)); document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(null); }); }
+  document.addEventListener('dragover', e => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault(); });
+  document.addEventListener('drop', e => { const f = Array.from((e.dataTransfer && e.dataTransfer.files) || []).find(x => /\.midi?$/i.test(x.name)); e.preventDefault(); if (!f) return; if ($('#o-start').classList.contains('on')) return toast('Start the app first, then drop the file.', 2500); UI.show('seq'); Seq.loadFile(f); });
   $('#sqSave').onclick = () => Seq.exportMid(); $('#sqWav').onclick = () => Seq.exportWav(); $('#sqMp3').onclick = () => Seq.exportWav('mp3'); $('#sqLoad').onclick = () => Seq.projects(); $('#pjImport').onclick = () => { $('#o-proj').classList.remove('on'); $('#sqFile').click(); }; $('#pjNew').onclick = () => { $('#o-proj').classList.remove('on'); Ed.newSong(); }; $('#pjClose').onclick = () => $('#o-proj').classList.remove('on'); $('#sqFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) Seq.loadFile(f); };
   $('#sqPlay').onclick = () => { if (Rec.state !== 'idle') Rec.stop(); else Seq.toggle(); }; $('#sqStop').onclick = () => { if (Rec.state !== 'idle') Rec.stop(); else Seq.stop(); };      // during a take both end the take, as the space bar does $('#sqRew').onclick = () => Seq.seek(0);
   const fsOk = !!document.documentElement.requestFullscreen, standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
@@ -113,7 +121,9 @@ function bind() {
   $('#tmMinus').onclick = () => Session.setTempo(-5); $('#tmPlus').onclick = () => Session.setTempo(5);
   $('#setTempo').oninput = e => { Store.data.settings.tempo = +e.target.value; Store.save(); $('#tempoVal').textContent = e.target.value + '%'; $('#tmVal').textContent = e.target.value + '%'; };
   document.addEventListener('keydown', e => {
-    if (e.code !== 'Space' || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || Keys.on || PX.on) return;
+    const tg = e.target, typing = tg.tagName === 'TEXTAREA' || tg.isContentEditable || (tg.tagName === 'INPUT' && /^(text|search|number|email|url|password|tel)$/.test(tg.type)),
+      picker = UI.screen === 'seq' && (tg.tagName === 'SELECT' || (tg.tagName === 'INPUT' && !typing));      // in the Composer a focused dropdown, slider or checkbox must not swallow the space bar
+    if (e.code !== 'Space' || typing || (!picker && /^(INPUT|SELECT)$/.test(tg.tagName)) || Keys.on || PX.on) return;
     if ($('#o-start').classList.contains('on')) return;
     e.preventDefault(); if (e.repeat) return;
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -174,7 +184,7 @@ function bind() {
 Store.load();
 applyUiSize();
 bind();
-Steps.init(); Meta.init();
+Steps.init(); Meta.init(); Mark.init();
 UI.refresh();
 frameLoop();
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});

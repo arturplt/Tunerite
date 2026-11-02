@@ -445,7 +445,7 @@ const Seq = {
       d.querySelector('b').textContent = t.name; d.querySelector('small').textContent = gm + ' · ' + t.notes.length + ' notes · ' + (t.drums ? 'kit' : noteName(t.lo) + '–' + noteName(t.hi));
       const sel = d.querySelector('select'); sel.innerHTML = opts;
       const nm = Store.data.settings.sfName; if (SF.sf && nm && /^sf:\d+$/.test(t.inst)) t.inst = 'sf:' + nm + '|' + t.inst.slice(3);      // the older form meant the active font: pin it to that font
-      if (/^sf:.*\|\d+$/.test(t.inst) && ![...sel.options].some(x => x.value === t.inst)) { const m = /^sf:(.*)\|(\d+)$/.exec(t.inst), F = SF.fontOf(m[1]), p = F && F.sf.presets[+m[2]], x = document.createElement('option'); x.value = t.inst; x.textContent = m[1].replace(/\.sf[23]$/i, '') + ' · ' + (p ? p.name : '#' + (+m[2] + 1)); sel.insertBefore(x, sel.options[1]); }   // an instrument from another stored font
+      if (/^sf:.*\|\d+$/.test(t.inst) && ![...sel.options].some(x => x.value === t.inst)) { const m = /^sf:(.*)\|(\d+)$/.exec(t.inst), F = SF.fontOf(m[1]), p = F && F.sf.presets[+m[2]], x = document.createElement('option'); x.value = t.inst; x.textContent = m[1].replace(/\.sf[23]$/i, '') + ' · ' + (p ? p.name : '#' + (+m[2] + 1)); { const ref = sel.options[1]; (ref ? ref.parentNode : sel).insertBefore(x, ref || null); } }   // an instrument from another stored font
       sel.value = t.inst; if (sel.value !== t.inst) { t.inst = 'auto'; sel.value = 'auto'; }
       const vol = d.querySelector('.sqvol'); vol.value = Math.round(t.vol * 100);
       d.querySelector('[data-k=m]').classList.toggle('on', t.mute); d.querySelector('[data-k=s]').classList.toggle('on', t.solo); d.querySelector('[data-k=g]').classList.toggle('on', this.sing === t.i);
@@ -466,7 +466,12 @@ const Seq = {
   /* The FX button and knobs of a mixer row. */
   fxUI(d, t) {
     const fxb = d.querySelector('.sqfxb'), fxp = d.querySelector('.sqfx');
-    Knobs.mount(fxp, this.FX, k => this.fxVal(t, k), (k, v) => { this.setFx(t, k, v); fxMark(); });
+    const mount = () => {
+      Knobs.mount(fxp, this.FX, k => this.fxVal(t, k), (k, v) => { this.setFx(t, k, v); fxMark(); });
+      const r = document.createElement('button'); r.className = 'knob rstknob'; r.setAttribute('aria-label', 'Reset effects'); r.title = 'Put every effect of this track back to rest'; r.innerHTML = '<svg viewBox="-50 -50 100 100" aria-hidden="true"><circle class="kb" r="27"/><circle class="kf" r="20"/></svg><b>Reset</b>'; fxp.appendChild(r);
+      r.onclick = () => { this.FX.forEach(f => { if (this.fxVal(t, f.k) !== f.d) this.setFx(t, f.k, f.d); }); mount(); fxMark(); };
+    };
+    mount();
     const fxMark = () => fxb.classList.toggle('on', this.FX.some(f => this.fxVal(t, f.k) !== f.d));
     fxp.hidden = !t.fxOpen; fxMark(); fxb.onclick = () => { t.fxOpen = !t.fxOpen; fxp.hidden = !t.fxOpen; };
   },

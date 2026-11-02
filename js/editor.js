@@ -150,7 +150,11 @@ const Ed = {
       $('#bpOk').onclick = () => { st.bassPat = $('#bpPat').value; Store.save(); $('#bassPop').hidden = true; this.makeBass($('#bpPat').value, +br.value); };
       $('#edTricks').onchange = e => { const v = e.target.value; e.target.value = ''; e.target.blur(); if (v) this.trick(v); };
       $('#edSnap').onclick = () => this.snapTake(); $('#edSnaps').onchange = e => { const v = e.target.value; e.target.value = ''; e.target.blur(); if (v !== '') this.snapGo(+v); }; this.snapRender();
-      $('#edLock').onclick = e => { this.lock = !this.lock; st.edLock = this.lock; Store.save(); e.currentTarget.classList.toggle('on', this.lock); };
+      $('#edLock').onclick = e => { this.lock = !this.lock; st.edLock = this.lock; Store.save(); e.currentTarget.classList.toggle('on', this.lock); this.scaleLabel(); };
+      this.follow = st.edFollow !== false; $('#edFollow').classList.toggle('on', this.follow); $('#edFollow').onclick = e => { this.follow = !this.follow; st.edFollow = this.follow; Store.save(); e.currentTarget.classList.toggle('on', this.follow); };
+      this.velCol = !!st.edVelCol; $('#edVelCol').classList.toggle('on', this.velCol); $('#edVelCol').onclick = e => { this.velCol = !this.velCol; st.edVelCol = this.velCol; Store.save(); e.currentTarget.classList.toggle('on', this.velCol); };
+      const cv0 = $('#edClickVol'); cv0.value = Math.round((st.recClickVol == null ? 0.6 : st.recClickVol) * 100); cv0.oninput = () => { st.recClickVol = cv0.value / 100; }; cv0.onchange = () => Store.save();
+      $('#edScale').addEventListener('change', () => this.scaleLabel()); root.addEventListener('change', () => this.scaleLabel()); this.scaleLabel();
       $('#edGhost').onclick = e => { this.ghost = !this.ghost; st.edGhost = this.ghost; Store.save(); e.currentTarget.classList.toggle('on', this.ghost); }; }
     $$('[data-tool]').forEach(b => b.onclick = () => { this.tool = b.dataset.tool; $$('[data-tool]').forEach(x => x.classList.toggle('on', x === b)); });
     $$('[data-ed]').forEach(b => b.onclick = () => this.act(b.dataset.ed));
@@ -188,7 +192,8 @@ const Ed = {
     this.snapRender();
     if (!Seq.song) return;
     if (this.song !== Seq.song) { this.song = Seq.song; this.hist = new EditHistory(); this.sel.clear(); this.ti = 0; this.lastDur = this.song.ppq; this.ppt = 56 * UIK / this.song.ppq; this.tap = null; this.drag = null; }
-    this.ti = clamp(this.ti, 0, Math.max(0, this.song.tracks.length - 1)); this.needFit = true; this.ls = {}; this.fillTracks();
+    if (this.viewFor !== this.song) { this.viewFor = this.song; const v = (Store.data.settings.edView || {})[Seq.name]; if (v) { this.ti = v.ti || 0; this.x0 = v.x0 || 0; if (v.ppt) this.ppt = v.ppt; this.topM = v.topM; this.rhk = v.rhk || 1; this.keepView = true; } }
+    this.ti = clamp(this.ti, 0, Math.max(0, this.song.tracks.length - 1)); this.needFit = !this.keepView; this.keepView = false; this.ls = {}; this.fillTracks(); this.scaleLabel();
   },
   fillTracks() {
     const sel = $('#edTrack'); if (!sel || !this.song) return;
@@ -216,6 +221,16 @@ const Ed = {
     Seq.load(songToUnits(song), name, song); Seq.dirty = false; Seq.projKey = null; Seq.render(); Seq.sync(); if (!this.on) this.toggle();
     this.autosave(); toast('New song. Press ● Rec, or tap the grid to draw notes.', 4000);
   },
+  /* Remembers where the view was (track, scroll, zoom) for this song, so a reload comes back to the same place. */
+  viewKeep() {
+    if (this.drag || !this.song || !Seq.name) return; const k = [this.ti, Math.round(this.x0), this.ppt.toFixed(4), Math.round(this.topM * 4), this.rhk || 1].join('|'); if (k === this.vk) return; this.vk = k;
+    clearTimeout(this.vt); this.vt = setTimeout(() => { const st = Store.data.settings; st.edView = st.edView || {}; st.edView[Seq.name] = { ti: this.ti, x0: this.x0, ppt: this.ppt, topM: this.topM, rhk: this.rhk || 1 }; const ks = Object.keys(st.edView); if (ks.length > 30) delete st.edView[ks[0]]; Store.save(); }, 1200);
+  },
+  /* The Scale button names the scale that is on. */
+  scaleLabel() {
+    const b = $('#edMenuEntry'); if (!b) return; const sc = this.scaleInfo(), t = $('#edScale'), nm = sc ? NOTE_NAMES[sc.root] : '';
+    b.textContent = '♪ ' + (sc ? nm + ' ' + (t.value === 'key' ? (this.song && this.song.keySigs[0] && this.song.keySigs[0].mi ? 'minor' : 'major') : t.options[t.selectedIndex].text.replace(/^Scale: /, '').toLowerCase()) : 'Scale') + (this.lock && sc ? ' 🔒' : '') + ' ▾';
+  },
   fit() {
     this.needFit = false; const tr = this.track, G = this.geo; if (!tr || !G) return;
     if (tr.notes.length) {
@@ -231,9 +246,9 @@ const Ed = {
     Seq.dirty = true;
     if (this.song) this.song.tracks.forEach(sortNotes);      // every track, so lists stay in time order after a region or chord edit
     try { Seq.rebuild(); } catch (e) { console.warn(e); }
-    this.fillTracks(); clearTimeout(this.saveT); this.saveT = setTimeout(() => this.autosave(), 700);
+    this.fillTracks(); { const sv = $('#sqSaved'); if (sv) sv.textContent = ' · unsaved'; } clearTimeout(this.saveT); this.saveT = setTimeout(() => this.autosave(), 700);
   },
-  autosave() { Seq.keep(); },
+  autosave() { Seq.keep(); const sv = $('#sqSaved'); if (sv) sv.textContent = ' · ✓ saved'; },
   mark() { const d = this.drag; if (d && !d.pushed) { this.hist.push(d.snap); d.pushed = true; } },
   chosen() { return this.sel.size ? Array.from(this.sel) : []; },
   /* Sounds a new note together with the chord that will be added to it. */
@@ -259,6 +274,13 @@ const Ed = {
     if (k === 'view') return Steps.toggleView();
     if (k === 'rdup' || k === 'rrep' || k === 'rclr') return this.regionOp(k);
     if (k === 'tdrum') { this.edit(() => { this.ti = songAddTrack(song, 'Drums', 9, 0); this.sel.clear(); this.needFit = true; this.ls = {}; }); Steps.show(true); return; }
+    if (k === 'tdup') {
+      if (!tr) return; const src = Seq.tracks.find(t => t.tid === tr.id), old = this.ti;
+      this.edit(() => { this.ti = songDuplicateTrack(song, old); this.sel.clear(); this.needFit = true; this.ls = {}; });
+      const nt = song.tracks[this.ti], dst = Seq.tracks.find(t => nt && t.tid === nt.id);
+      if (src && dst) { ['inst', 'vol', 'panv', 'mute', 'solo'].forEach(f => { dst[f] = src[f]; }); dst.fx = src.fx ? JSON.parse(JSON.stringify(src.fx)) : null; Seq.gains(); Seq.save(); Seq.render(); }
+      return;
+    }
     if (k === 'tadd') return this.edit(() => { this.ti = songAddTrack(song, 'Track ' + (song.tracks.length + 1)); this.sel.clear(); this.needFit = true; this.ls = {}; });
     if (k === 'tdel') { if (!tr) return; return this.edit(() => { songDeleteTrack(song, this.ti); this.ti = clamp(this.ti, 0, Math.max(0, song.tracks.length - 1)); this.sel.clear(); this.needFit = true; this.ls = {}; }); }
     if (k === 'tup' || k === 'tdown') { if (!tr) return; return this.edit(() => { this.ti = songMoveTrack(song, this.ti, k === 'tup' ? -1 : 1); }); }
@@ -281,10 +303,35 @@ const Ed = {
     else if (k === 'copy') { this.clip = notesCopy(sel); toast(sel.length ? 'Copied ' + sel.length + ' note' + (sel.length > 1 ? 's' : '') + '.' : 'Select some notes first.', 1800); }
     else if (k === 'paste') { if (!this.clip) return toast('Copy some notes first.', 2000); this.edit(() => { this.sel = new Set(notesPaste(tr, this.clip, ph())); }); }
     else if (k === 'dup') { if (!sel.length) return toast('Select some notes first.', 2000); const c = notesCopy(sel), at = Math.max.apply(null, sel.map(n => n.tick + n.dur)); this.edit(() => { this.sel = new Set(notesPaste(tr, c, at)); }); }
+    else if (k === 'cut') { if (!sel.length) return toast('Select some notes first.', 2000); this.clip = notesCopy(sel); this.edit(() => { const set = new Set(sel); tr.notes = tr.notes.filter(n => !set.has(n)); this.sel.clear(); }); toast('Cut ' + sel.length + ' note' + (sel.length > 1 ? 's' : '') + '.', 1500); }
+    else if (k === 'split') {
+      const at = songTick(song, Seq.pos()), pool = sel.length ? sel : tr.notes; if (!pool.some(n => n.tick < at && n.tick + n.dur > at)) return toast('Put the playhead inside a note first.', 2400);
+      this.edit(() => { const made = notesSplit(tr, pool, at); if (sel.length) made.forEach(n => this.sel.add(n)); });
+    } else if (k === 'glue') {
+      if (sel.length < 2) return toast('Select two or more notes of the same pitch.', 2400);
+      this.edit(() => { this.sel = new Set(notesGlue(tr, sel)); });
+    } else if (k === 'legato') { if (sel.length < 2) return toast('Select two or more notes first.', 2000); this.edit(() => notesLegato(sel)); }
+    else if (k === 'velminus' || k === 'velplus') { if (!sel.length) return toast('Select some notes first.', 2000); this.edit(() => notesVelScale(sel, k === 'velplus' ? 110 : 90, k === 'velplus' ? 1 : 0)); }
+    else if (k === 'cresc' || k === 'dimin') { if (sel.length < 2) return toast('Select two or more notes first.', 2000); this.edit(() => notesVelRamp(sel, k === 'cresc' ? 40 : 115, k === 'cresc' ? 115 : 40)); }
+    else if (k === 'barins' || k === 'bardel') {
+      const at = songBarStart(song, songTick(song, Seq.pos())), n = +$('#edBars').value || 1, len = songBarSpan(song, at, n);
+      this.edit(() => { (k === 'barins' ? songInsertTime : songDeleteTime)(song, at, len); this.sel.clear(); });
+      toast((k === 'barins' ? 'Added ' : 'Removed ') + n + ' bar' + (n > 1 ? 's' : '') + ' at bar ' + (songBarLines(song, 0, at + 1).length || 1) + '.', 2200);
+    }
     else if (k === 'del') { if (!sel.length) return; this.edit(() => { const set = new Set(sel); tr.notes = tr.notes.filter(n => !set.has(n)); this.sel.clear(); }); }
     else if (k === 'up' || k === 'down' || k === 'octup' || k === 'octdown') {
       if (!sel.length) return toast('Select some notes first.', 2000);
       const d = (k === 'up' ? 1 : k === 'down' ? -1 : k === 'octup' ? 12 : -12); this.edit(() => notesTranspose(sel, d)); this.audition(sel[0].midi, sel[0].vel, sel[0].ch);
+    } else if (k === 'loopsel') {
+      if (!sel.length) return toast('Select some notes first.', 2000);
+      Seq.setRegion(songSec(song, Math.min.apply(null, sel.map(n => n.tick))), songSec(song, Math.max.apply(null, sel.map(n => n.tick + n.dur)))); toast('Loop set to the selection.', 1500);
+    } else if (k === 'rowup' || k === 'rowdown') {
+      this.rhk = clamp((this.rhk || 1) * (k === 'rowup' ? 1.25 : 0.8), 0.55, 3);
+    } else if (k === 'fit') { this.needFit = true; }
+    else if (k === 'taptempo') {
+      const now = performance.now(), T = this.taps = (this.taps && now - this.taps[this.taps.length - 1] < 2000 ? this.taps : []); T.push(now); if (T.length > 8) T.shift();
+      if (T.length < 3) return toast('Keep tapping…', 800);
+      const bpm = clamp(Math.round(60000 / ((T[T.length - 1] - T[0]) / (T.length - 1))), 30, 300); this.edit(() => songSetTempo(song, 0, bpm)); toast(bpm + ' BPM', 900);
     } else if (k === 'arp') {
       const r = notesArp(sel, $('#edArpPat').value, gridTicks(song, +$('#edArpRate').value)); if (!r.add.length) return toast('Select a chord first: two or more notes that start together.', 2600);
       this.edit(() => { const del = new Set(r.del); tr.notes = tr.notes.filter(n => !del.has(n)); r.add.forEach(n => tr.notes.push(n)); this.sel = new Set(r.add); });
@@ -298,17 +345,34 @@ const Ed = {
       if (!sel.length) return; const d = k === 'left' ? -g : g; this.edit(() => { const m = Math.min.apply(null, sel.map(n => n.tick)); const dd = Math.max(d, -m); sel.forEach(n => { n.tick += dd; }); });
     }
   },
+  /* Selects a track of the song (clamped), like picking it in the track list. */
+  goTrack(i) {
+    const n = this.song ? this.song.tracks.length : 0; if (!n || Rec.state !== 'idle' || this.busy()) return; i = clamp(i, 0, n - 1);
+    if (i === this.ti) return; Vox.sel = null; this.ti = i; this.sel.clear(); this.needFit = true; this.ls = {}; Seq.markSel(); const t = this.song.tracks[i]; toast((i + 1) + ' · ' + (t && t.name || 'Track'), 900);
+  },
   key(e) {
     if (!this.on || UI.screen !== 'seq' || !this.song) return;
     const t = e.target && e.target.tagName, mod = e.ctrlKey || e.metaKey, k = e.key; let a = null;
     const history = mod && /^[zy]$/i.test(k) && t !== 'TEXTAREA' && !(t === 'INPUT' && /^(text|search|number)$/.test(e.target.type));   // a dropdown or checkbox keeps focus after use: undo must still work
     if ((t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') && !history) return;
+    if (!mod && !e.altKey && /^[1-9]$/.test(k)) { e.preventDefault(); return this.goTrack(+k - 1); }          // 1-9 pick a track; - and = go to the previous and next one
+    if (!mod && !e.altKey && (k === '-' || k === '=' || k === '+')) { e.preventDefault(); return this.goTrack(this.ti + (k === '-' ? -1 : 1)); }
+    if (!mod && !e.altKey && Rec.state === 'idle') {      // single letters: mute, solo, loop, rewind, tools, tap tempo
+      const lk = k.toLowerCase(), tool = { d: 'draw', v: 'select', b: 'brush', h: 'pan' }[lk];
+      if (tool) { e.preventDefault(); const b = document.querySelector('[data-tool="' + tool + '"]'); if (b) b.click(); return; }
+      if (lk === 'm' || lk === 's') { const s = Seq.tracks.find(x => x.ti === this.ti); if (s) { e.preventDefault(); s[lk === 'm' ? 'mute' : 'solo'] = !s[lk === 'm' ? 'mute' : 'solo']; Seq.gains(); Seq.save(); Seq.render(); toast(s.name + (lk === 'm' ? (s.mute ? ' muted' : ' unmuted') : (s.solo ? ' solo' : ' solo off')), 900); } return; }
+      if (lk === 'l') { e.preventDefault(); if (e.shiftKey) return this.act('loopsel'); $('#sqLoop').click(); return; }
+      if (lk === 't') { e.preventDefault(); return this.act('taptempo'); }
+      const sh = { x: 'split', j: 'glue', g: 'legato' }[lk]; if (sh) { e.preventDefault(); return this.act(sh); }
+      if (k === 'Home') { e.preventDefault(); return Seq.seek(0); }
+    }
     if (k === 'Delete' || k === 'Backspace') a = 'del';
     else if (mod && k.toLowerCase() === 'z') a = e.shiftKey ? 'redo' : 'undo';
     else if (mod && k.toLowerCase() === 'y') a = 'redo';
     else if (mod && k.toLowerCase() === 'a') a = 'all';
     else if (mod && k.toLowerCase() === 'c') a = 'copy';
     else if (mod && k.toLowerCase() === 'v') a = 'paste';
+    else if (mod && k.toLowerCase() === 'x') a = 'cut';
     else if (mod && k.toLowerCase() === 'd') a = 'dup';
     else if (k === 'ArrowUp') a = e.shiftKey ? 'octup' : 'up';
     else if (k === 'ArrowDown') a = e.shiftKey ? 'octdown' : 'down';
@@ -346,7 +410,13 @@ const Ed = {
   down(e) {
     if (!this.song || !this.geo || Rec.state !== 'idle') return; const cv = $('#edCv'), G = this.geo, { px, py } = this.pos(e), tick = this.tickAt(px), midi = this.midiAt(py), tr = this.track;
     try { cv.setPointerCapture(e.pointerId); } catch (err) { /* the gesture still works while the pointer stays over the canvas */ } e.preventDefault();
-    if (py < G.rulerH) { this.drag = { mode: 'seek' }; this.seekTo(tick); return; }
+    if (py < G.rulerH) {
+      const now0 = performance.now(), b0 = songBarStart(this.song, Math.max(0, Math.round(tick)));
+      if (this.rtap && this.rtap.b === b0 && now0 - this.rtap.t < 350 && tr) {      // double-tap the ruler: select the notes of that bar (Shift adds)
+        const end = b0 + Steps.lenAt(this.song, b0), got = tr.notes.filter(n => n.tick >= b0 && n.tick < end); if (!e.shiftKey) this.sel.clear(); got.forEach(n => this.sel.add(n)); this.rtap = null; toast(got.length + ' note' + (got.length === 1 ? '' : 's') + ' selected.', 1100); return;
+      }
+      this.rtap = { b: b0, t: now0 }; this.drag = { mode: 'seek' }; this.seekTo(tick); return;
+    }
     if (px < G.keyW) { if (py < G.rulerH + G.noteH && this.inScale(this.fitPitch(midi))) this.audition(this.fitPitch(midi), 90, tr && tr.notes.length ? tr.notes[0].ch : 0); return; }
     if (!tr) return;
     const snap = songSnapshot(this.song);
@@ -435,6 +505,7 @@ const Ed = {
   },
   wheel(e) {
     if (!this.geo) return; e.preventDefault(); const G = this.geo;
+    if (e.altKey) { this.rhk = clamp((this.rhk || 1) * (e.deltaY < 0 ? 1.12 : 1 / 1.12), 0.55, 3); return; }
     if (e.ctrlKey || e.metaKey) {
       const { px } = this.pos(e), tk = this.tickAt(px); this.ppt = clamp(this.ppt * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 2 * UIK / this.song.ppq, 400 * UIK / this.song.ppq); this.x0 = tk - (px - G.keyW) / this.ppt;
     } else if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) this.x0 += (e.deltaX || e.deltaY) / this.ppt;
@@ -445,11 +516,11 @@ const Ed = {
     if (!this.on || !Seq.song) return; const cv = $('#edCv'); if (!cv) return;
     if (this.song !== Seq.song) this.attach();
     const { g, w, h } = fitCanvas(cv); if (w < 40 || h < 80) return;
-    const U = UIK, G = this.geo = { w, h, keyW: 36 * U, rulerH: 20 * U, velH: Math.max(46 * U, h * 0.2), rh: 13 * U }; G.noteH = h - G.rulerH - G.velH;
+    const U = UIK, G = this.geo = { w, h, keyW: 36 * U, rulerH: 20 * U, velH: Math.max(46 * U, h * 0.2), rh: 13 * U * (this.rhk || 1) }; G.noteH = h - G.rulerH - G.velH;
     if (this.needFit) this.fit();
     const song = this.song, tr = this.track, ppq = song.ppq, ph = songTick(song, Seq.pos());
-    if (Seq.playing && !this.drag) { if (this.X(ph) > w - 8 || this.X(ph) < G.keyW) this.x0 = ph - (w - G.keyW) * 0.1 / this.ppt; }
-    this.clampView();
+    if (Seq.playing && !this.drag && this.follow !== false) { if (this.X(ph) > w - 8 || this.X(ph) < G.keyW) this.x0 = ph - (w - G.keyW) * 0.1 / this.ppt; }
+    this.clampView(); this.viewKeep();
     const X = t => this.X(t), Y = m => this.Y(m), left = this.tickAt(G.keyW), right = this.tickAt(w), bottom = G.rulerH + G.noteH, col = SEQ_COLORS[this.ti % SEQ_COLORS.length];
     g.fillStyle = '#141210'; g.fillRect(0, 0, w, h);
     // pitch rows and the key column
@@ -485,7 +556,7 @@ const Ed = {
     });
     if (tr) tr.notes.forEach(n => {
       const x = X(n.tick), nw = Math.max(3, n.dur * this.ppt); if (x + nw < G.keyW || x > w) return; const y = Y(n.midi); if (y + G.rh < G.rulerH || y > bottom) return;
-      const on = this.sel.has(n); g.globalAlpha = 0.55 + 0.45 * (n.vel || 90) / 127; g.fillStyle = col; g.fillRect(x, y + 1, nw, G.rh - 2); g.globalAlpha = 1;
+      const on = this.sel.has(n); g.globalAlpha = 0.55 + 0.45 * (n.vel || 90) / 127; g.fillStyle = this.velCol ? 'hsl(' + Math.round(220 - 215 * (n.vel || 90) / 127) + ',72%,58%)' : col; g.fillRect(x, y + 1, nw, G.rh - 2); g.globalAlpha = 1;
       if (on) { g.strokeStyle = '#fff'; g.lineWidth = 2; g.strokeRect(x + 1, y + 2, Math.max(1, nw - 2), G.rh - 4); }
       else { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x, y + 1, 1, G.rh - 2); }
     });

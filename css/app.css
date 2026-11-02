@@ -234,6 +234,7 @@ body.focus .dawbody{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr)}
 .dawtools{flex:none;display:flex;flex-wrap:wrap;gap:calc(6px*var(--k)) calc(12px*var(--k));align-items:center;margin-bottom:calc(6px*var(--k))}
 .edgrp{display:flex;gap:calc(3px*var(--k));align-items:center;flex-wrap:nowrap}
 .dawmain{position:relative}
+#edMk{flex:none;display:block;width:100%;height:calc(22px*var(--k));margin-bottom:calc(4px*var(--k));border-radius:calc(4px*var(--k));background:#1b1b20;touch-action:none;cursor:pointer}
 #edMeta{flex:none;display:block;width:100%;height:calc(34px*var(--k));margin-bottom:calc(4px*var(--k));border-radius:calc(4px*var(--k));background:#1b1b20;touch-action:none;cursor:pointer}
 #sfPop{top:calc(44px*var(--k));left:calc(60px*var(--k));width:calc(340px*var(--k));max-width:calc(100% - 16px*var(--k))}
 .sfpHead{display:flex;align-items:center;gap:calc(8px*var(--k));margin-bottom:calc(6px*var(--k))}.sfpHead .muted{flex:1;font-size:.8em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -254,11 +255,15 @@ body.focus .dawbody{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr)}
 .dawfoot>canvas{display:block;width:100%;height:clamp(calc(64px*var(--k)),17vh,calc(150px*var(--k)));border-radius:calc(4px*var(--k));background:#141417;cursor:pointer;touch-action:none}
 #sqSeek{width:100%;height:calc(18px*var(--k));margin:calc(2px*var(--k)) 0 0;accent-color:var(--accent)}
 .dmstep{min-height:calc(26px*var(--k))}
+/* Composer toolbar: the many editing controls live in three drop-down panels */
+.dawpop.wide{width:min(27rem,92vw);gap:calc(8px*var(--k));padding:calc(8px*var(--k))}
+.dawpop.wide .sqb{min-width:0;text-align:center;min-height:calc(32px*var(--k))}
+.poprow{display:flex;flex-wrap:wrap;gap:calc(4px*var(--k));align-items:center}.poprow>.edlab{flex:0 0 100%;font-size:calc(10px*var(--k));letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin-bottom:calc(-1px*var(--k))}
+.dawtools [data-tool]{min-width:calc(38px*var(--k));font-size:calc(16px*var(--k))}
 @media(max-width:860px){
  .dawbody{grid-template-columns:1fr;grid-template-rows:minmax(calc(84px*var(--k)),26%) minmax(0,1fr)}
 .dawbody.noside{grid-template-rows:minmax(0,1fr)}
  .dawside{border-right:0;border-bottom:1px solid #0e0e10}
- .dawtools{flex-wrap:nowrap;overflow-x:auto;padding-bottom:calc(3px*var(--k))}
  .dawtop{gap:calc(6px*var(--k)) calc(8px*var(--k));padding:calc(6px*var(--k))}
  .dmname{font-size:calc(10px*var(--k));letter-spacing:0}
 }
@@ -308,6 +313,7 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 .knob:hover .kb{stroke:#2a2a30}
 .knob b{font-size:calc(10px*var(--k));letter-spacing:.1em;text-transform:uppercase;color:#9a9aa6;font-weight:600}.knob.lit b{color:var(--accent)}
 
+.rstknob{cursor:pointer;background:none;border:0;padding:0;font:inherit}.rstknob .kf{fill:#e03a3a;stroke:#ff7a6e;filter:drop-shadow(0 0 3px rgba(255,80,70,.6))}.rstknob b{color:#ff8a80}.rstknob:hover .kf{fill:#f04c48}.rstknob:active .kf{fill:#b82a2a}.rstknob:active svg{transform:translateY(1px)}
 .sqfxb{grid-column:1/4;justify-self:start}
 .sqfx{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(6px*var(--k)) calc(4px*var(--k));padding:calc(4px*var(--k)) 0}
 .sqfx[hidden]{display:none}.sqfx .knob svg{width:calc(38px*var(--k));height:calc(38px*var(--k))}.sqfx .knob b{font-size:calc(9px*var(--k));text-align:center;white-space:nowrap}
@@ -316,3 +322,11 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 #voxCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;background:#0d0c10}#voxCv[hidden]{display:none}.daw .sqtrack.sqvox{cursor:pointer}
 #voxBar{position:absolute;right:calc(8px*var(--k));top:calc(26px*var(--k));z-index:2;display:flex;gap:calc(6px*var(--k));align-items:center;flex-wrap:wrap;justify-content:flex-end}#voxBar[hidden]{display:none}.voxq{display:flex;flex-direction:column;font-size:calc(10px*var(--k));color:#9a9aa6;background:rgba(13,12,16,.75);padding:calc(2px*var(--k)) calc(6px*var(--k));border-radius:calc(4px*var(--k))}.voxq b{color:var(--accent)}.voxq input{width:calc(110px*var(--k));accent-color:var(--accent)}
 .sqtunb{grid-column:4}.sqtune{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:calc(6px*var(--k));align-items:center}.sqtune[hidden]{display:none}.sqtune select{font:inherit;font-size:calc(12px*var(--k));min-height:calc(28px*var(--k));background:#141417;color:var(--text);border:1px solid #34343b;border-radius:calc(4px*var(--k))}.sqtk{display:flex;flex-wrap:wrap;gap:calc(4px*var(--k)) calc(6px*var(--k));flex-basis:100%}.sqab{min-width:calc(76px*var(--k))}.sqtk .knob svg{width:calc(38px*var(--k));height:calc(38px*var(--k))}.sqtk .knob b{font-size:calc(9px*var(--k))}
+
+/* Scroll bars in the Composer (track list, panels, step grid, toolbars) follow the dark UI */
+#s-seq *{scrollbar-width:thin;scrollbar-color:#4a4a54 #141417}
+#s-seq ::-webkit-scrollbar{width:calc(10px*var(--k));height:calc(10px*var(--k))}
+#s-seq ::-webkit-scrollbar-track{background:#141417;border-radius:calc(5px*var(--k))}
+#s-seq ::-webkit-scrollbar-thumb{background:#3a3a42;border:2px solid #141417;border-radius:calc(5px*var(--k))}
+#s-seq ::-webkit-scrollbar-thumb:hover{background:#ffb347}
+#s-seq ::-webkit-scrollbar-corner{background:#141417}

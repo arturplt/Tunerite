@@ -5,7 +5,7 @@ const CORE_FILES = ['pitch', 'scoring', 'exercises', 'midi-import', 'song', 'pro
 const core = CORE_FILES.map(f => fs.readFileSync(path.join(__dirname, '..', 'js', 'core', f + '.js'), 'utf8').replace(/^"use strict";\n/, '')).join('\n')
   .split('/* CORE:BEGIN */')[1].split('/* CORE:END */')[0];
 const C = new Function(core + `; return { freqToMidi, midiToFreq, noteName, centsOff, analyse, PitchTracker, scoreEvent, aggregate, starsFor,
-  buildExercise, parseMidi, newSong, newSongTrack, parseSong, writeSong, songSegs, songSec, songTick, songToUnits, gridTicks, snapTick, songSnapshot, songRestore, EditHistory, sortNotes, notesTranspose, notesFlip, notesReverse, notesArp, chordName, notesHumanize, notesSwing, notesScatter, notesRandomInScale, progChords, melodyIdea, scalePitches, notesQuantize, notesCopy, notesPaste, songEndTick, songBarLines, songBeats, framesToNotes, songTrackChannels, songFreeChannel, songAddTrack, songDeleteTrack, songMoveTrack, songSetProgram, songSetChannel, songTempoAt, songSetTempo, songRemoveTempo, songBarStart, songSetTimeSig, songRemoveTimeSig, keyName, songSetKey, songCtrlEvents, songSetCtrl, songRemoveCtrl, songClearCtrl, songNew, songAutomation, encodeWav, lastLoud, melodyFromNotes, buildCustom, EXERCISES, computeStreak, describeDeviation, TOLERANCE, HOP, targetAt,
+  buildExercise, parseMidi, newSong, newSongTrack, parseSong, writeSong, songSegs, songSec, songTick, songToUnits, gridTicks, snapTick, songSnapshot, songRestore, EditHistory, notesSplit, notesGlue, notesLegato, notesVelScale, notesVelRamp, songBarSpan, songInsertTime, songDeleteTime, songSetMarker, songRemoveMarker, songDuplicateTrack, sortNotes, notesTranspose, notesFlip, notesReverse, notesArp, chordName, notesHumanize, notesSwing, notesScatter, notesRandomInScale, progChords, melodyIdea, scalePitches, notesQuantize, notesCopy, notesPaste, songEndTick, songBarLines, songBeats, framesToNotes, songTrackChannels, songFreeChannel, songAddTrack, songDeleteTrack, songMoveTrack, songSetProgram, songSetChannel, songTempoAt, songSetTempo, songRemoveTempo, songBarStart, songSetTimeSig, songRemoveTimeSig, keyName, songSetKey, songCtrlEvents, songSetCtrl, songRemoveCtrl, songClearCtrl, songNew, songAutomation, encodeWav, lastLoud, melodyFromNotes, buildCustom, EXERCISES, computeStreak, describeDeviation, TOLERANCE, HOP, targetAt,
   chordName, analyseTake, countIssues, adaptivePlan, ISSUES, refine, detectNotes, describeKeys, intervalName, buildPianoSteps, chordMatches, pianoSummary, pianoRoot, libraryItems, libraryFilter, SING_META, PIANO_LIB, LEVELS, parseSoundFont, soundFontVoices,
   SING_PATTERNS, SING_RANDOM, mulberry32, degSemis, romanChords, PIANO_PROGS, PIANO_OPTS, PIANO_CHORDS, PIANO_SCALES, PIANO_NAMES, PIANO_PATTERNS, PIANO_INTERVALS };`)();
 
@@ -649,6 +649,40 @@ test('wav: header, 16-bit samples, clipping and silence trimming', () => {
   assert.strictEqual(dv.getInt16(44 + 12, true), 32767); assert.strictEqual(dv.getInt16(44 + 16, true), -32768);   // clipped
   assert.strictEqual(C.encodeWav([l], 8000).length, 44 + 10);
   assert.strictEqual(C.lastLoud([Float32Array.from([0, 0.3, 0, 0.001, 0, 0])], 0.0005), 4); assert.strictEqual(C.lastLoud([new Float32Array(5)], 0.01), 0);
+});
+
+const nn = (midi, tick, dur, vel) => ({ midi, tick, dur, vel: vel == null ? 80 : vel, ch: 0 });
+test('notes: split cuts spanning notes, glue joins same pitch, legato fills gaps', () => {
+  const tr = C.newSongTrack('x'), a = nn(60, 0, 480), b = nn(62, 100, 100); tr.notes.push(a, b);
+  const r = C.notesSplit(tr, [a, b], 240); assert.strictEqual(r.length, 1); assert.strictEqual(a.dur, 240); assert.deepStrictEqual([r[0].tick, r[0].dur, r[0].midi], [240, 240, 60]); assert.strictEqual(tr.notes.length, 3);
+  const kept = C.notesGlue(tr, [a, r[0]]); assert.strictEqual(kept.length, 1); assert.strictEqual(kept[0].dur, 480); assert.strictEqual(tr.notes.length, 2);
+  const x = nn(60, 0, 10), y = nn(64, 0, 10), z = nn(62, 100, 10), w = nn(60, 300, 10); C.notesLegato([x, y, z, w]);
+  assert.deepStrictEqual([x.dur, y.dur, z.dur, w.dur], [100, 100, 200, 10]);
+});
+test('notes: velocity scale and ramp stay within 1..127', () => {
+  const n = [nn(60, 0, 10, 100), nn(60, 10, 10, 50)]; C.notesVelScale(n, 200, 0); assert.deepStrictEqual(n.map(x => x.vel), [127, 100]);
+  C.notesVelScale(n, 1, 0); assert.deepStrictEqual(n.map(x => x.vel), [1, 1]);
+  const m = [nn(60, 0, 10), nn(60, 50, 10), nn(60, 100, 10)]; C.notesVelRamp(m, 20, 120); assert.deepStrictEqual(m.map(x => x.vel), [20, 70, 120]);
+});
+test('song: insert and delete bars move notes, tempo, meter and markers', () => {
+  const s = C.newSong(480); C.songAddTrack(s, 'A'); const tr = s.tracks[0], bar = 1920;
+  tr.notes.push(nn(60, 0, bar * 2), nn(62, bar, 100), nn(64, bar * 2, 100)); C.songSetTempo(s, bar * 2, 90); C.songSetMarker(s, bar * 2, 'Verse');
+  assert.strictEqual(C.songBarSpan(s, 0, 2), bar * 2);
+  C.songInsertTime(s, bar, bar);
+  assert.deepStrictEqual(tr.notes.map(n => n.tick), [0, bar * 2, bar * 3]); assert.strictEqual(tr.notes[0].dur, bar * 2);
+  assert.strictEqual(s.tempos[1].tick, bar * 3); assert.strictEqual(s.markers[0].tick, bar * 3);
+  C.songDeleteTime(s, bar, bar);
+  assert.deepStrictEqual(tr.notes.map(n => n.tick), [0, bar, bar * 2]); assert.strictEqual(tr.notes[0].dur, bar);
+  assert.strictEqual(s.tempos[1].tick, bar * 2); assert.strictEqual(s.markers[0].tick, bar * 2);
+  C.songDeleteTime(s, bar, bar); assert.strictEqual(tr.notes.length, 2); assert.strictEqual(s.tempos[1].tick, bar);
+  C.songDeleteTime(s, 0, bar); assert.strictEqual(s.tempos[0].us, Math.round(60e6 / 90)); assert.strictEqual(s.tempos[0].tick, 0);
+});
+test('song: markers round-trip through a MIDI file; duplicate track copies on a new channel', () => {
+  const s = C.newSong(480); C.songAddTrack(s, 'A'); s.tracks[0].notes.push(nn(60, 0, 100)); C.songSetMarker(s, 960, 'Chorus'); C.songSetMarker(s, 0, 'Intro');
+  const back = C.parseSong(C.writeSong(s)); assert.deepStrictEqual(back.markers, [{ tick: 0, name: 'Intro' }, { tick: 960, name: 'Chorus' }]);
+  assert.ok(C.songRemoveMarker(s, 960)); assert.strictEqual(s.markers.length, 1);
+  const i = C.songDuplicateTrack(s, 0); assert.strictEqual(i, 1); assert.strictEqual(s.tracks.length, 2); assert.notStrictEqual(s.tracks[1].id, s.tracks[0].id);
+  assert.notStrictEqual(C.songTrackChannels(s.tracks[1])[0], C.songTrackChannels(s.tracks[0])[0]); s.tracks[1].notes[0].tick = 5; assert.strictEqual(s.tracks[0].notes[0].tick, 0);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
