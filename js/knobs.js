@@ -53,7 +53,7 @@ const Knobs = {
   paint(k) { const el = $(`#fxKnobs .knob[data-k="${k}"]`); if (el) this.paintEl(el, this.val(k), this.list.find(x => x.k === k)); },
   /* Any set of knobs: host gets one per entry of `list`; get(k) reads an amount and put(k, v) stores one. Used by the Compose tracks, which have their own amounts. */
   mount(host, list, get, put) {
-    host.innerHTML = list.map(f => `<div class="knob" data-k="${f.k}" role="slider" tabindex="0" aria-label="${f.n}" aria-valuemin="0" aria-valuemax="100" title="${f.n}. Drag, scroll or use the arrow keys; double-tap to reset.">
+    host.innerHTML = list.map(f => `<div class="knob" data-k="${f.k}" role="slider" tabindex="0" aria-label="${f.n}" aria-valuemin="0" aria-valuemax="100" title="${f.tip ? f.tip + '. ' : ''}${f.n}: drag, scroll or use the arrow keys; double-tap to reset.">
       <svg viewBox="-50 -50 100 100" aria-hidden="true">${this.ticks()}<circle class="kb" r="27"/><circle class="kf" r="20"/><circle class="kd" cx="0" cy="-14" r="3"/></svg><b>${f.n}</b></div>`).join('');
     host.querySelectorAll('.knob').forEach(el => {
       const f = list.find(x => x.k === el.dataset.k), paint = () => this.paintEl(el, get(f.k), f);
@@ -61,11 +61,12 @@ const Knobs = {
     });
   },
   paintEl(el, v, f) {
-    const a = this.A0 + (this.A1 - this.A0) * v, mid = f.d > 0;
+    const a = this.A0 + (this.A1 - this.A0) * v, mid = f.bi != null ? f.bi : f.d > 0;
     el.querySelector('.kd').setAttribute('transform', `rotate(${a.toFixed(1)})`); el.querySelector('.kf').setAttribute('transform', `rotate(${a.toFixed(1)})`);
     const lit = v * (this.T - 1), from = mid ? (this.T - 1) / 2 : 0;
     el.querySelectorAll('line').forEach(l => { const i = +l.dataset.i; l.classList.toggle('on', mid ? (i >= Math.min(from, lit) - 1e-6 && i <= Math.max(from, lit) + 1e-6 && Math.abs(lit - from) > 0.05) : i <= lit + 1e-6 && v > 0.005); });
-    el.setAttribute('aria-valuenow', Math.round(v * 100)); el.setAttribute('aria-valuetext', mid ? (v < 0.45 ? 'darker' : v > 0.55 ? 'brighter' : 'neutral') : Math.round(v * 100) + '%'); el.classList.toggle('lit', mid ? Math.abs(v - 0.5) > 0.03 : v > 0.005);
+    if (f.txt) el.querySelector('b').textContent = f.txt(v);
+    el.setAttribute('aria-valuenow', Math.round(v * 100)); el.setAttribute('aria-valuetext', mid ? (v < 0.45 ? 'darker' : v > 0.55 ? 'brighter' : 'neutral') : Math.round(v * 100) + '%'); el.classList.toggle('lit', Math.abs(v - (f.d || 0)) > (mid ? 0.03 : 0.005));
   },
   /* A dropdown on the Piano screen was changed: it takes over from that knob. */
   free(k) { const s = Store.data.settings; if (k && s.fxK && k in s.fxK) { s.fxK = Object.assign({}, s.fxK); delete s.fxK[k]; } this.sync(); },

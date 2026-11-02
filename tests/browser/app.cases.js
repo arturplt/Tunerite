@@ -210,3 +210,25 @@ T.test('voice tracks: the transport Stop button ends a take and its graph', asyn
   try { Rec.start(); await T.wait(1800); T.eq(Rec.state, 'rec'); $('#sqStop').click(); T.eq(Rec.state, 'idle', 'Stop ends the take'); const n = Vox.pn; await T.wait(300); T.eq(Vox.pn, n, 'nothing more is captured'); T.eq(Seq.vox.length, 1, 'the take is kept'); }
   finally { Engine.mic = saved.mic; Engine.ready = saved.ready; Rec.src = 'keys'; Seq.vox = []; Seq.render(); }
 });
+T.test('track filters and compressor: wired only when on, with attack and release', async () => {
+  await audio(); scene(); await Seq.start(0); const t = Seq.tracks[0], ty = n => t.fxn.filter(x => x.constructor.name === n).length;
+  T.eq(ty('BiquadFilterNode') + ty('DynamicsCompressorNode'), 0, 'nothing wired at rest');
+  Seq.setFx(t, 'lowcut', 0.5); Seq.setFx(t, 'highcut', 0.5); Seq.setFx(t, 'comp', 1);
+  T.eq(ty('BiquadFilterNode'), 2, 'two filters'); T.eq(ty('DynamicsCompressorNode'), 1, 'a compressor');
+  const cp = t.fxn.find(x => x.constructor.name === 'DynamicsCompressorNode'), hp = t.fxn.find(x => x.type === 'highpass');
+  T.near(hp.frequency.value, 283, 5, 'low cut at half'); T.near(cp.ratio.value, 12, 0.01, 'full compression is 12:1');
+  const att = cp.attack.value; Seq.setFx(t, 'attack', 1); T.ok(cp.attack.value > att * 5, 'attack knob changes it without re-wiring'); T.ok(t.fxn.includes(cp), 'same node');
+  Seq.setFx(t, 'comp', 0); T.eq(ty('DynamicsCompressorNode'), 0, 'compressor removed when off'); Seq.halt();
+});
+T.test('track effects: gate, de-esser, mid EQ, synced echo, auto-pan, lo-fi', async () => {
+  await audio(); scene(); await Seq.start(0); const t = Seq.tracks[0], n = k => t.fxn.filter(x => x.constructor.name === k).length;
+  await Seq.loadGate(Engine.ctx); Seq.setFx(t, 'gate', 0.5); T.eq(n('AudioWorkletNode'), 1, 'the gate is a worklet node');
+  T.near(t.fxn.find(x => x.constructor.name === 'AudioWorkletNode').parameters.get('thr').value, Math.pow(10, -40 / 20), 1e-6, 'threshold -40 dB at half');
+  Seq.setFx(t, 'deess', 0.5); T.eq(n('DynamicsCompressorNode'), 1, 'de-esser has its own compressor');
+  Seq.setFx(t, 'midgain', 1); const pk = t.fxn.find(x => x.type === 'peaking'); T.near(pk.gain.value, 12, 1e-6, '+12 dB at the top'); T.near(pk.frequency.value, 1000, 1, 'mid freq rests at 1 kHz');
+  Seq.setFx(t, 'echo', 0.5); const dl = t.fxn.find(x => x.constructor.name === 'DelayNode' && x.delayTime.value > 0.1), beat = 60 / (Seq.bpm * Seq.tempo);
+  T.near(dl.delayTime.value, 0.75 * beat, 1e-3, 'default echo time is a dotted eighth, ' + dl.delayTime.value);
+  Seq.setFx(t, 'etime', 0.6); T.near(dl.delayTime.value, beat, 1e-3, 'turned up a step: a quarter note'); Seq.halt(); Seq.setTempo(0.5); await Seq.start(0); const dl2 = t.fxn.find(x => x.constructor.name === 'DelayNode' && x.delayTime.value > 0.1); T.near(dl2.delayTime.value, 2 * beat, 1e-3, 'follows the tempo');
+  Seq.setFx(t, 'apan', 1); T.eq(n('StereoPannerNode'), 1, 'auto-pan'); Seq.setFx(t, 'lofi', 1); T.ok(t.fxn.some(x => x.constructor.name === 'WaveShaperNode' && x.curve && x.curve.length === 2048), 'lo-fi shaper');
+  ['gate', 'deess', 'midgain', 'echo', 'apan', 'lofi'].forEach(k => Seq.setFx(t, k, k === 'midgain' ? 0.5 : 0)); T.eq(t.fxn.filter(x => x.constructor.name !== 'GainNode').length, 0, 'everything leaves the path when at rest'); Seq.setTempo(1); Seq.halt();
+});

@@ -77,9 +77,25 @@ const Seq = {
   /* ---- per-track effects ----
      Each track has its own amounts (t.fx, 0 to 1) for the six effects below. An effect at rest is not in the signal path at all; a track with every effect at rest has only one gain node between it and the master.
      Reverb is a send into one convolver shared by the tracks (a convolver per track would be too heavy); the rest are built per track. */
-  FX: [{ k: 'reverb', n: 'Reverb', d: 0 }, { k: 'echo', n: 'Echo', d: 0 }, { k: 'chorus', n: 'Chorus', d: 0 }, { k: 'trem', n: 'Tremolo', d: 0 }, { k: 'drive', n: 'Drive', d: 0 }, { k: 'tone', n: 'Tone', d: 0.5 }],
-  fxVal(t, k) { const v = t.fx && t.fx[k]; return v != null ? v : k === 'tone' ? 0.5 : 0; },
-  fxSig(t) { return this.FX.map(f => (f.k === 'tone' ? Math.abs(this.fxVal(t, 'tone') - 0.5) > 0.02 : this.fxVal(t, f.k) > 0.01) ? 1 : 0).join(''); },
+  ECHO_BEATS: [0.25, 0.5, 0.75, 1, 1.5, 2], ECHO_NAMES: ['1/16', '1/8', '1/8.', '1/4', '1/4.', '1/2'],
+  /* k: the key in t.fx; d: the resting value; sub: a setting of another effect (it never switches anything on by itself); bi: rests in the middle (lit either side); txt: a label that shows the value. */
+  FX: [
+    { k: 'reverb', n: 'Reverb', d: 0, tip: 'Room around the sound (shared by all tracks)' }, { k: 'echo', n: 'Echo', d: 0, tip: 'Repeats that fade away' },
+    { k: 'etime', n: 'Echo time', d: 0.4, sub: 'echo', bi: false, tip: 'Echo time as a note length at the song tempo: 1/16, 1/8, dotted 1/8, 1/4, dotted 1/4, 1/2', txt: v => 'Echo ' + Seq.ECHO_NAMES[Math.round(v * 5)] },
+    { k: 'efb', n: 'Feedback', d: 0.4, sub: 'echo', bi: false, tip: 'How many repeats the echo makes' }, { k: 'chorus', n: 'Chorus', d: 0, tip: 'Thickens the sound with slightly detuned copies' },
+    { k: 'tone', n: 'Tone', d: 0.5, tip: 'Dark on the left, bright on the right' }, { k: 'midgain', n: 'Mid', d: 0.5, tip: 'Boost or cut one band of the middle (set where with Mid freq)' },
+    { k: 'midfreq', n: 'Mid freq', d: 0.5, sub: 'midgain', bi: false, tip: 'Which frequency the Mid knob works on, 200 Hz to 5 kHz' },
+    { k: 'lowcut', n: 'Low cut', d: 0, tip: 'High-pass filter: removes rumble and low body' }, { k: 'highcut', n: 'High cut', d: 0, tip: 'Low-pass filter: removes brightness' },
+    { k: 'gate', n: 'Gate', d: 0, tip: 'Noise gate: silences the track between notes or phrases, so hiss and room noise disappear' },
+    { k: 'comp', n: 'Compress', d: 0, tip: 'Compressor: evens out loud and quiet notes (threshold and ratio together, with make-up gain)' },
+    { k: 'attack', n: 'Attack', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor grabs a loud note' }, { k: 'release', n: 'Release', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor lets go afterwards' },
+    { k: 'deess', n: 'De-ess', d: 0, tip: 'Tames harsh "s" and "t" sounds in a voice' }, { k: 'drive', n: 'Drive', d: 0, tip: 'Overdrive: warm to crunchy' },
+    { k: 'lofi', n: 'Lo-fi', d: 0, tip: 'Bit crusher with a telephone-like band' }, { k: 'trem', n: 'Tremolo', d: 0, tip: 'Volume pulse' },
+    { k: 'apan', n: 'Auto-pan', d: 0, tip: 'Moves the sound from side to side' }, { k: 'apanrate', n: 'Pan rate', d: 0.5, sub: 'apan', bi: false, tip: 'How fast the auto-pan swings, 0.2 to 8 times a second' },
+  ],
+  fxVal(t, k) { const v = t.fx && t.fx[k]; return v != null ? v : this.FX.find(f => f.k === k).d; },
+  isBi(f) { return f.bi != null ? f.bi : f.d > 0; },
+  fxSig(t) { return this.FX.map(f => f.sub ? 0 : (this.isBi(f) ? Math.abs(this.fxVal(t, f.k) - f.d) > 0.02 : this.fxVal(t, f.k) > 0.01) ? 1 : 0).join(''); },
   sharedReverb(c) {
     if (this.rv && this.rv.ctx === c) return this.rv.conv;
     const n = Math.floor(c.sampleRate * 1.8), b = c.createBuffer(2, n, c.sampleRate);
@@ -93,25 +109,53 @@ const Seq = {
     (t.fxn || []).forEach(n => { try { if (n.stop) n.stop(); n.disconnect(); } catch (e) { /* already gone */ } });
     try { tail.disconnect(); } catch (e) { /* nothing was connected */ }
     if (t.an) tail.connect(t.an);
-    const nodes = t.fxn = [], ups = [], mk = n => { nodes.push(n); return n; }, g = () => mk(c.createGain()), on = k => sig[this.FX.findIndex(f => f.k === k)] === '1', V = k => this.fxVal(t, k);
+    const nodes = t.fxn = [], ups = [], mk = n => { nodes.push(n); return n; }, g = () => mk(c.createGain()), bq = (type, q) => { const f = mk(c.createBiquadFilter()); f.type = type; f.Q.value = q == null ? 0.7 : q; return f; }, on = k => sig[this.FX.findIndex(f => f.k === k)] === '1', V = k => this.fxVal(t, k);
     t.fxKey = sig; let cur = tail; const chain = n => { cur.connect(n); cur = n; };
+    /* In signal order: gate, filters, tone and mid, de-esser, compressor, drive, lo-fi, tremolo, auto-pan; echo, chorus and reverb are sends from the end. */
+    if (on('gate')) {
+      if (this.gateReady(c)) { const gt = mk(new AudioWorkletNode(c, 'trk-gate', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2] })); chain(gt); ups.push(() => { gt.parameters.get('thr').value = Math.pow(10, (-60 + 40 * V('gate')) / 20); }); }
+      else this.loadGate(c).then(() => { if (t.tail && t.fxKey === sig) { t.fxKey = null; this.wireFx(t); } }).catch(() => toast('The noise gate is not available in this browser.', 3000));
+    }
+    if (on('lowcut')) { const hp = bq('highpass'); chain(hp); ups.push(() => { hp.frequency.value = 40 * Math.pow(50, V('lowcut')); }); }
+    if (on('highcut')) { const lp = bq('lowpass'); chain(lp); ups.push(() => { lp.frequency.value = 16000 * Math.pow(250 / 16000, V('highcut')); }); }
     if (on('tone')) {
-      const lo = mk(c.createBiquadFilter()), hi = mk(c.createBiquadFilter()); lo.type = 'lowshelf'; lo.frequency.value = 250; hi.type = 'highshelf'; hi.frequency.value = 3000; chain(lo); chain(hi);
+      const lo = bq('lowshelf'), hi = bq('highshelf'); lo.frequency.value = 250; hi.frequency.value = 3000; chain(lo); chain(hi);
       ups.push(() => { lo.gain.value = 3 - 6 * V('tone'); hi.gain.value = (V('tone') - 0.5) * 14; });
+    }
+    if (on('midgain')) { const pk = bq('peaking', 1); chain(pk); ups.push(() => { pk.gain.value = (V('midgain') - 0.5) * 24; pk.frequency.value = 200 * Math.pow(25, V('midfreq')); }); }
+    if (on('deess')) {      // the highs are split off at 5.5 kHz, compressed on their own and added back (one band is inverted: a pair of 2nd-order filters then sums to a flat response)
+      const lo = bq('lowpass', 0.5), hi = bq('highpass', 0.5), dc = mk(c.createDynamicsCompressor()), inv = g(), sum = g(); lo.frequency.value = hi.frequency.value = 5500; inv.gain.value = -1; dc.knee.value = 6; dc.attack.value = 0.002; dc.release.value = 0.05;
+      cur.connect(lo); cur.connect(hi); lo.connect(sum); hi.connect(dc); dc.connect(inv); inv.connect(sum); cur = sum;
+      ups.push(() => { const a = V('deess'); dc.threshold.value = -15 - 30 * a; dc.ratio.value = 3 + 9 * a; });
+    }
+    if (on('comp')) {
+      const cp = mk(c.createDynamicsCompressor()), mu = g(); cp.knee.value = 10; chain(cp); chain(mu);
+      ups.push(() => { const a = V('comp'), thr = -6 - 34 * a, ratio = 2 + 10 * a; cp.threshold.value = thr; cp.ratio.value = ratio; cp.attack.value = 0.001 * Math.pow(100, V('attack')); cp.release.value = 0.03 * Math.pow(30, V('release')); mu.gain.value = Math.pow(10, -thr * (1 - 1 / ratio) * 0.5 / 20); });
     }
     if (on('drive')) {
       const dry = g(), wet = g(), pre = g(), sum = g(), sh = mk(c.createWaveShaper()), K = 1024, cv = new Float32Array(K); for (let i = 0; i < K; i++) cv[i] = Math.tanh((i / (K - 1) * 2 - 1) * 2.2); sh.curve = cv; sh.oversample = '2x';
       cur.connect(dry); cur.connect(pre); pre.connect(sh); sh.connect(wet); dry.connect(sum); wet.connect(sum); cur = sum;
       ups.push(() => { const d = V('drive'); dry.gain.value = 1 - 0.6 * d; wet.gain.value = 0.7 * d; pre.gain.value = 1 + 7 * d; });
     }
+    if (on('lofi')) {
+      const hp = bq('highpass'), lp = bq('lowpass'), sh = mk(c.createWaveShaper()); chain(hp); chain(lp); chain(sh);
+      ups.push(() => {
+        const a = V('lofi'), L = Math.pow(2, 9 - 6 * a), K = 2048, cv = new Float32Array(K); for (let i = 0; i < K; i++) cv[i] = Math.round((i / (K - 1) * 2 - 1) * L) / L;
+        sh.curve = cv; hp.frequency.value = 20 + 380 * a; lp.frequency.value = 14000 - 10800 * a;
+      });
+    }
     if (on('trem')) {
       const tr = g(), lfo = mk(c.createOscillator()), dep = g(); lfo.frequency.value = 5.5; lfo.connect(dep); dep.connect(tr.gain); lfo.start(); chain(tr);
       ups.push(() => { const d = V('trem') * 0.3; tr.gain.value = 1 - d; dep.gain.value = d; });
     }
+    if (on('apan') && c.createStereoPanner) {
+      const pn = mk(c.createStereoPanner()), lfo = mk(c.createOscillator()), dep = g(); pn.pan.value = 0; lfo.connect(dep); dep.connect(pn.pan); lfo.start(); chain(pn);
+      ups.push(() => { dep.gain.value = V('apan'); lfo.frequency.value = 0.2 * Math.pow(40, V('apanrate')); });
+    }
     const out = g(); cur.connect(out); out.connect(Engine.master);
     if (on('echo')) {
-      const dl = mk(c.createDelay(1)), fb = g(), wet = g(); dl.delayTime.value = 0.35; fb.gain.value = 0.4; out.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(Engine.master);
-      ups.push(() => { wet.gain.value = V('echo') * 0.6; });
+      const dl = mk(c.createDelay(4)), fb = g(), wet = g(); out.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(Engine.master);
+      ups.push(() => { dl.delayTime.value = Math.min(3.9, this.ECHO_BEATS[Math.round(V('etime') * 5)] * 60 / ((this.bpm || 100) * (this.tempo || 1))); fb.gain.value = V('efb') * 0.85; wet.gain.value = V('echo') * 0.6; });
     }
     if (on('chorus')) {
       const wet = g(); wet.connect(Engine.master);
@@ -124,6 +168,27 @@ const Seq = {
     if (on('reverb')) { const snd = g(); out.connect(snd); snd.connect(this.sharedReverb(c)); ups.push(() => { snd.gain.value = V('reverb') * 0.7; }); }
     t.fxSet = () => ups.forEach(f => f());
     t.fxSet();
+  },
+  /* The noise gate is an audio worklet, so each audio context has to load it once before a gate can be wired in. */
+  gateReady(c) { return !!(this.gc && this.gc.has(c)); },
+  loadGate(c) {
+    const code = `class Gate extends AudioWorkletProcessor {
+      static get parameterDescriptors() { return [{ name: 'thr', defaultValue: 0.003, minValue: 0, maxValue: 1, automationRate: 'k-rate' }]; }
+      constructor() { super(); this.e = 0; this.g = 0; this.hold = 0; }
+      process(inp, out, par) {
+        const a = inp[0], o = out[0]; if (!a || !a.length) return true; const n = a[0].length, thr = par.thr[0], ca = 1 - Math.exp(-1 / (0.002 * sampleRate)), cr = 1 - Math.exp(-1 / (0.12 * sampleRate)), dec = Math.exp(-1 / (0.03 * sampleRate));
+        for (let i = 0; i < n; i++) {
+          let m = 0; for (let k = 0; k < a.length; k++) { const x = Math.abs(a[k][i]); if (x > m) m = x; }
+          this.e = Math.max(m, this.e * dec); if (this.e > thr) this.hold = 0.06 * sampleRate; else if (this.hold > 0) this.hold--;
+          const target = this.hold > 0 ? 1 : 0; this.g += (target - this.g) * (target > this.g ? ca : cr);
+          for (let k = 0; k < o.length; k++) o[k][i] = (a[Math.min(k, a.length - 1)][i]) * this.g;
+        }
+        return true;
+      } }
+      registerProcessor('trk-gate', Gate);`;
+    this.gp = this.gp || new Map(); this.gc = this.gc || new Set(); if (this.gp.has(c)) return this.gp.get(c);
+    const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' })), pr = c.audioWorklet.addModule(url).then(() => { URL.revokeObjectURL(url); this.gc.add(c); });
+    this.gp.set(c, pr); return pr;
   },
   /* A track's effect amount was changed (or loaded): re-wire only if the set of active effects changed. */
   setFx(t, k, v) { t.fx = Object.assign({}, t.fx, { [k]: clamp(Math.round(v * 100) / 100, 0, 1) }); if (t.tail) this.wireFx(t); this.save(); },
@@ -213,7 +278,7 @@ const Seq = {
   stop() { this.halt(); this.release(); this.base = 0; this.acc = false; this.skip = -1; if (this.keepTempo != null) { this.tempo = this.keepTempo; this.keepTempo = null; } this.sync(); },
   toggle() { if (this.playing) this.pause(); else this.start(this.base >= this.length - 0.05 ? 0 : this.base); },
   seek(s) { s = clamp(s, 0, this.maxPos); if (this.playing && !this.acc) this.start(s); else this.base = s; },
-  setTempo(x) { const p = this.pos(); this.tempo = x; if (this.playing && !this.acc) this.start(p); this.save(); },
+  setTempo(x) { const p = this.pos(); this.tempo = x; if (this.playing && !this.acc) this.start(p); else this.all().forEach(t => { if (t.fxSet) t.fxSet(); }); this.save(); },
   setSing(i) {
     if (i === this.sing) { this.sing = -1; this.save(); return this.render(); }
     const mono = melodyFromNotes(this.tracks[i].notes);
@@ -319,6 +384,7 @@ const Seq = {
       this.halt(); this.release(); toast('Rendering the song…', 120000);
       await this.prepare();
       const sr = Engine.ctx.sampleRate || 44100, off = new OfflineAudioContext(2, Math.ceil((Math.max(this.length, Vox.end()) + 4) * sr), sr), saved = Object.assign({}, Engine), base = this.base, skip = this.skip;
+      if (this.all().some(t => this.fxVal(t, 'gate') > 0.01)) await this.loadGate(off);
       try { Engine.ctx = off; Engine.buildFx(); this.skip = -1; this.renderAll(); }      // everything is scheduled before the real context comes back
       finally { Object.assign(Engine, saved); this.base = base; this.skip = skip; }
       const buf = await off.startRendering(), chans = [buf.getChannelData(0), buf.getChannelData(1)], end = lastLoud(chans, 0.0005);

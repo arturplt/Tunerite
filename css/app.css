@@ -304,8 +304,8 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 .knob b{font-size:calc(10px*var(--k));letter-spacing:.1em;text-transform:uppercase;color:#9a9aa6;font-weight:600}.knob.lit b{color:var(--accent)}
 
 .sqfxb{grid-column:1/4;justify-self:start}
-.sqfx{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(6px*var(--k)) calc(4px*var(--k));padding:calc(4px*var(--k)) 0}
-.sqfx[hidden]{display:none}.sqfx .knob svg{width:calc(44px*var(--k));height:calc(44px*var(--k))}
+.sqfx{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(6px*var(--k)) calc(4px*var(--k));padding:calc(4px*var(--k)) 0}
+.sqfx[hidden]{display:none}.sqfx .knob svg{width:calc(38px*var(--k));height:calc(38px*var(--k))}.sqfx .knob b{font-size:calc(9px*var(--k));text-align:center;white-space:nowrap}
 .daw .sqtrack.sel .knob line{stroke:#55555f}.daw .sqtrack.sel .knob line.on{stroke:var(--accent)}.daw .sqtrack.sel .knob .kb{fill:#101013}.daw .sqtrack.sel .knob .kf{fill:#2a2a30;stroke:#4a4a54}.daw .sqtrack.sel .knob .kd{fill:#6a6a76}.daw .sqtrack.sel .knob.lit .kd{fill:var(--accent)}
 .sqvname{grid-column:1/4;min-width:0;width:100%;font:inherit;font-size:calc(13px*var(--k));min-height:calc(28px*var(--k));background:#141417;color:var(--text);border:1px solid #34343b;border-radius:calc(4px*var(--k));padding:0 calc(8px*var(--k))}
 #voxCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;background:#0d0c10}#voxCv[hidden]{display:none}.daw .sqtrack.sqvox{cursor:pointer}
