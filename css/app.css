@@ -330,3 +330,5 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 #s-seq ::-webkit-scrollbar-thumb{background:#3a3a42;border:2px solid #141417;border-radius:calc(5px*var(--k))}
 #s-seq ::-webkit-scrollbar-thumb:hover{background:#ffb347}
 #s-seq ::-webkit-scrollbar-corner{background:#141417}
+#s-seq.helping{outline:2px solid var(--accent);outline-offset:-2px}
+#s-seq.helping button,#s-seq.helping select,#s-seq.helping input,#s-seq.helping canvas,#s-seq.helping label{cursor:help}

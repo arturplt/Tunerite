@@ -120,6 +120,20 @@ function bind() {
   $('#sPrev').onclick = () => Session.seek(-1); $('#sNext').onclick = () => Session.seek(1); $('#sSlow').onclick = () => Session.setTempo(-5); $('#sFast').onclick = () => Session.setTempo(5);
   $('#tmMinus').onclick = () => Session.setTempo(-5); $('#tmPlus').onclick = () => Session.setTempo(5);
   $('#setTempo').oninput = e => { Store.data.settings.tempo = +e.target.value; Store.save(); $('#tempoVal').textContent = e.target.value + '%'; $('#tmVal').textContent = e.target.value + '%'; };
+  // Composer help: press I, then click any control to read what it does (nothing is triggered while help is on)
+  { const seq = $('#s-seq'), tipOf = el => { const t = el.closest('[title],[aria-label]'); return t ? (t.title || t.getAttribute('aria-label')) : ''; },
+      setHelp = on => { seq.classList.toggle('helping', on); toast(on ? 'Help on: click any button to see what it does. Press I or Esc to leave.' : 'Help off.', 2500); };
+    document.addEventListener('keydown', e => {
+      if (UI.screen !== 'seq' || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (e.code === 'KeyI') { e.preventDefault(); setHelp(!seq.classList.contains('helping')); }
+      else if (e.code === 'Escape' && seq.classList.contains('helping')) setHelp(false);
+    });
+    seq.addEventListener('click', e => {
+      if (!seq.classList.contains('helping')) return;
+      e.preventDefault(); e.stopPropagation(); const t = tipOf(e.target); toast(t ? ((e.target.closest('button,label,select,input') || e.target).textContent.trim().slice(0, 24) + ' — ' + t).replace(/^ — /, '') : 'No help for this spot.', 5000);
+    }, true);
+    ['pointerdown', 'mousedown', 'dblclick', 'input', 'change'].forEach(ev => seq.addEventListener(ev, e => { if (seq.classList.contains('helping')) { e.stopPropagation(); e.preventDefault(); } }, true));
+  }
   document.addEventListener('keydown', e => {
     const tg = e.target, typing = tg.tagName === 'TEXTAREA' || tg.isContentEditable || (tg.tagName === 'INPUT' && /^(text|search|number|email|url|password|tel)$/.test(tg.type)),
       picker = UI.screen === 'seq' && (tg.tagName === 'SELECT' || (tg.tagName === 'INPUT' && !typing));      // in the Composer a focused dropdown, slider or checkbox must not swallow the space bar
