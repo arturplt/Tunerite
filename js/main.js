@@ -6,13 +6,19 @@ function bind() {
   const set = (id, key, get) => $(id).onchange = $(id).oninput = e => { Store.data.settings[key] = get(e.target); Store.save(); Engine.applySettings(); if (key === 'gateDb') UI.refresh(); };
   set('#setDiff', 'diff', e => e.value); set('#setHear', 'hear', e => e.checked); set('#setDrone', 'drone', e => e.checked);
   set('#setCues', 'cues', e => e.checked); set('#setWait', 'wait', e => e.checked); set('#setFind', 'find', e => +e.value); set('#setGuide', 'guide', e => e.value); set('#setVol', 'vol', e => +e.value);
+  const vz = $('#volZone'), vp = $('#volPop'); let vHide = 0;
+  const setVolFrom = x => { const v = Math.round(clamp(x / innerWidth, 0, 1) * 20) / 20, st = Store.data.settings; st.vol = clamp(v, 0.1, 1); $('#setVol').value = st.vol; $('#volFill').style.width = (st.vol - 0.1) / 0.9 * 100 + '%'; $('#volNum').textContent = Math.round(st.vol * 100) + '%'; Engine.applySettings(); };
+  vz.ondragstart = vz.onselectstart = vz.oncontextmenu = vz.onmousedown = e => e.preventDefault();
+  vz.onpointerdown = e => { e.preventDefault(); getSelection().removeAllRanges(); vz.setPointerCapture(e.pointerId); clearTimeout(vHide); vp.hidden = false; setVolFrom(e.clientX); };
+  vz.onpointermove = e => { if (vz.hasPointerCapture(e.pointerId)) setVolFrom(e.clientX); };
+  vz.onpointerup = vz.onpointercancel = () => { Store.save(); vHide = setTimeout(() => { vp.hidden = true; }, 400); };
   $('#setUi').onchange = e => { Store.data.settings.uiSize = e.target.value; Store.save(); applyUiSize(); };
-  set('#setInst', 'inst', e => e.value); set('#setKbPlay', 'kbPlay', e => e.checked); set('#setTimbre', 'timbre', e => e.value); $$('.fxRv').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.reverb = e.target.value; Store.save(); Engine.applySettings(); $$('.fxRv').forEach(x => x.value = e.target.value); });
-  $$('.fxCh').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.chorus = e.target.checked; Store.save(); Engine.applySettings(); $$('.fxCh').forEach(x => x.checked = e.target.checked); }); set('#setKb', 'kbSound', e => e.checked);
+  set('#setInst', 'inst', e => e.value); set('#setKbPlay', 'kbPlay', e => e.checked); set('#setTimbre', 'timbre', e => e.value); $$('.fxRv').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.reverb = e.target.value; Knobs.free('reverb'); Store.save(); Engine.applySettings(); $$('.fxRv').forEach(x => x.value = e.target.value); });
+  $$('.fxCh').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.chorus = e.target.checked; Knobs.free('chorus'); Store.save(); Engine.applySettings(); $$('.fxCh').forEach(x => x.checked = e.target.checked); }); set('#setKb', 'kbSound', e => e.checked);
   $('#setMic').onchange = async e => { Store.data.settings.micId = e.target.value; Store.save(); try { await Engine.setMic(e.target.value); toast('Microphone changed.'); } catch (err) { toast(micMessage(err)); } };
   if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => Engine.listMics());
   $('#setTimbre').addEventListener('change', () => SFUI.list());
-  $$('[data-fx]').forEach(el => el.onchange = e => { const k = el.dataset.fx; Store.data.settings[k] = el.type === 'checkbox' ? el.checked : el.value; Store.save(); Engine.setFx(); if (el.tagName === 'SELECT') el.blur(); });
+  $$('[data-fx]').forEach(el => el.onchange = e => { const k = el.dataset.fx; Store.data.settings[k] = el.type === 'checkbox' ? el.checked : el.value; Knobs.free({ fxTrem: 'trem', fxVib: 'vib', fxDelay: 'echo', fxWide: 'wide', fxTone: 'tone', fxPhase: 'phase', fxDrive: 'drive' }[k]); Store.save(); Engine.setFx(); if (el.tagName === 'SELECT') el.blur(); });
   $('#fxSus').onchange = e => VKeys.setPedal(e.target.checked);
   /* One button: switches every effect off, and brings the previous settings back on the second press. */
   const FX_KEYS = ['reverb', 'chorus', 'fxTrem', 'fxVib', 'fxDelay', 'fxWide', 'fxTone', 'fxPhase', 'fxDrive', 'fxOct', 'fxHuman'];
@@ -24,7 +30,7 @@ function bind() {
     FX_KEYS.forEach(k => { st[k] = from[k]; });
     $$('.fxRv').forEach(x => x.value = st.reverb); $$('.fxCh').forEach(x => x.checked = !!st.chorus);
     $$('[data-fx]').forEach(el => { const v = st[el.dataset.fx]; if (el.type === 'checkbox') el.checked = !!v; else el.value = v; });
-    Store.save(); Engine.applySettings(); Engine.setFx();
+    st.fxK = {}; Knobs.sync(); Store.save(); Engine.applySettings(); Engine.setFx();
     $('#fxReset').textContent = fxSaved ? '\u21ba Restore effects' : '\u21ba Reset all effects';
   };
   $('#setInst').addEventListener('change', e => Spec.setMode(instMode(e.target.value)));
@@ -33,7 +39,7 @@ function bind() {
     mb.onclick = e => { e.stopPropagation(); pop.hidden = !pop.hidden; mb.setAttribute('aria-expanded', String(!pop.hidden)); };
     pop.onclick = close; document.addEventListener('click', close); document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }); }
   $('#sqSave').onclick = () => Seq.exportMid(); $('#sqWav').onclick = () => Seq.exportWav(); $('#sqMp3').onclick = () => Seq.exportWav('mp3'); $('#sqLoad').onclick = () => Seq.projects(); $('#pjImport').onclick = () => { $('#o-proj').classList.remove('on'); $('#sqFile').click(); }; $('#pjNew').onclick = () => { $('#o-proj').classList.remove('on'); Ed.newSong(); }; $('#pjClose').onclick = () => $('#o-proj').classList.remove('on'); $('#sqFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) Seq.loadFile(f); };
-  $('#sqPlay').onclick = () => Seq.toggle(); $('#sqStop').onclick = () => Seq.stop(); $('#sqRew').onclick = () => Seq.seek(0);
+  $('#sqPlay').onclick = () => { if (Rec.state !== 'idle') Rec.stop(); else Seq.toggle(); }; $('#sqStop').onclick = () => { if (Rec.state !== 'idle') Rec.stop(); else Seq.stop(); };      // during a take both end the take, as the space bar does $('#sqRew').onclick = () => Seq.seek(0);
   const fsOk = !!document.documentElement.requestFullscreen, standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
   if (standalone) $('#btnFs').closest('.setting').hidden = true;
   else if (!fsOk) { $('#btnFs').hidden = true; $('#fsHint').textContent = 'This browser cannot hide its address bar. Use Share, then Add to Home Screen, and open Pitch Perfect from there.'; }
@@ -51,7 +57,7 @@ function bind() {
   $('#sqTempo').oninput = e => { $('#sqTempoOut').textContent = e.target.value + '%'; }; $('#sqTempo').onchange = e => Seq.setTempo(e.target.value / 100);
   { const cv = $('#seqCv'); cv.onpointerdown = e => Seq.ovDown(e); cv.onpointermove = e => Seq.ovMove(e); cv.onpointerup = () => Seq.ovUp(); cv.onpointercancel = () => { Seq.ovDrag = null; Seq.ovMode = null; Seq.ovReg = null; }; }
   $('#sqSeek').oninput = e => { Seq.drag = true; $('#sqTime').textContent = Seq.fmt(+e.target.value) + ' / ' + Seq.fmt(Seq.length); }; $('#sqSeek').onchange = e => { Seq.drag = false; Seq.seek(+e.target.value); };
-  Ed.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
+  Ed.init(); Knobs.init(); Vox.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
   for (let o = 1; o <= 7; o++) { const d = document.createElement('div'); d.className = 'ppoct'; d.innerHTML = '<b>' + o + '</b><div class="ppn">' + [...'CDEFGAB'].map(l => '<i>' + l + '</i>').join('') + '</div>'; $('#ppOcts').appendChild(d); }
   $('#instHintBtn').onclick = () => { if (Tuner.hint.want) setInst(Tuner.hint.want); $('#instHint').hidden = true; };
   $('#instHintNo').onclick = () => { Tuner.hint.dismissed[Tuner.hint.want] = true; $('#instHint').hidden = true; };

@@ -153,3 +153,60 @@ T.test('audio: vibrato is only connected to voices when it is on', async () => {
     st.fxVib = 'light'; Engine._playNote(60, c.currentTime + 1, 0.2, { synth: 'soft', nopool: true }); T.eq(linked, 1);
   } finally { Engine.fx.vibDepth.connect = orig; }
 });
+T.test('knobs: a knob takes over from its dropdown, and vibrato follows it', async () => {
+  await audio(); const st = Store.data.settings, c = Engine.ctx; st.fxVib = 'off'; st.fxK = {}; Engine.setFx();
+  Knobs.set('vib', 1); T.eq(Engine.vibOn(), true, 'the knob alone turns vibrato on');
+  Knobs.set('vib', 0); T.eq(Engine.vibOn(), false);
+  st.fxTrem = 'deep'; T.eq(Knobs.val('trem'), 1, 'untouched knob shows the dropdown level');
+  Knobs.set('trem', 0.4); T.eq(Knobs.val('trem'), 0.4); Knobs.free('trem'); T.eq(Knobs.val('trem'), 1, 'changing the dropdown hands control back');
+  Knobs.set('reverb', 0.9); T.eq(Engine.rvKind, 'hall'); Knobs.set('reverb', 0.2); T.eq(Engine.rvKind, 'room'); Knobs.set('reverb', 0); T.eq(Engine.rvKind, '');
+  Knobs.reset(); T.eq(st.fxTrem, 'off'); T.deep(st.fxK, {});
+});
+T.test('track effect knobs: dragging one changes that track only', async () => {
+  await audio(); scene(s => s.tracks[1].notes.push({ midi: 40, tick: 0, dur: 900, vel: 90, ch: 1 })); const k = $('#sqTracks .sqtrack .sqfx .knob[data-k="reverb"]'); T.ok(k, 'the knob exists');
+  const ev = (type, y) => k.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 1, clientX: 10, clientY: y }));
+  ev('pointerdown', 100); ev('pointermove', 40); ev('pointerup', 40);
+  T.ok(Seq.tracks[0].fx && Seq.tracks[0].fx.reverb > 0.3, 'dragging up raises the amount ' + JSON.stringify(Seq.tracks[0].fx));
+  T.ok(k.classList.contains('lit'), 'the knob lights up'); T.eq(Seq.tracks[1].fx, null, 'the other tracks are untouched');
+});
+T.test('voice tracks: a recording is a mixer channel that plays, mutes, saves and renders', async () => {
+  await audio(); scene(); const sr = Engine.ctx.sampleRate, data = new Float32Array(sr).map((_, i) => 0.3 * Math.sin(i * 0.05));
+  const v = Vox.add({ data, sr }, 0.5); T.eq(Seq.vox.length, 1); T.eq($$('#sqTracks .sqtrack').length, Seq.tracks.length + 1, 'a row for the recording');
+  T.eq(Store.data.seq.vox[0].id, v.id, 'it is listed with the song');
+  await Seq.start(0); T.ok(v.strip, 'it has a mixer strip'); T.eq(Vox.src.length, 1, 'its clip is scheduled'); Seq.gains();
+  Seq.seek(0.9); await T.wait(50); T.eq(Vox.src.length, 1, 'seeking restarts it in the middle');
+  Seq.halt(); T.eq(Vox.src.length, 0, 'stopping stops it');
+  Seq.vox = []; Seq.render();
+});
+T.test('voice tracks: a take captures what the microphone hears', async () => {
+  await audio(); scene(); const c = Engine.ctx, osc = c.createOscillator(); osc.start(); const saved = { mic: Engine.mic, ready: Engine.ready };
+  Engine.mic = osc; Engine.ready = true; Rec.src = 'audio'; Store.data.settings.recCount = false; Store.data.settings.recMetro = false;
+  try {
+    Rec.start(); await T.wait(300); T.ok(Vox.node, 'the capture node exists'); await T.wait(2200); T.eq(Rec.state, 'rec');
+    Vox.draw(); Vox.draw(); T.eq($('#voxCv').hidden, false, 'the spectrogram shows while recording'); T.ok(Vox.lv && Vox.lv.F > 10, 'frames of the live picture: ' + (Vox.lv && Vox.lv.F));
+    Rec.stop(); const n0 = Vox.pn, F0 = Vox.lv && Vox.lv.F; Vox.draw(); await T.wait(500); Vox.draw(); T.eq(Vox.pn, n0, 'no samples after stop'); T.eq(Vox.lv && Vox.lv.F, F0, 'the live picture stops'); T.eq(Vox.sel, Seq.vox[0], 'the finished take is shown'); T.ok(Seq.vox[0].spec && Seq.vox[0].spec.ready, 'and analysed');
+    T.eq(Seq.vox.length, 1, 'the take became a track'); T.ok(Seq.vox[0].buf.duration > 1.5, 'about two seconds of audio, got ' + Seq.vox[0].buf.duration);
+  } finally { Engine.mic = saved.mic; Engine.ready = saved.ready; Rec.src = 'keys'; Seq.vox = []; Seq.render(); }
+});
+T.test('voice tracks: selecting one shows its spectrogram in place of the piano roll', async () => {
+  await audio(); scene(); const sr = 48000, data = new Float32Array(sr * 2).map((_, i) => 0.4 * Math.sin(2 * Math.PI * 440 * i / sr)), v = Vox.add({ data, sr }, 0);
+  Ed.on = true; Vox.select(v); await T.wait(400); T.ok(v.spec && v.spec.ready, 'the analysis finishes');
+  Vox.draw(); T.eq($('#voxCv').hidden, false); T.eq($('#edCv').hidden, true, 'the piano roll is hidden');
+  const rows = v.spec.cv.getContext('2d').getImageData(10, 0, 1, Vox.ROWS).data; let best = 0; for (let r = 0; r < Vox.ROWS; r++) best = Math.max(best, rows[r * 4 + 1]); const hot = []; for (let r = 0; r < Vox.ROWS; r++) if (rows[r * 4 + 1] >= best - 2) hot.push(r); const bi = hot.reduce((x, y) => x + y, 0) / hot.length;
+  const f = Vox.FMIN * Math.pow(Vox.FMAX / Vox.FMIN, (Vox.ROWS - 1 - bi) / (Vox.ROWS - 1)); T.near(f, 440, 12, 'a 440 Hz tone lights the 440 Hz row, got ' + f);
+  $('#sqTracks .sqtrack').click(); Vox.draw(); T.eq($('#voxCv').hidden, true, 'choosing a MIDI track brings the piano roll back'); Seq.vox = []; Seq.render();
+});
+T.test('voice view: other voices are drawn over the spectrogram in their own colour', async () => {
+  await audio(); scene(); const sr = 48000, tone = f => new Float32Array(sr * 2).map((_, i) => 0.4 * Math.sin(2 * Math.PI * f * i / sr));
+  const a = Vox.add({ data: tone(440), sr }, 0), b = Vox.add({ data: tone(220), sr }, 0); Ed.on = true; Vox.select(a); await T.wait(600);
+  Vox.draw(); await T.wait(600); T.ok(b.spec && b.spec.ready, 'the other voice was analysed');
+  const rows = Array.from(b.spec.at).filter(r => r >= 0); T.ok(rows.length > b.spec.F * 0.8, 'its pitch line follows it');
+  const f = Vox.FMIN * Math.pow(Vox.FMAX / Vox.FMIN, rows[10] / (Vox.ROWS - 1)); T.near(f, 220, 8, 'at 220 Hz, got ' + f);
+  T.ok(Vox.colour(a) !== Vox.colour(b), 'each voice has its own colour'); Vox.draw(); Seq.vox = []; Seq.render();
+});
+T.test('voice tracks: the transport Stop button ends a take and its graph', async () => {
+  await audio(); scene(); const osc = Engine.ctx.createOscillator(); osc.start(); const saved = { mic: Engine.mic, ready: Engine.ready };
+  Engine.mic = osc; Engine.ready = true; Rec.src = 'audio'; Store.data.settings.recCount = false; Store.data.settings.recMetro = false;
+  try { Rec.start(); await T.wait(1800); T.eq(Rec.state, 'rec'); $('#sqStop').click(); T.eq(Rec.state, 'idle', 'Stop ends the take'); const n = Vox.pn; await T.wait(300); T.eq(Vox.pn, n, 'nothing more is captured'); T.eq(Seq.vox.length, 1, 'the take is kept'); }
+  finally { Engine.mic = saved.mic; Engine.ready = saved.ready; Rec.src = 'keys'; Seq.vox = []; Seq.render(); }
+});

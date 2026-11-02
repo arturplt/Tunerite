@@ -51,7 +51,7 @@ const SF = {
     const a4f = st.a4 / 440, parts = [];
     vs.forEach(v => {
       const buf = bufs.get(v.si), S = sf.samples[v.si]; if (!buf) return;
-      const src = c.createBufferSource(); src.buffer = buf; if (Engine.fx && st.fxVib && st.fxVib !== 'off') Engine.fx.vibDepth.connect(src.detune); if (o.bend) o.bend.connect(src.detune);
+      const src = c.createBufferSource(); src.buffer = buf; if (Engine.fx && Engine.vibOn()) Engine.fx.vibDepth.connect(src.detune); if (o.bend) o.bend.connect(src.detune);
       const rate = m => Math.pow(2, ((m - v.root) * v.scale / 100 + v.coarse + v.fine / 100) / 12) * a4f;
       src.playbackRate.setValueAtTime(rate(midi), when);
       if (o.midi2 != null) src.playbackRate.exponentialRampToValueAtTime(rate(o.midi2), when + dur);       // glides bend the sample

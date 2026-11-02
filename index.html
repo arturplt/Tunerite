@@ -16,6 +16,7 @@
 </head>
 <body>
 <div id="micBar"></div>
+<div id="volZone" title="Drag sideways for volume"></div><div id="volPop" hidden><span>🔊</span><div id="volTrack"><i id="volFill"></i></div><b id="volNum"></b></div>
 <main>
   <!-- TUNER -->
   <section id="s-tuner" class="screen on">
@@ -189,8 +190,12 @@
   <p class="dawempty" id="sqEmpty">No song yet. <b>Open</b> a MIDI file or start a <b>New</b> song, then add tracks and drums.</p>
   <div id="sqBody" class="dawbody" hidden>
     <aside class="dawside">
-      <div class="dawsidehead"><span>TRACKS</span><span><button class="sqb" data-ed="tadd" title="Add a track">＋ Track</button><button class="sqb" data-ed="tdrum" title="Add a drum track and edit it as a step grid">＋ Drums</button></span></div>
+      <div class="dawsidehead"><span>TRACKS</span><span><button class="sqb" data-ed="tadd" title="Add a track">＋ Track</button><button class="sqb" id="sqAddVox" title="Record your voice as a new audio track, from the playhead">＋ Voice</button><button class="sqb" data-ed="tdrum" title="Add a drum track and edit it as a step grid">＋ Drums</button></span></div>
       <div id="sqTracks"></div>
+      <details class="edmore" id="fxMore" open><summary>Effects · knobs</summary>
+        <div id="fxKnobs" class="knobs"></div>
+        <div class="edbar"><button class="sqb" id="fxKnobReset" title="Turn every effect off">↺ Reset effects</button><small class="edlab" style="flex:1">Applies to the whole mix and to the Piano screen. Drag a knob, double-tap to reset it.</small></div>
+      </details>
       <details class="edmore" id="edMore"><summary>Inspector · track and song</summary>
         <div class="edbar"><input id="edTName" class="edsel" placeholder="Track name" aria-label="Track name" style="flex:1;min-width:7rem"></div>
         <div class="edbar"><select id="edProg" class="edsel" aria-label="Instrument" style="flex:1;min-width:0"></select><select id="edCh" class="edsel" aria-label="MIDI channel"></select></div>
@@ -212,7 +217,7 @@
         <div class="edgrp pr"><select id="edLen" class="edsel" aria-label="Length of new notes" title="Length of a note you add by tapping"><option value="0">New: last</option><option value="32">New: 1/32</option><option value="16">New: 1/16</option><option value="8">New: 1/8</option><option value="4">New: 1/4</option><option value="2">New: 1/2</option><option value="1">New: whole</option><option value="bar">New: bar</option></select><select id="edChord" class="edsel" aria-label="Chord to stamp" title="Stamp a whole chord when you add a note"><option value="0">Chord: off</option><option value="scale">Scale triad</option><option value="maj">Major</option><option value="min">Minor</option><option value="dim">Diminished</option><option value="sus4">Sus4</option><option value="pow">Power (5th)</option><option value="maj7">Major 7</option><option value="dom7">Dominant 7</option><option value="min7">Minor 7</option></select><select id="edRoot" class="edsel" aria-label="Scale key note" title="Key note of the scale to highlight"></select><select id="edScale" class="edsel" aria-label="Scale" title="Highlight the notes of a scale; the others are dimmed"><option value="off">Scale: off</option><option value="key">Song key</option><option value="major">Major</option><option value="minor">Minor</option><option value="pentmaj">Major pent.</option><option value="pentmin">Minor pent.</option><option value="blues">Blues</option><option value="dorian">Dorian</option><option value="mixo">Mixolydian</option><option value="harm">Harmonic minor</option></select><button class="sqb on" id="edGhost" title="Show the notes of the other tracks faintly behind this one">Ghost</button></div>
         <div class="edgrp pr"><button class="sqb" data-ed="all" title="Select all (Ctrl+A)">All</button><button class="sqb" data-ed="copy" title="Copy (Ctrl+C)">Copy</button><button class="sqb" data-ed="paste" title="Paste at the playhead (Ctrl+V)">Paste</button><button class="sqb" data-ed="dup" title="Duplicate after the selection (Ctrl+D)">Dup</button><button class="sqb" data-ed="del" title="Delete (Del)">Del</button></div>
         <div class="edgrp pr"><button class="sqb" data-ed="up" title="Up a semitone (↑)">♯</button><button class="sqb" data-ed="down" title="Down a semitone (↓)">♭</button><button class="sqb" data-ed="octup" title="Up an octave (Shift+↑)">+8</button><button class="sqb" data-ed="octdown" title="Down an octave (Shift+↓)">−8</button><button class="sqb" data-ed="quant" title="Snap the starts of the selected notes (or all) to the grid">Quantize</button></div>
-        <div class="edgrp"><select id="edSrc" class="edsel" aria-label="Record from"><option value="keys">Keys</option><option value="voice">Voice</option></select><button class="sqb" data-rec="recMetro" title="Click track while recording">Metro</button><button class="sqb" data-rec="recCount" title="One bar of clicks before recording starts">Count</button><button class="sqb" data-rec="recQ" title="Snap the recorded notes to the grid">Snap</button><button class="sqb" data-ed="piano" title="Open the on-screen piano">🎹</button><button class="sqb" id="edHelp" title="How to edit">?</button></div>
+        <div class="edgrp"><select id="edSrc" class="edsel" aria-label="Record from"><option value="keys">Keys</option><option value="voice">Voice (notes)</option><option value="audio">Voice (audio)</option></select><button class="sqb" data-rec="recMetro" title="Click track while recording">Metro</button><button class="sqb" data-rec="recCount" title="One bar of clicks before recording starts">Count</button><button class="sqb" data-rec="recQ" title="Snap the recorded notes to the grid">Snap</button><button class="sqb" data-ed="piano" title="Open the on-screen piano">🎹</button><button class="sqb" id="edHelp" title="How to edit">?</button></div>
       </div>
       <canvas id="edMeta" class="pr" title="Tempo and time-signature changes. Tap an empty spot to add one, tap a marker to edit it, drag a marker to move it."></canvas>
       <div id="bassPop" class="metaPop" hidden>
@@ -227,6 +232,8 @@
       </div>
       <div class="dawview">
         <canvas id="edCv"></canvas>
+        <canvas id="voxCv" hidden title="Spectrogram of the voice recording. Drag to scroll, wheel to zoom, tap to move the playhead."></canvas>
+        <button class="sqb on" id="voxGhost" hidden title="Show the other tracks over the spectrogram: notes as bars, other voices as lines">Others</button>
         <div id="edSteps" hidden>
           <div class="edgrp stbar"><button class="sqb" data-st="prev" aria-label="Previous bar">◀</button><b id="stBar">Bar 1</b><button class="sqb" data-st="next" aria-label="Next bar">▶</button>
             <select id="stDiv" class="edsel" aria-label="Steps per bar"><option value="8">1/8</option><option value="12">1/8 triplet</option><option value="16" selected>1/16</option><option value="24">1/16 triplet</option><option value="32">1/32</option></select>
@@ -445,7 +452,9 @@
 <script src="js/meta.js"></script>
 <script src="js/frame.js"></script>
 <script src="js/sequencer.js"></script>
+<script src="js/knobs.js"></script>
 <script src="js/editor.js"></script>
+<script src="js/vox.js"></script>
 <script src="js/recorder.js"></script>
 <script src="js/midi-file.js"></script>
 <script src="js/main.js"></script>

@@ -91,7 +91,7 @@ const Ed = {
       this.song.name = v; Seq.name = v; if (Store.data.midi && Store.data.midi.name === old) Store.data.midi.name = v; Seq.save(); Seq.render(); this.autosave();
     };
     $('#edKey').onchange = e => { if (!this.song || this.busy()) return; const k = e.target.value.split(':').map(Number); this.edit(() => songSetKey(this.song, k[0], k[1])); };
-    $('#edTrack').onchange = e => { if (Rec.state !== 'idle') { e.target.value = this.ti; return; } this.ti = +e.target.value; this.sel.clear(); this.needFit = true; this.ls = {}; };
+    $('#edTrack').onchange = e => { if (Rec.state !== 'idle') { e.target.value = this.ti; return; } Vox.sel = null; this.ti = +e.target.value; this.sel.clear(); this.needFit = true; this.ls = {}; };
     $('#edGrid').onchange = e => { this.div = +e.target.value; };
     { const st = Store.data.settings, root = $('#edRoot'); ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'].forEach((n, i) => opt(root, i, n));
       root.value = st.edRoot || 0; $('#edScale').value = st.edScale || 'off'; $('#edLen').value = st.edLen || '0'; this.ghost = st.edGhost !== false; $('#edGhost').classList.toggle('on', this.ghost);

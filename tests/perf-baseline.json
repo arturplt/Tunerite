@@ -1,0 +1,16 @@
+{
+  "draw: overview (ms)": 0.25833333333333336,
+  "draw: piano roll with ghosts (ms)": 3.4683333333271245,
+  "draw: step grid (ms)": 0.2933333333271245,
+  "draw: tempo strip (ms)": 0.08499999999379118,
+  "edit: commit one change (ms)": 5.7,
+  "mixer: meters + sliders (ms)": 0.08500000002483526,
+  "play: frames per second drawn (inverse, ms)": 16.483516483516485,
+  "play: live voices at once (count)": 180,
+  "play: scheduler tick (ms)": 0.0125,
+  "render: 120 drum hits (ms per second of audio)": 75.30000000012417,
+  "render: 120 soft notes (ms per second of audio)": 53.73333333308498,
+  "render: effects idle (ms per second of audio)": 28.767,
+  "song: build playable tracks (ms)": 1.0199999999254943,
+  "song: write to MIDI bytes (ms)": 4.360000000149012
+}

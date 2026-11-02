@@ -140,15 +140,19 @@ const Engine = {
   setFx() {
     if (!this.conv) return;
     const s = Store.data.settings, t = this.ctx.currentTime, F = this.fx, lv = { off: 0, light: 1, medium: 2, deep: 3 };
+    /* The Compose knobs (settings.fxK, 0 to 1) win over the dropdowns for any effect they have touched; an untouched knob falls back to the dropdown's level. */
+    const K = s.fxK || {}, kv = (k, d) => K[k] != null ? K[k] : d, dl = { short: 0.18, medium: 0.35, long: 0.6 }[s.fxDelay];
+    const kTrem = kv('trem', [0, 0.25, 0.58, 1][lv[s.fxTrem] || 0]), kVib = kv('vib', [0, 0.24, 0.5, 1][lv[s.fxVib] || 0]), kEcho = kv('echo', dl ? 0.75 : 0), kWide = kv('wide', s.fxWide ? 0.75 : 0);
+    const kPhase = kv('phase', s.fxPhase === 'phaser' ? 1 : 0), kChor = kv('chorus', s.chorus ? 1 : 0), kDrive = K.drive;
     if (F) {
-      const tr = [0, 0.15, 0.35, 0.6][lv[s.fxTrem] || 0], tn = { dark: [3, -9], warm: [4, -4], neutral: [0, 0], bright: [-3, 6] }[s.fxTone] || [0, 0];
-      F.tr.gain.setTargetAtTime(1 - tr / 2, t, 0.05); F.trDepth.gain.setTargetAtTime(tr / 2, t, 0.05);
-      F.vibDepth.gain.setTargetAtTime([0, 12, 25, 50][lv[s.fxVib] || 0], t, 0.05);
+      const tn = K.tone != null ? [3 - 6 * K.tone, (K.tone - 0.5) * 14] : { dark: [3, -9], warm: [4, -4], neutral: [0, 0], bright: [-3, 6] }[s.fxTone] || [0, 0];
+      F.tr.gain.setTargetAtTime(1 - kTrem * 0.3, t, 0.05); F.trDepth.gain.setTargetAtTime(kTrem * 0.3, t, 0.05);
+      F.vibDepth.gain.setTargetAtTime(kVib * 50, t, 0.05);
       F.lo.gain.setTargetAtTime(tn[0], t, 0.05); F.hi.gain.setTargetAtTime(tn[1], t, 0.05);
-      const dl = { short: 0.18, medium: 0.35, long: 0.6 }[s.fxDelay]; if (dl) F.dl.delayTime.setTargetAtTime(dl, t, 0.05); F.dlWet.gain.setTargetAtTime(dl ? 0.45 : 0, t, 0.05);
-      F.wdWet.gain.setTargetAtTime(s.fxWide ? 0.6 : 0, t, 0.05);
-      F.phWet.gain.setTargetAtTime(s.fxPhase === 'phaser' ? 0.8 : 0, t, 0.05); F.flWet.gain.setTargetAtTime(s.fxPhase === 'flanger' ? 0.7 : 0, t, 0.05);
-      const dr = { warm: [0.8, 0.35, 3], crunch: [0.4, 0.7, 8] }[s.fxDrive] || [1, 0, 1]; F.drDry.gain.setTargetAtTime(dr[0], t, 0.05); F.drWet.gain.setTargetAtTime(dr[1], t, 0.05); F.drPre.gain.setTargetAtTime(dr[2], t, 0.05);
+      if (kEcho > 0.01) F.dl.delayTime.setTargetAtTime(dl || 0.35, t, 0.05); F.dlWet.gain.setTargetAtTime(kEcho * 0.6, t, 0.05);
+      F.wdWet.gain.setTargetAtTime(kWide * 0.8, t, 0.05);
+      F.phWet.gain.setTargetAtTime(kPhase * 0.8, t, 0.05); F.flWet.gain.setTargetAtTime(s.fxPhase === 'flanger' ? 0.7 : 0, t, 0.05);
+      const dr = kDrive != null ? [1 - 0.6 * kDrive, 0.7 * kDrive, 1 + 7 * kDrive] : { warm: [0.8, 0.35, 3], crunch: [0.4, 0.7, 8] }[s.fxDrive] || [1, 0, 1]; F.drDry.gain.setTargetAtTime(dr[0], t, 0.05); F.drWet.gain.setTargetAtTime(dr[1], t, 0.05); F.drPre.gain.setTargetAtTime(dr[2], t, 0.05);
     }
     if (F) {      // an effect that is off is not in the signal path at all: idle delays, filters and an oversampled shaper cost the audio thread even when silent
       const link = (k, on) => {
@@ -156,17 +160,19 @@ const Engine = {
         if (on) { if (!F.on[k]) { F.on[k] = true; list.forEach(([a, b]) => a.connect(b)); } }
         else if (F.on[k]) setTimeout(() => { if (!F.want[k] && F.on[k]) { F.on[k] = false; list.forEach(([a, b]) => { try { a.disconnect(b); } catch (e) { /* already gone */ } }); } }, 600);
       };
-      link('drive', !!({ warm: 1, crunch: 1 }[s.fxDrive])); link('phase', s.fxPhase === 'phaser'); link('flange', s.fxPhase === 'flanger'); link('wide', !!s.fxWide); link('echo', !!{ short: 1, medium: 1, long: 1 }[s.fxDelay]); link('chorus', !!s.chorus);
+      link('drive', kDrive != null ? kDrive > 0.01 : !!({ warm: 1, crunch: 1 }[s.fxDrive])); link('phase', kPhase > 0.01); link('flange', s.fxPhase === 'flanger'); link('wide', kWide > 0.01); link('echo', kEcho > 0.01); link('chorus', kChor > 0.01);
     }
-    const kind = s.reverb === 'room' || s.reverb === 'hall' ? s.reverb : '';
+    const rk = K.reverb, kind = rk != null ? (rk > 0.01 ? (rk < 0.5 ? 'room' : 'hall') : '') : s.reverb === 'room' || s.reverb === 'hall' ? s.reverb : '';
     if (kind !== this.rvKind) {
       this.rvKind = kind;
       if (kind) this.conv.buffer = this.impulse(kind === 'hall' ? 2.4 : 0.9, kind === 'hall' ? 2.5 : 3);
       this.rvSend.gain.setTargetAtTime(kind ? 1 : 0, t, 0.02);
     }
-    this.rvWet.gain.setTargetAtTime(kind === 'hall' ? 0.55 : kind === 'room' ? 0.4 : 0, t, 0.02);
-    this.chWet.gain.setTargetAtTime(s.chorus ? 0.5 : 0, t, 0.05);
+    this.rvWet.gain.setTargetAtTime(rk != null ? rk * 0.7 : kind === 'hall' ? 0.55 : kind === 'room' ? 0.4 : 0, t, 0.02);
+    this.chWet.gain.setTargetAtTime(kChor * 0.5, t, 0.05);
   },
+  /* Vibrato is wired into each voice as it starts, so it is only connected while the effect is on. */
+  vibOn() { const s = Store.data.settings; return !!((s.fxK && s.fxK.vib > 0.01) || (s.fxVib && s.fxVib !== 'off')); },
   outLatency() { const c = this.ctx; return (c.outputLatency || c.baseLatency || 0); },
   /* Soft piano-like tone: a few harmonics with a gentle decay. sustain=true gives a steady tone (guide, glides). */
   playNote(midi, when, dur, o) {
@@ -198,11 +204,11 @@ const Engine = {
     if (o.preset != null ? SF.cache.has(o.preset) : Store.data.settings.timbre === 'sf' && SF.ready) { try { const r = SF.play(midi, when, dur, o); if (r) return r; } catch (e) { console.error(e); } }   // notes the font has no sample for fall back to the built-in sound
     const c = this.ctx, a4 = Store.data.settings.a4;
     const g = c.createGain(); g.connect(o.dest || this.master);
-    const tb = o.synth || Store.data.settings.timbre, W = this.voiceWave(tb), vib = Store.data.settings.fxVib;
+    const tb = o.synth || Store.data.settings.timbre, W = this.voiceWave(tb), vib = this.vibOn();
     const osc = c.createOscillator(); osc.setPeriodicWave(W.wave);      // the whole timbre is one oscillator: a stack of sine partials cost four to six
     osc.frequency.setValueAtTime(midiToFreq(midi, a4), when);
     if (o.midi2 != null) osc.frequency.exponentialRampToValueAtTime(midiToFreq(o.midi2, a4), when + dur);
-    if (this.fx && vib && vib !== 'off') this.fx.vibDepth.connect(osc.detune);      // a connected detune makes every oscillator compute its pitch per sample, so only when vibrato is on
+    if (this.fx && vib) this.fx.vibDepth.connect(osc.detune);      // a connected detune makes every oscillator compute its pitch per sample, so only when vibrato is on
     if (o.bend) o.bend.connect(osc.detune);      // pitch wheel of the sequencer track
     g.gain.value = 0; osc.connect(g); osc.start(when); osc.stop(when + dur + 0.15); const oscs = [osc], gain = (o.gain == null ? 0.25 : o.gain) * W.k;
     g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(gain, when + 0.01);

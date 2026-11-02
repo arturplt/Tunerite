@@ -11,8 +11,9 @@ const Rec = {
   toggle() { if (this.state === 'idle') this.start(); else this.stop(); },
   start() {
     const song = Ed.song, tr = Ed.track; if (!song || !tr) return;
+    if (this.src === 'audio' && !(Vox.node && Vox.ctx === Engine.ctx)) { if (!Engine.ready) return toast('Turn the microphone on first (Tuner tab).', 3000); return Vox.prep().then(() => this.start()).catch(e => toast('Could not start the recorder: ' + (e.message || e), 4000)); }
     const c = Engine.ctx; if (!c || !Engine.master) return toast('Tap Start first, then record.', 2500);
-    if (this.src === 'voice' && !Engine.ready) return toast('Turn the microphone on first (Tuner tab).', 3000);
+    if (this.src !== 'keys' && !Engine.ready) return toast('Turn the microphone on first (Tuner tab).', 3000);
     if (c.state !== 'running') c.resume();
     const p = Seq.pos(), ts = song.timeSigs.filter(t => t.tick <= songTick(song, p)).pop() || song.timeSigs[0], beat = song.ppq * 4 / ts.den;
     Seq.pause();
@@ -26,6 +27,7 @@ const Rec = {
     this.state = 'count'; Engine.keepAwake(true);
     if (Seq.loaded) Seq.start(this.base, { at: this.T0 });
     if (this.src === 'voice') { this.listener = fr => { if (this.state === 'rec') this.frames.push({ t: fr.t, m: fr.midi }); }; Engine.listeners.add(this.listener); if (this.metro) toast('Use headphones, or the click will be recorded too.', 3500); }
+    else if (this.src === 'audio') { Vox.begin(); if (this.metro) toast('Use headphones, or the click will be recorded too.', 3500); }
     else Midi.rec = d => this.onMidi(d);
     this.timer = setInterval(() => this.pump(), 25); this.pump();
   },
@@ -57,9 +59,11 @@ const Rec = {
   stop(cancel) {
     if (this.state === 'idle') return; const was = this.state; clearInterval(this.timer); this.timer = 0; Midi.rec = null; Engine.keepAwake(false);
     if (this.listener) { Engine.listeners.delete(this.listener); this.listener = null; }
+    const clip = this.src === 'audio' ? Vox.finish(this.T0 + this.lat) : null;
     let notes = [], end = 0; try { end = Math.round(this.tickNow()); } catch (e) { /* the audio context is gone */ }
     this.state = 'idle'; Seq.stop(); Seq.base = clamp(this.base, 0, Seq.maxPos);   // leave the playhead where the take began, to play it back
     if (cancel || was !== 'rec' || Ed.song !== this.song) return;
+    if (this.src === 'audio') { if (!clip) return toast('Nothing was recorded.', 2500); Vox.add(clip, this.base); return toast('Recorded a voice track. Delete it with the ✕ in the track list.', 3500); }
     if (this.src === 'voice') {
       const song = this.song, toTick = t => Math.max(this.startTick, Math.round(songTick(song, this.base + (t - this.lat - this.T0) * this.tempo)));
       notes = framesToNotes(this.frames).map(n => { const a = toTick(n.start), b = toTick(n.start + n.dur); return { midi: n.midi, tick: a, dur: Math.max(1, b - a), vel: 90, ch: this.ch }; });

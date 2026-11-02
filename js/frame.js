@@ -9,7 +9,7 @@ function frameLoop() {
   if (UI.screen === 'seq') {
     /* While nothing moves and nobody is touching the screen the editor redraws a few times a second, which leaves the processor to the audio. */
     const busy = Seq.playing || Ed.drag || Rec.state !== 'idle' || performance.now() - UI.lastIn < 600; frameLoop.n = (frameLoop.n || 0) + 1;
-    if (busy || frameLoop.n % 5 === 0) { Seq.draw(); Ed.draw(); Steps.draw(); Meta.draw(); }
+    if (busy || frameLoop.n % 5 === 0) { Seq.draw(); Ed.draw(); Steps.draw(); Vox.draw(); Meta.draw(); }
     Seq.meters(); if (busy || frameLoop.n % 5 === 0) Seq.sliders();
   }
   } catch (e) { console.error(e); }

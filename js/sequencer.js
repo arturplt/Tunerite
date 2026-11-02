@@ -20,7 +20,7 @@ const SeqStore = {
 };
 const PLAY_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M7 5v14l11-7z"/></svg>', PAUSE_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
 const Seq = {
-  name: '', bpm: 100, tracks: [], length: 0, lo: 48, hi: 84, playing: false, acc: false, loop: false, tempo: 1, base: 0, T0: 0, skip: -1, nodes: [], timer: 0, gen: 0, sing: -1, drag: false, loopA: null, loopB: null,
+  name: '', bpm: 100, tracks: [], vox: [], length: 0, lo: 48, hi: 84, playing: false, acc: false, loop: false, tempo: 1, base: 0, T0: 0, skip: -1, nodes: [], timer: 0, gen: 0, sing: -1, drag: false, loopA: null, loopB: null,
   get loaded() { return this.tracks.length > 0 || !!this.song; },
   get maxPos() { return Rec.state !== 'idle' ? 1e9 : Ed.on ? this.length + 600 : this.length; },   // a take, or the editor (tempo and time signature changes late in a short song), may go past the end
   /* parsed = the result of parseMidi. Saved choices are restored when the file name matches the last one used. */
@@ -34,14 +34,15 @@ const Seq = {
       const ps = (prev ? prev(u) : (sv.tracks || [])[i]) || {}; let lo = 127, hi = 0, end = 0;
       u.notes.forEach(n => { if (n.midi < lo) lo = n.midi; if (n.midi > hi) hi = n.midi; if (n.start + n.dur > end) end = n.start + n.dur; });
       return { i, ti: u.ti, tid: u.tid, auto: u.auto || null, name: u.name || (u.drums ? 'Drums' : 'Track ' + (i + 1)), ch: u.ch, drums: u.drums, program: u.program || 0, bank: u.bank || 0, notes: u.notes, lo, hi, end,
-        inst: ps.inst || 'auto', vol: ps.vol == null ? 0.8 : ps.vol, panv: ps.panv != null ? ps.panv : ps.pan || 0, mute: !!ps.mute, solo: !!ps.solo, strip: null, ni: 0 };
+        inst: ps.inst || 'auto', vol: ps.vol == null ? 0.8 : ps.vol, panv: ps.panv != null ? ps.panv : ps.pan || 0, fx: ps.fx || null, mute: !!ps.mute, solo: !!ps.solo, strip: null, ni: 0 };
     });
     this.song = song || null; this.name = name; this.bpm = parsed.bpm; this.length = Math.max.apply(null, [0].concat(this.tracks.map(t => t.end)));
     const mel = this.tracks.filter(t => !t.drums); this.lo = mel.length ? Math.min.apply(null, mel.map(t => t.lo)) - 1 : 48; this.hi = mel.length ? Math.max.apply(null, mel.map(t => t.hi)) + 1 : 84;
     if (this.hi - this.lo < 12) this.hi = this.lo + 12;
+    this.vox = []; Vox.restore(sv.vox);
     this.base = 0; this.tempo = sv.tempo || 1; this.sing = sv.sing != null && this.tracks[sv.sing] ? sv.sing : -1; this.loop = !!sv.loop; this.loopA = sv.loopA != null && sv.loopB > sv.loopA ? sv.loopA : null; this.loopB = this.loopA != null ? sv.loopB : null;
   },
-  save() { Store.data.seq = Object.assign(Store.data.seq || {}, { name: this.name, sing: this.sing, tempo: this.tempo, loop: this.loop, loopA: this.loopA, loopB: this.loopB, tracks: this.tracks.map(t => ({ inst: t.inst, vol: t.vol, pan: t.panv || 0, mute: t.mute, solo: t.solo })) }); Store.save(); },
+  save() { Store.data.seq = Object.assign(Store.data.seq || {}, { name: this.name, sing: this.sing, tempo: this.tempo, loop: this.loop, loopA: this.loopA, loopB: this.loopB, vox: this.vox.map(v => ({ id: v.id, name: v.name, start: v.start, vol: v.vol, pan: v.panv || 0, mute: v.mute, solo: v.solo, fx: v.fx || null })), tracks: this.tracks.map(t => ({ inst: t.inst, vol: t.vol, pan: t.panv || 0, fx: t.fx || null, mute: t.mute, solo: t.solo })) }); Store.save(); },
   /* Which sound a track plays: a SoundFont preset (index), a built-in voice, or the drum kit. */
   res(t) {
     const c = t.inst;
@@ -61,7 +62,7 @@ const Seq = {
   /* One chain per track: strip (the mixer's volume, mute and solo) -> ctl (volume events) -> pan -> master. Tracks without volume, pan or bend events have only the strip. */
   strips() {
     const c = Engine.ctx;
-    this.tracks.forEach(t => {
+    this.all().forEach(t => {
       if (t.strip) return; t.strip = c.createGain(); t.strip.gain.value = 0; let last = t.strip;
       if (t.auto) { t.ctl = c.createGain(); last.connect(t.ctl); last = t.ctl; }
       if (c.createStereoPanner) { t.pan = c.createStereoPanner(); t.pan.pan.value = t.panv || 0; last.connect(t.pan); last = t.pan; }      // the mixer's pan; MIDI pan events move it too
@@ -69,10 +70,63 @@ const Seq = {
         if (c.createConstantSource) { t.bendSrc = c.createConstantSource(); t.bendSrc.offset.value = 0; t.bendSrc.start(); }     // cents, connected to the detune of every voice of the track
       }
       t.an = c.createAnalyser(); t.an.fftSize = 256; last.connect(t.an);      // level meter tap
-      last.connect(Engine.master);
+      t.tail = last; this.wireFx(t);
     });
     this.gains();
   },
+  /* ---- per-track effects ----
+     Each track has its own amounts (t.fx, 0 to 1) for the six effects below. An effect at rest is not in the signal path at all; a track with every effect at rest has only one gain node between it and the master.
+     Reverb is a send into one convolver shared by the tracks (a convolver per track would be too heavy); the rest are built per track. */
+  FX: [{ k: 'reverb', n: 'Reverb', d: 0 }, { k: 'echo', n: 'Echo', d: 0 }, { k: 'chorus', n: 'Chorus', d: 0 }, { k: 'trem', n: 'Tremolo', d: 0 }, { k: 'drive', n: 'Drive', d: 0 }, { k: 'tone', n: 'Tone', d: 0.5 }],
+  fxVal(t, k) { const v = t.fx && t.fx[k]; return v != null ? v : k === 'tone' ? 0.5 : 0; },
+  fxSig(t) { return this.FX.map(f => (f.k === 'tone' ? Math.abs(this.fxVal(t, 'tone') - 0.5) > 0.02 : this.fxVal(t, f.k) > 0.01) ? 1 : 0).join(''); },
+  sharedReverb(c) {
+    if (this.rv && this.rv.ctx === c) return this.rv.conv;
+    const n = Math.floor(c.sampleRate * 1.8), b = c.createBuffer(2, n, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6) * Math.min(1, i / (c.sampleRate * 0.004)); }
+    const conv = c.createConvolver(); conv.buffer = b; conv.connect(Engine.master); this.rv = { ctx: c, conv }; return conv;
+  },
+  /* Wires tail -> effects -> master. The wiring is only rebuilt when a different set of effects is on; moving an amount just updates the parameters. */
+  wireFx(t) {
+    const c = Engine.ctx, tail = t.tail; if (!c || !tail) return;
+    const sig = this.fxSig(t); if (t.fxKey === sig && t.fxSet) return t.fxSet();
+    (t.fxn || []).forEach(n => { try { if (n.stop) n.stop(); n.disconnect(); } catch (e) { /* already gone */ } });
+    try { tail.disconnect(); } catch (e) { /* nothing was connected */ }
+    if (t.an) tail.connect(t.an);
+    const nodes = t.fxn = [], ups = [], mk = n => { nodes.push(n); return n; }, g = () => mk(c.createGain()), on = k => sig[this.FX.findIndex(f => f.k === k)] === '1', V = k => this.fxVal(t, k);
+    t.fxKey = sig; let cur = tail; const chain = n => { cur.connect(n); cur = n; };
+    if (on('tone')) {
+      const lo = mk(c.createBiquadFilter()), hi = mk(c.createBiquadFilter()); lo.type = 'lowshelf'; lo.frequency.value = 250; hi.type = 'highshelf'; hi.frequency.value = 3000; chain(lo); chain(hi);
+      ups.push(() => { lo.gain.value = 3 - 6 * V('tone'); hi.gain.value = (V('tone') - 0.5) * 14; });
+    }
+    if (on('drive')) {
+      const dry = g(), wet = g(), pre = g(), sum = g(), sh = mk(c.createWaveShaper()), K = 1024, cv = new Float32Array(K); for (let i = 0; i < K; i++) cv[i] = Math.tanh((i / (K - 1) * 2 - 1) * 2.2); sh.curve = cv; sh.oversample = '2x';
+      cur.connect(dry); cur.connect(pre); pre.connect(sh); sh.connect(wet); dry.connect(sum); wet.connect(sum); cur = sum;
+      ups.push(() => { const d = V('drive'); dry.gain.value = 1 - 0.6 * d; wet.gain.value = 0.7 * d; pre.gain.value = 1 + 7 * d; });
+    }
+    if (on('trem')) {
+      const tr = g(), lfo = mk(c.createOscillator()), dep = g(); lfo.frequency.value = 5.5; lfo.connect(dep); dep.connect(tr.gain); lfo.start(); chain(tr);
+      ups.push(() => { const d = V('trem') * 0.3; tr.gain.value = 1 - d; dep.gain.value = d; });
+    }
+    const out = g(); cur.connect(out); out.connect(Engine.master);
+    if (on('echo')) {
+      const dl = mk(c.createDelay(1)), fb = g(), wet = g(); dl.delayTime.value = 0.35; fb.gain.value = 0.4; out.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(Engine.master);
+      ups.push(() => { wet.gain.value = V('echo') * 0.6; });
+    }
+    if (on('chorus')) {
+      const wet = g(); wet.connect(Engine.master);
+      [[0.018, 0.4, -0.7], [0.026, 0.55, 0.7]].forEach(([base, hz, pan]) => {
+        const d = mk(c.createDelay(0.1)), lfo = mk(c.createOscillator()), dep = g(), p = c.createStereoPanner ? mk(c.createStereoPanner()) : null;
+        d.delayTime.value = base; lfo.frequency.value = hz; dep.gain.value = 0.0025; lfo.connect(dep); dep.connect(d.delayTime); lfo.start(); out.connect(d); if (p) { p.pan.value = pan; d.connect(p); p.connect(wet); } else d.connect(wet);
+      });
+      ups.push(() => { wet.gain.value = V('chorus') * 0.5; });
+    }
+    if (on('reverb')) { const snd = g(); out.connect(snd); snd.connect(this.sharedReverb(c)); ups.push(() => { snd.gain.value = V('reverb') * 0.7; }); }
+    t.fxSet = () => ups.forEach(f => f());
+    t.fxSet();
+  },
+  /* A track's effect amount was changed (or loaded): re-wire only if the set of active effects changed. */
+  setFx(t, k, v) { t.fx = Object.assign({}, t.fx, { [k]: clamp(Math.round(v * 100) / 100, 0, 1) }); if (t.tail) this.wireFx(t); this.save(); },
   /* Starting values and event cursors for a track's volume, pan and bend at song time `base`. */
   autoInit(t, base) {
     const a = t.auto; if (!a || !t.ctl) return; t.ai = {};
@@ -90,18 +144,20 @@ const Seq = {
     });
   },
   gains() {
-    if (!Engine.ctx) return; const c = Engine.ctx, solo = this.tracks.some(t => t.solo);
-    this.tracks.forEach(t => { if (t.strip) t.strip.gain.setTargetAtTime(t.mute || (solo && !t.solo) || t.i === this.skip ? 0 : t.vol, c.currentTime, 0.015); });
+    if (!Engine.ctx) return; const c = Engine.ctx, solo = this.all().some(t => t.solo);
+    this.all().forEach(t => { if (t.strip) t.strip.gain.setTargetAtTime(t.mute || (solo && !t.solo) || t.i === this.skip ? 0 : t.vol, c.currentTime, 0.015); });
   },
   release() {
     const c = Engine.ctx; if (!c) return;
-    this.tracks.forEach(t => {
-      const s = t.strip; if (!s) return; const rest = [t.ctl, t.pan, t.bendSrc, t.an]; t.strip = t.ctl = t.pan = t.bendSrc = t.an = null;
+    this.all().forEach(t => {
+      const s = t.strip; if (!s) return; const rest = [t.ctl, t.pan, t.bendSrc, t.an, t.tail].concat(t.fxn || []); t.strip = t.ctl = t.pan = t.bendSrc = t.an = t.tail = t.fxn = t.fxSet = t.fxKey = null;
       try { s.gain.cancelScheduledValues(c.currentTime); s.gain.setTargetAtTime(0, c.currentTime, 0.01); } catch (e) { /* node already gone */ }
       setTimeout(() => { [s].concat(rest).forEach(n => { if (!n) return; try { if (n.stop) n.stop(); n.disconnect(); } catch (e) { /* already stopped */ } }); }, 500);
     });
   },
-  halt() { this.gen++; this.playing = false; clearInterval(this.timer); this.timer = 0; this.nodes.forEach(n => { try { n.h.stop(); } catch (e) {} }); this.nodes = []; },
+  /* The mixer channels: the MIDI tracks, then the voice recordings (Vox). */
+  all() { return this.vox.length ? this.tracks.concat(this.vox) : this.tracks; },
+  halt() { Vox.stop(); this.gen++; this.playing = false; clearInterval(this.timer); this.timer = 0; this.nodes.forEach(n => { try { n.h.stop(); } catch (e) {} }); this.nodes = []; },
   async start(from, o) {
     o = o || {}; if (!this.loaded) return;
     if (!Engine.ctx || !Engine.master) return toast('Tap Start first, then play.', 2500);
@@ -111,6 +167,7 @@ const Seq = {
     await this.prepare(); if (gen !== this.gen) return;
     this.strips(); this.T0 = o.at != null ? o.at : c.currentTime + 0.1;
     this.tracks.forEach(t => { let a = 0, b = t.notes.length; while (a < b) { const m = (a + b) >> 1; if (t.notes[m].start < this.base - 1e-6) a = m + 1; else b = m; } t.ni = a; this.autoInit(t, this.base); });
+    Vox.play(this.base, this.T0, this.tempo);
     this.playing = true; this.timer = setInterval(() => this.tick(), 25); this.tick(); this.sync();
   },
   /* The part of the song that repeats: the loop region, or the whole song. Null when looping is off, during a take, or when this is a backing track for Train. */
@@ -131,10 +188,10 @@ const Seq = {
     this.nodes = this.nodes.filter(n => n.end > now);
     const reg = this.region();
     if (reg && this.base < reg.b) {      // wrap without a gap: schedule up to the end of the region, then carry on from its start on the same clock
-      while (hs >= reg.b) { this.sched(reg.b, now); this.T0 += (reg.b - this.base) / this.tempo; this.base = reg.a; this.seekTracks(); hs = this.base + (now + 0.35 - this.T0) * this.tempo; }
+      while (hs >= reg.b) { this.sched(reg.b, now); this.T0 += (reg.b - this.base) / this.tempo; Vox.stop(this.T0); this.base = reg.a; this.seekTracks(); Vox.play(this.base, this.T0, this.tempo); hs = this.base + (now + 0.35 - this.T0) * this.tempo; }
     }
     this.sched(hs, now);
-    if (Rec.state === 'idle' && now - this.T0 > (this.length - this.base) / this.tempo + 0.4) { if (this.loop && !this.acc) this.start(0); else { this.stop(); } }
+    if (Rec.state === 'idle' && now - this.T0 > (Math.max(this.length, Vox.end()) - this.base) / this.tempo + 0.4) { if (this.loop && !this.acc) this.start(0); else { this.stop(); } }
   },
   /* Sets (or with null clears) the loop region, snapped to beats, and turns looping on. */
   setRegion(a, b) {
@@ -239,15 +296,17 @@ const Seq = {
   renderAll() {
     this.rendering = true;
     try {
-      this.tracks.forEach(t => { t.strip = t.ctl = t.pan = t.bendSrc = null; }); this.strips();
-      const solo = this.tracks.some(t => t.solo);
+      this.all().forEach(t => { t.strip = t.ctl = t.pan = t.bendSrc = t.tail = t.fxn = t.fxSet = t.fxKey = null; }); this.strips();
+      const solo = this.all().some(t => t.solo);
+      this.vox.forEach(v => { const g = v.strip.gain; g.cancelScheduledValues(0); g.setValueAtTime(v.mute || (solo && !v.solo) ? 0 : v.vol, 0); });
+      Vox.play(0, 0, 1);
       this.tracks.forEach(t => {
         const g = t.strip.gain; g.cancelScheduledValues(0); g.setValueAtTime(t.mute || (solo && !t.solo) ? 0 : t.vol, 0);
         const r = this.res(t); this.autoInit(t, 0);
         t.notes.forEach(n => this.note(t, r, n, n.start, Math.max(0.05, n.sus || n.dur)));
         this.autoRun(t, Infinity, 0, 0, 1, 0);
       });
-    } finally { this.rendering = false; this.nodes = []; this.tracks.forEach(t => { t.strip = t.ctl = t.pan = t.bendSrc = null; }); }
+    } finally { this.rendering = false; this.nodes = []; Vox.src = []; this.all().forEach(t => { t.strip = t.ctl = t.pan = t.bendSrc = t.tail = t.fxn = t.fxSet = t.fxKey = null; }); }
   },
   /* Renders the song faster than real time with the same sounds and effects as playback, at its written tempo, and saves it as a 16-bit stereo WAV file, or a 192 kbps MP3 when fmt is 'mp3'. */
   async exportWav(fmt) {
@@ -259,7 +318,7 @@ const Seq = {
     try {
       this.halt(); this.release(); toast('Rendering the song…', 120000);
       await this.prepare();
-      const sr = Engine.ctx.sampleRate || 44100, off = new OfflineAudioContext(2, Math.ceil((this.length + 4) * sr), sr), saved = Object.assign({}, Engine), base = this.base, skip = this.skip;
+      const sr = Engine.ctx.sampleRate || 44100, off = new OfflineAudioContext(2, Math.ceil((Math.max(this.length, Vox.end()) + 4) * sr), sr), saved = Object.assign({}, Engine), base = this.base, skip = this.skip;
       try { Engine.ctx = off; Engine.buildFx(); this.skip = -1; this.renderAll(); }      // everything is scheduled before the real context comes back
       finally { Object.assign(Engine, saved); this.base = base; this.skip = skip; }
       const buf = await off.startRendering(), chans = [buf.getChannelData(0), buf.getChannelData(1)], end = lastLoud(chans, 0.0005);
@@ -291,9 +350,9 @@ const Seq = {
     if (!Ed.on) Ed.toggle();      // the editor is always open next to the track list
     const opts = this.instOptions();
     this.tracks.forEach(t => {
-      const r = this.res(t), d = document.createElement('div'); d.className = 'sqtrack'; d.dataset.ti = t.ti; d.onclick = e => { if (e.target.closest('button,select,input') || Ed.busy()) return; Ed.ti = t.ti; Ed.sel.clear(); Ed.needFit = true; Ed.ls = {}; }; d.style.setProperty('--tc', SEQ_COLORS[t.i % SEQ_COLORS.length]);
+      const r = this.res(t), d = document.createElement('div'); d.className = 'sqtrack'; d.dataset.ti = t.ti; d.onclick = e => { if (e.target.closest('button,select,input') || Ed.busy()) return; Vox.sel = null; Ed.ti = t.ti; Ed.sel.clear(); Ed.needFit = true; Ed.ls = {}; }; d.style.setProperty('--tc', SEQ_COLORS[t.i % SEQ_COLORS.length]);
       const gm = t.drums ? 'Drums' : GM_FAMILY[t.program >> 3] + ' · program ' + (t.program + 1);
-      d.innerHTML = '<div class="sqname"><b></b><small></small></div><button class="sqb" data-k="m" title="Mute">M</button><button class="sqb" data-k="s" title="Solo">S</button><button class="sqb sing" data-k="g" title="Sing this track in Train">SING</button><select class="sqinst"></select><input type="range" class="sqvol" min="0" max="100" aria-label="Volume" title="Volume"><div class="sqm" style="grid-column:1/4"><i></i></div><input type="range" class="sqpan" min="-100" max="100" aria-label="Pan" title="Pan (double-click to centre)">';
+      d.innerHTML = '<div class="sqname"><b></b><small></small></div><button class="sqb" data-k="m" title="Mute">M</button><button class="sqb" data-k="s" title="Solo">S</button><button class="sqb sing" data-k="g" title="Sing this track in Train">SING</button><select class="sqinst"></select><input type="range" class="sqvol" min="0" max="100" aria-label="Volume" title="Volume"><div class="sqm" style="grid-column:1/4"><i></i></div><input type="range" class="sqpan" min="-100" max="100" aria-label="Pan" title="Pan (double-click to centre)"><button class="sqb sqfxb" title="Effects for this track">FX</button><div class="sqfx" hidden></div>';
       d.querySelector('b').textContent = t.name; d.querySelector('small').textContent = gm + ' · ' + t.notes.length + ' notes · ' + (t.drums ? 'kit' : noteName(t.lo) + '–' + noteName(t.hi));
       const sel = d.querySelector('select'); sel.innerHTML = opts; sel.value = t.inst; if (sel.value !== t.inst) { t.inst = 'auto'; sel.value = 'auto'; }
       const vol = d.querySelector('.sqvol'); vol.value = Math.round(t.vol * 100);
@@ -305,10 +364,19 @@ const Seq = {
       const pan = d.querySelector('.sqpan'); pan.value = Math.round((t.panv || 0) * 100);
       pan.oninput = () => { t.panv = pan.value / 100; if (t.pan) t.pan.pan.setTargetAtTime(t.panv, Engine.ctx.currentTime, 0.015); }; pan.onchange = () => this.save();
       pan.ondblclick = () => { pan.value = 0; pan.oninput(); this.save(); };
+      this.fxUI(d, t);
       sel.onchange = async () => { t.inst = sel.value; this.save(); await this.prepare(); };
       box.appendChild(d);
     });
+    Vox.rows(box);
     this.markSel();
+  },
+  /* The FX button and knobs of a mixer row. */
+  fxUI(d, t) {
+    const fxb = d.querySelector('.sqfxb'), fxp = d.querySelector('.sqfx');
+    Knobs.mount(fxp, this.FX, k => this.fxVal(t, k), (k, v) => { this.setFx(t, k, v); fxMark(); });
+    const fxMark = () => fxb.classList.toggle('on', this.FX.some(f => this.fxVal(t, f.k) !== f.d));
+    fxp.hidden = !t.fxOpen; fxMark(); fxb.onclick = () => { t.fxOpen = !t.fxOpen; fxp.hidden = !t.fxOpen; };
   },
   /* The track being edited is highlighted in the list. */
   markSel() { $$('#sqTracks .sqtrack').forEach(d => d.classList.toggle('sel', +d.dataset.ti === Ed.ti)); },
@@ -360,6 +428,10 @@ const Seq = {
     this.tracks.forEach((t, k) => {
       const el = cards[k] && cards[k].querySelector('.sqm i'); if (!el) return;
       const f = this.playing && t.an ? frac(level(t.an, this.mbuf)) : 0; t.lvl = Math.max(f, (t.lvl || 0) - fall); show(el, t.lvl);
+    });
+    this.vox.forEach((v, k) => {
+      const el = cards[this.tracks.length + k] && cards[this.tracks.length + k].querySelector('.sqm i'); if (!el) return;
+      const f = this.playing && v.an ? frac(level(v.an, this.mbuf)) : 0; v.lvl = Math.max(f, (v.lvl || 0) - fall); show(el, v.lvl);
     });
     const an = Engine.outAn, mel = $('#sqMeter i'); if (!an || !mel) return; if (!this.obuf || this.obuf.length !== an.fftSize) this.obuf = new Float32Array(an.fftSize);
     const pk = level(an, this.obuf), f = frac(pk); this.mlvl = Math.max(f, (this.mlvl || 0) - fall); show(mel, this.mlvl);

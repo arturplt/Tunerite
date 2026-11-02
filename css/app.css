@@ -75,6 +75,11 @@ canvas{display:block;width:100%}
 .stars{font-size:2.4rem;text-align:center;color:var(--warn);letter-spacing:6px}
 .stat{display:flex;justify-content:space-between;padding:0.375rem 0;border-bottom:1px solid var(--line)}
 #micBar{position:fixed;top:0;left:0;height:3px;width:0;background:#4a5575;z-index:30;pointer-events:none;transition:width .05s}
+#volZone{position:fixed;top:0;left:0;right:0;height:0.875rem;z-index:31;touch-action:none;cursor:ew-resize;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;-webkit-touch-callout:none}
+#volPop{position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);width:min(22rem,86vw);display:flex;align-items:center;gap:0.625rem;padding:0.5rem 0.875rem;background:var(--panel2);border:1px solid var(--line);border-radius:12px;z-index:31;pointer-events:none}
+#volTrack{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+#volFill{display:block;height:100%;width:0;background:var(--accent)}
+#volNum{min-width:2.8em;text-align:right}
 #toast{position:fixed;left:1rem;right:1rem;bottom:5rem;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0.75rem;z-index:20;display:none;text-align:center}
 [hidden]{display:none!important}
 html,body{font-family:'Oswald','Arial Narrow',sans-serif;letter-spacing:.03em}
@@ -285,3 +290,23 @@ details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:cen
 details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary::before{content:"▸";display:inline-block;width:1em;transition:transform .15s}
 details.fold[open]>summary::before{transform:rotate(90deg)}
+
+/* Effect knobs in Compose: a dark cap with an amber dot, and a ring of ticks that light up to the value. */
+.knobs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(8px*var(--k)) calc(4px*var(--k));padding:calc(8px*var(--k)) 0}
+.knob{display:flex;flex-direction:column;align-items:center;gap:calc(2px*var(--k));cursor:ns-resize;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:calc(8px*var(--k))}
+.knob:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.knob svg{width:calc(58px*var(--k));height:calc(58px*var(--k));display:block;overflow:visible}
+.knob line{stroke:#3a3a42;stroke-width:2;stroke-linecap:round}.knob line.on{stroke:var(--accent);filter:drop-shadow(0 0 2px rgba(255,179,71,.55))}
+.knob .kb{fill:#17171a;stroke:#0a0a0c;stroke-width:1.5;filter:drop-shadow(0 3px 3px rgba(0,0,0,.7))}
+.knob .kf{fill:#232328;stroke:#34343b;stroke-width:1}
+.knob .kd{fill:#4a4a54}.knob.lit .kd{fill:var(--accent);filter:drop-shadow(0 0 3px var(--accent))}
+.knob:hover .kb{stroke:#2a2a30}
+.knob b{font-size:calc(10px*var(--k));letter-spacing:.1em;text-transform:uppercase;color:#9a9aa6;font-weight:600}.knob.lit b{color:var(--accent)}
+
+.sqfxb{grid-column:1/4;justify-self:start}
+.sqfx{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(6px*var(--k)) calc(4px*var(--k));padding:calc(4px*var(--k)) 0}
+.sqfx[hidden]{display:none}.sqfx .knob svg{width:calc(44px*var(--k));height:calc(44px*var(--k))}
+.daw .sqtrack.sel .knob line{stroke:#55555f}.daw .sqtrack.sel .knob line.on{stroke:var(--accent)}.daw .sqtrack.sel .knob .kb{fill:#101013}.daw .sqtrack.sel .knob .kf{fill:#2a2a30;stroke:#4a4a54}.daw .sqtrack.sel .knob .kd{fill:#6a6a76}.daw .sqtrack.sel .knob.lit .kd{fill:var(--accent)}
+.sqvname{grid-column:1/4;min-width:0;width:100%;font:inherit;font-size:calc(13px*var(--k));min-height:calc(28px*var(--k));background:#141417;color:var(--text);border:1px solid #34343b;border-radius:calc(4px*var(--k));padding:0 calc(8px*var(--k))}
+#voxCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;background:#0d0c10}#voxCv[hidden]{display:none}.daw .sqtrack.sqvox{cursor:pointer}
+#voxGhost{position:absolute;right:calc(8px*var(--k));top:calc(26px*var(--k));z-index:2;opacity:.9}#voxGhost[hidden]{display:none}
