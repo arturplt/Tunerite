@@ -149,7 +149,15 @@ T.test('audio: every built-in instrument plays and every GM program has one', as
   await audio(); const c = Engine.ctx;
   Object.keys(TIMBRES).forEach(k => { const h = Engine._playNote(48, c.currentTime + 1, 0.1, { synth: k, nopool: true }); T.ok(h && h.stop, k + ' plays'); h.stop(); });
   for (let p = 0; p < 128; p++) T.ok(TIMBRES[synthFor(p)], 'program ' + p);
-  T.eq(synthFor(40), 'strings'); T.eq(synthFor(56), 'brass'); T.eq(synthFor(73), 'flute'); T.eq(synthFor(33), 'bass');
+  T.eq(synthFor(40), 'strings'); T.eq(synthFor(56), 'trumpet'); T.eq(synthFor(61), 'brass'); T.eq(synthFor(73), 'flute'); T.eq(synthFor(33), 'bass');
+});
+T.test('audio: built-in instruments are about as loud as the soft voice', async () => {
+  await audio(); const c = Engine.ctx, an = c.createAnalyser(); an.fftSize = 2048; const buf = new Float32Array(2048);
+  const loud = async (k, midi) => { const sink = c.createGain(); sink.gain.value = 1; sink.connect(an); const h = Engine._playNote(midi, c.currentTime + 0.02, 0.5, { synth: k, nopool: true, dest: sink }); let m = 0;
+    for (let i = 0; i < 16; i++) { await T.wait(25); an.getFloatTimeDomainData(buf); let r = 0; for (let j = 0; j < buf.length; j++) r += buf[j] * buf[j]; m = Math.max(m, Math.sqrt(r / buf.length)); }
+    h.stop(); await T.wait(60); return m; };
+  const ref = await loud('soft', 60), out = {}; for (const k of Object.keys(TIMBRES)) { out[k] = +(await loud(k, 60) / ref).toFixed(2); }
+  const bad = Object.keys(out).filter(k => out[k] < 0.5 || out[k] > 1.7); T.deep(bad, [], 'too quiet or too loud: ' + bad.map(k => k + ' ' + out[k]).join(', '));
 });
 T.test('audio: vibrato is only connected to voices when it is on', async () => {
   await audio(); const st = Store.data.settings, c = Engine.ctx; let linked = 0; const orig = Engine.fx.vibDepth.connect.bind(Engine.fx.vibDepth);

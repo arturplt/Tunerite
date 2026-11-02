@@ -5,9 +5,26 @@
 const GM_PROGRAMS = ['Acoustic Grand Piano','Bright Acoustic Piano','Electric Grand Piano','Honky-tonk Piano','Electric Piano 1','Electric Piano 2','Harpsichord','Clavinet','Celesta','Glockenspiel','Music Box','Vibraphone','Marimba','Xylophone','Tubular Bells','Dulcimer','Drawbar Organ','Percussive Organ','Rock Organ','Church Organ','Reed Organ','Accordion','Harmonica','Tango Accordion','Acoustic Guitar (nylon)','Acoustic Guitar (steel)','Electric Guitar (jazz)','Electric Guitar (clean)','Electric Guitar (muted)','Overdriven Guitar','Distortion Guitar','Guitar Harmonics','Acoustic Bass','Electric Bass (finger)','Electric Bass (pick)','Fretless Bass','Slap Bass 1','Slap Bass 2','Synth Bass 1','Synth Bass 2','Violin','Viola','Cello','Contrabass','Tremolo Strings','Pizzicato Strings','Orchestral Harp','Timpani','String Ensemble 1','String Ensemble 2','Synth Strings 1','Synth Strings 2','Choir Aahs','Voice Oohs','Synth Voice','Orchestra Hit','Trumpet','Trombone','Tuba','Muted Trumpet','French Horn','Brass Section','Synth Brass 1','Synth Brass 2','Soprano Sax','Alto Sax','Tenor Sax','Baritone Sax','Oboe','English Horn','Bassoon','Clarinet','Piccolo','Flute','Recorder','Pan Flute','Blown Bottle','Shakuhachi','Whistle','Ocarina','Lead 1 (square)','Lead 2 (sawtooth)','Lead 3 (calliope)','Lead 4 (chiff)','Lead 5 (charang)','Lead 6 (voice)','Lead 7 (fifths)','Lead 8 (bass + lead)','Pad 1 (new age)','Pad 2 (warm)','Pad 3 (polysynth)','Pad 4 (choir)','Pad 5 (bowed)','Pad 6 (metallic)','Pad 7 (halo)','Pad 8 (sweep)','FX 1 (rain)','FX 2 (soundtrack)','FX 3 (crystal)','FX 4 (atmosphere)','FX 5 (brightness)','FX 6 (goblins)','FX 7 (echoes)','FX 8 (sci-fi)','Sitar','Banjo','Shamisen','Koto','Kalimba','Bagpipe','Fiddle','Shehnai','Tinkle Bell','Agogo','Steel Drums','Woodblock','Taiko Drum','Melodic Tom','Synth Drum','Reverse Cymbal','Guitar Fret Noise','Breath Noise','Seashore','Bird Tweet','Telephone Ring','Helicopter','Applause','Gunshot'];
 const GM_FAMILY = ['Piano', 'Chromatic percussion', 'Organ', 'Guitar', 'Bass', 'Strings', 'Ensemble', 'Brass', 'Reed', 'Pipe', 'Synth lead', 'Synth pad', 'Synth effects', 'Ethnic', 'Percussive', 'Sound effects'];
 const SEQ_COLORS = ['#ffb347', '#7ee05a', '#5ac8e0', '#e05a8a', '#b48aff', '#e0d45a', '#ff7a5a', '#8ae0b4'];
-/* The built-in voice that stands in for a General MIDI program when no SoundFont has it. */
-const synthFor = p => p < 4 ? 'piano' : p < 6 ? 'epiano' : p < 8 ? 'pluck' : p < 16 ? 'mallet' : p < 21 ? 'organ' : p < 24 ? 'reed' : p < 32 ? 'pluck' : p < 40 ? 'bass' : p < 45 ? 'strings' : p < 48 ? 'pluck'
-  : p < 56 ? 'pad' : p < 64 ? 'brass' : p < 72 ? 'reed' : p < 80 ? 'flute' : p < 88 ? 'lead' : p < 104 ? 'pad' : p < 112 ? (p === 109 ? 'reed' : p === 110 ? 'strings' : 'pluck') : p < 120 ? 'mallet' : 'soft';
+/* The built-in voice that stands in for each General MIDI program (eight per row, one family per row) when no SoundFont has it. */
+const GM_SYNTH = [
+  'piano', 'piano', 'piano', 'piano', 'epiano', 'epiano', 'pluck', 'pluck',      // piano: grand, bright, electric grand, honky-tonk, e-pianos, harpsichord, clavinet
+  'mallet', 'mallet', 'mallet', 'mallet', 'mallet', 'mallet', 'mallet', 'mallet',      // chromatic percussion
+  'organ', 'organ', 'organ', 'organ', 'organ', 'reed', 'reed', 'reed',      // organ, then accordion and harmonica
+  'nylon', 'pluck', 'pluck', 'pluck', 'muted', 'dist', 'dist', 'pluck',      // guitar
+  'cello', 'bass', 'bass', 'bass', 'bass', 'bass', 'bass', 'bass',      // bass
+  'strings', 'strings', 'cello', 'cello', 'strings', 'pizz', 'harp', 'timpani',      // strings
+  'strings', 'strings', 'warmpad', 'warmpad', 'aah', 'ooh', 'aah', 'brassens',      // ensemble
+  'trumpet', 'trombone', 'trombone', 'trumpet', 'brassens', 'brass', 'brass', 'brass',      // brass
+  'sax', 'sax', 'sax', 'sax', 'oboe', 'oboe', 'reed', 'clarinet',      // reed
+  'flute', 'flute', 'recorder', 'panflute', 'panflute', 'panflute', 'flute', 'flute',      // pipe
+  'square', 'lead', 'recorder', 'recorder', 'dist', 'aah', 'sync', 'sync',      // synth lead
+  'warmpad', 'warmpad', 'brightpad', 'aah', 'warmpad', 'brightpad', 'ooh', 'brightpad',      // synth pad
+  'wind', 'warmpad', 'mallet', 'warmpad', 'brightpad', 'ooh', 'pad', 'sync',      // synth effects
+  'sitar', 'pluck', 'pluck', 'harp', 'kalimba', 'bagpipe', 'strings', 'oboe',      // ethnic
+  'mallet', 'mallet', 'steeldrum', 'mallet', 'taiko', 'timpani', 'timpani', 'wind',      // percussive
+  'soft', 'wind', 'sea', 'flute', 'mallet', 'wind', 'sea', 'taiko'      // sound effects
+];
+const synthFor = p => GM_SYNTH[p] || 'soft';
 const SeqStore = {
   db: null,
   open() { if (this.db) return Promise.resolve(this.db); return new Promise((res, rej) => { if (!window.indexedDB) return rej(new Error('no storage')); const rq = indexedDB.open('pitchperfect-seq', 1); rq.onupgradeneeded = () => rq.result.createObjectStore('songs', { keyPath: 'name' }); rq.onsuccess = () => { this.db = rq.result; res(this.db); }; rq.onerror = () => rej(rq.error); }); },
@@ -408,7 +425,7 @@ const Seq = {
     const g = (l, h) => '<optgroup label="' + l + '">' + h + '</optgroup>', o = (v, l) => '<option value="' + v + '">' + l + '</option>';
     let h = o('auto', 'Auto (from the file)');
     if (SF.sf) h += g('SoundFont: ' + SF.name.replace(/[<>&"]/g, ''), SF.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).map(x => o('sf:' + x.i, (x.p.bank ? 'Bank ' + x.p.bank + ' · ' : '') + x.p.name.replace(/[<>&"]/g, ''))).join(''));
-    return h + g('Built-in', Object.keys(TIMBRES).map(k => o('syn:' + k, TIMBRES[k].label)).join('') + o('kit', 'Drum kit'));
+    return h + timbreOptions().replace(/<optgroup label="/g, '<optgroup label="Built-in: ').replace(/value="/g, 'value="syn:') + g('Built-in: Drums', o('kit', 'Drum kit'));
   },
   render() {
     const box = $('#sqTracks'); if (!box) return; box.textContent = '';

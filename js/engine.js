@@ -2,25 +2,60 @@
 /* The volume slider is squared, so the quiet half of it has fine steps, and the output stage sits 6 dB under full scale: earbuds were too loud at the old default. */
 const volGain = v => v * v, OUT_TRIM = 0.5;
 /* ---- Audio engine ---- */
-/* The built-in instruments: each is one oscillator with a stack of partials (amps), an attack (a), either held for the whole note (hold) or decaying to a fraction (f) of its level over T seconds, and an optional low-pass filter at lp times the pitch. */
+/* The built-in instruments. Each is one oscillator with a stack of partials (amps), grouped by family (fam) for the menus.
+   a = attack in seconds; hold = sustains for the whole note, otherwise it decays to the fraction f of its level over T seconds;
+   lp = low-pass at that many times the pitch; drive = clipping; formants = [[Hz, Q, level]...] band-passes that give a vowel;
+   noise = [level, band-pass at that many times the pitch (or fixed Hz in noise[3]), Q] breath or wind mixed in; noOsc = noise only;
+   glide = [start multiple of the pitch, seconds] for a drum that drops in pitch; trim = loudness correction (the tests check every voice against 'soft'). */
 const saw = n => Array.from({ length: n }, (_, i) => 1 / (i + 1));
+const odd = n => Array.from({ length: n }, (_, i) => i % 2 ? 0 : 1 / (i + 1));
 const TIMBRES = {
-  soft: { label: 'Soft', amps: [1, 0.45, 0.2, 0.1] },
-  piano: { label: 'Piano-like', amps: [1, 0.6, 0.38, 0.22, 0.14, 0.09], f: 0.08, T: 2.2 },
-  organ: { label: 'Organ', amps: [1, 0.8, 0.55, 0.4, 0.25], hold: true },
-  pure: { label: 'Pure sine', amps: [1] },
-  epiano: { label: 'Electric piano', amps: [1, 0.25, 0.05, 0.18, 0.03], f: 0.1, T: 2.5 },
-  pluck: { label: 'Plucked string', amps: saw(9), f: 0.04, T: 1.2, lp: 7 },
-  mallet: { label: 'Mallet / bell', amps: [1, 0, 0, 0.35, 0, 0, 0.12], f: 0.03, T: 1.4 },
-  strings: { label: 'Strings', amps: saw(12), a: 0.12, hold: true, lp: 9 },
-  brass: { label: 'Brass', amps: [1, 0.9, 0.8, 0.6, 0.5, 0.35, 0.25, 0.15, 0.1], a: 0.05, hold: true, lp: 8 },
-  reed: { label: 'Reed', amps: [1, 0, 0.5, 0, 0.3, 0, 0.15, 0, 0.08], a: 0.03, hold: true },
-  flute: { label: 'Flute', amps: [1, 0.2, 0.08, 0.03], a: 0.06, hold: true },
-  bass: { label: 'Synth bass', amps: saw(8), f: 0.45, T: 1.5, lp: 4 },
-  lead: { label: 'Synth lead', amps: saw(14), a: 0.015, hold: true },
-  pad: { label: 'Pad', amps: [1, 0.5, 0.33, 0.25, 0.2, 0.15], a: 0.3, hold: true }
+  soft: { fam: 'Basic', label: 'Soft', amps: [1, 0.45, 0.2, 0.1] },
+  pure: { fam: 'Basic', label: 'Pure sine', amps: [1] },
+  piano: { fam: 'Piano', label: 'Piano-like', amps: [1, 0.6, 0.38, 0.22, 0.14, 0.09], f: 0.08, T: 2.2 },
+  epiano: { fam: 'Piano', label: 'Electric piano', amps: [1, 0.25, 0.05, 0.18, 0.03], f: 0.1, T: 2.5 },
+  mallet: { fam: 'Mallets and bells', label: 'Mallet / bell', amps: [1, 0, 0, 0.35, 0, 0, 0.12], f: 0.03, T: 1.4 },
+  kalimba: { fam: 'Mallets and bells', label: 'Kalimba', amps: [1, 0, 0, 0, 0.35, 0, 0, 0, 0, 0.1], f: 0.03, T: 1.2 },
+  steeldrum: { fam: 'Mallets and bells', label: 'Steel drum', amps: [1, 0, 0.5, 0, 0, 0.25], f: 0.03, T: 1.2 },
+  organ: { fam: 'Organ', label: 'Organ', amps: [1, 0.8, 0.55, 0.4, 0.25], hold: true },
+  pluck: { fam: 'Guitar and plucked', label: 'Plucked string', amps: saw(9), f: 0.04, T: 1.2, lp: 7 },
+  nylon: { fam: 'Guitar and plucked', label: 'Nylon guitar', amps: saw(7), f: 0.05, T: 1.6, lp: 5 },
+  muted: { fam: 'Guitar and plucked', label: 'Muted guitar', amps: saw(6), f: 0.02, T: 0.4, lp: 3 },
+  dist: { fam: 'Guitar and plucked', label: 'Distortion guitar', amps: saw(14), f: 0.2, T: 2.5, lp: 6, drive: 8 },
+  harp: { fam: 'Guitar and plucked', label: 'Harp', amps: [1, 0.5, 0.25, 0.12, 0.06, 0.03], f: 0.04, T: 2.5 },
+  sitar: { fam: 'Guitar and plucked', label: 'Sitar', amps: [1, 0.8, 0.9, 0.7, 0.8, 0.6, 0.5, 0.45, 0.35, 0.3, 0.2], f: 0.05, T: 2, lp: 12, drive: 3 },
+  bass: { fam: 'Bass', label: 'Synth bass', amps: saw(8), f: 0.45, T: 1.5, lp: 4 },
+  strings: { fam: 'Strings', label: 'Strings', amps: saw(12), a: 0.12, hold: true, lp: 9 },
+  cello: { fam: 'Strings', label: 'Cello / bowed bass', amps: saw(12), a: 0.09, hold: true, lp: 5 },
+  pizz: { fam: 'Strings', label: 'Pizzicato', amps: saw(6), f: 0.02, T: 0.35, lp: 6 },
+  aah: { fam: 'Voices', label: 'Choir "aah"', amps: saw(16), a: 0.12, hold: true, trim: 4.5, formants: [[800, 6, 1], [1150, 6, 0.7], [2900, 8, 0.3]] },
+  ooh: { fam: 'Voices', label: 'Choir "ooh"', amps: saw(16), a: 0.12, hold: true, trim: 5, formants: [[330, 6, 1], [800, 6, 0.4], [2700, 8, 0.1]] },
+  trumpet: { fam: 'Brass', label: 'Trumpet', amps: [1, 0.95, 0.85, 0.7, 0.55, 0.4, 0.3, 0.2, 0.12, 0.08], a: 0.04, hold: true, lp: 10 },
+  trombone: { fam: 'Brass', label: 'Trombone / tuba', amps: [1, 0.8, 0.6, 0.45, 0.3, 0.2, 0.12, 0.07], a: 0.07, hold: true, lp: 4 },
+  brassens: { fam: 'Brass', label: 'Soft brass', amps: [1, 0.7, 0.5, 0.35, 0.22, 0.14, 0.08], a: 0.12, hold: true, lp: 5 },
+  brass: { fam: 'Brass', label: 'Brass section', amps: [1, 0.9, 0.8, 0.6, 0.5, 0.35, 0.25, 0.15, 0.1], a: 0.05, hold: true, lp: 8 },
+  sax: { fam: 'Reeds', label: 'Saxophone', amps: [1, 0.8, 0.6, 0.55, 0.4, 0.3, 0.25, 0.15, 0.1, 0.06], a: 0.05, hold: true, lp: 9, noise: [0.04, 3, 1] },
+  oboe: { fam: 'Reeds', label: 'Oboe', amps: [0.6, 1, 0.9, 0.6, 0.4, 0.3, 0.2, 0.1], a: 0.04, hold: true, lp: 12 },
+  clarinet: { fam: 'Reeds', label: 'Clarinet', amps: odd(10), a: 0.04, hold: true, lp: 8 },
+  reed: { fam: 'Reeds', label: 'Reed', amps: [1, 0, 0.5, 0, 0.3, 0, 0.15, 0, 0.08], a: 0.03, hold: true },
+  flute: { fam: 'Pipes', label: 'Flute', amps: [1, 0.2, 0.08, 0.03], a: 0.06, hold: true },
+  recorder: { fam: 'Pipes', label: 'Recorder', amps: [1, 0.05, 0.12, 0.02], a: 0.05, hold: true, noise: [0.05, 2, 2] },
+  panflute: { fam: 'Pipes', label: 'Pan flute', amps: [1, 0.1, 0.04], a: 0.08, hold: true, noise: [0.14, 1, 3] },
+  bagpipe: { fam: 'Pipes', label: 'Bagpipe', amps: [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1], a: 0.03, hold: true, lp: 9 },
+  lead: { fam: 'Synth lead', label: 'Sawtooth lead', amps: saw(14), a: 0.015, hold: true },
+  square: { fam: 'Synth lead', label: 'Square lead', amps: odd(15), a: 0.01, hold: true },
+  sync: { fam: 'Synth lead', label: 'Sync lead', amps: [1, 0.3, 0.9, 0.25, 0.7, 0.2, 0.5, 0.2, 0.35, 0.15, 0.25], a: 0.01, hold: true },
+  pad: { fam: 'Synth pad', label: 'Pad', amps: [1, 0.5, 0.33, 0.25, 0.2, 0.15], a: 0.3, hold: true },
+  warmpad: { fam: 'Synth pad', label: 'Warm pad', amps: saw(8), a: 0.5, hold: true, lp: 3 },
+  brightpad: { fam: 'Synth pad', label: 'Bright pad', amps: saw(14), a: 0.35, hold: true, lp: 7 },
+  timpani: { fam: 'Percussive', label: 'Timpani', amps: [1, 0.3, 0.1], f: 0.02, T: 0.9, glide: [1.25, 0.06] },
+  taiko: { fam: 'Percussive', label: 'Taiko', amps: [1, 0.4, 0.1], f: 0.01, T: 0.5, glide: [2, 0.1], noise: [0.2, 2, 0.7] },
+  wind: { fam: 'Effects', label: 'Wind', amps: [1], noOsc: true, trim: 14, a: 0.4, hold: true, noise: [0.5, 1, 4] },
+  sea: { fam: 'Effects', label: 'Sea', amps: [1], noOsc: true, trim: 4, a: 0.6, hold: true, noise: [0.5, 0, 0.5, 600] }
 };
 const timbreOf = tb => TIMBRES[tb] || TIMBRES.soft;      // anything else ('sf' while the font is still loading) sounds soft
+/* The built-in voices as <optgroup>s, one per family, for the instrument menus. */
+const timbreOptions = () => { const fams = []; Object.keys(TIMBRES).forEach(k => { const f = TIMBRES[k].fam; let g = fams.find(x => x.f === f); if (!g) fams.push(g = { f, o: [] }); g.o.push('<option value="' + k + '">' + TIMBRES[k].label + '</option>'); }); return fams.map(g => '<optgroup label="' + g.f + '">' + g.o.join('') + '</optgroup>').join(''); };
 const Engine = {
   ctx: null, stream: null, master: null, node: null, inst: 'voice', tracker: null, listeners: new Set(), ready: false, level: -90, lat: 0,
   async start() {
@@ -219,22 +254,41 @@ const Engine = {
     let peak = 0; for (let k = 0; k < 2048; k++) { const th = k / 2048 * 2 * Math.PI; let v = 0; amps.forEach((a, i) => { v += a / sum * Math.sin((i + 1) * th); }); peak = Math.max(peak, Math.abs(v)); }
     return cache[tb] = { ctx: c, wave: c.createPeriodicWave(real, imag), k: peak };      // a periodic wave is normalised to a peak of 1, the stack peaked at `peak`
   },
+  /* One second of white noise, made once and shared by the drum kit and the breathy voices. */
+  noiseBuffer() {
+    if (!this.noiseBuf) { const c = this.ctx, b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; this.noiseBuf = b; }
+    return this.noiseBuf;
+  },
+  driveCurve(k) { const m = this.curves || (this.curves = {}); if (!m[k]) { const n = 1024, a = new Float32Array(n); for (let i = 0; i < n; i++) a[i] = Math.tanh(k * (i / (n - 1) * 2 - 1)) / Math.tanh(k); m[k] = a; } return m[k]; },
   _playNote(midi, when, dur, o) {
     if (o.preset != null ? SF.cache.has(o.preset) : Store.data.settings.timbre === 'sf' && SF.ready) { try { const r = SF.play(midi, when, dur, o); if (r) return r; } catch (e) { console.error(e); } }   // notes the font has no sample for fall back to the built-in sound
     const c = this.ctx, a4 = Store.data.settings.a4;
     const g = c.createGain(); g.connect(o.dest || this.master);
     const tb = o.synth || Store.data.settings.timbre, TB = timbreOf(tb), W = this.voiceWave(tb), vib = this.vibOn(), freq = midiToFreq(midi, a4);
     const osc = c.createOscillator(); osc.setPeriodicWave(W.wave);      // the whole timbre is one oscillator: a stack of sine partials cost four to six
-    osc.frequency.setValueAtTime(freq, when);
+    if (TB.glide && o.midi2 == null) { osc.frequency.setValueAtTime(freq * TB.glide[0], when); osc.frequency.exponentialRampToValueAtTime(freq, when + TB.glide[1]); } else osc.frequency.setValueAtTime(freq, when);
     if (o.midi2 != null) osc.frequency.exponentialRampToValueAtTime(midiToFreq(o.midi2, a4), when + dur);
     if (this.fx && vib) this.fx.vibDepth.connect(osc.detune);      // a connected detune makes every oscillator compute its pitch per sample, so only when vibrato is on
     if (o.bend) o.bend.connect(osc.detune);      // pitch wheel of the sequencer track
-    g.gain.value = 0; let lp = null; if (TB.lp) { lp = c.createBiquadFilter(); lp.frequency.value = Math.min(freq * TB.lp, 16000); osc.connect(lp); lp.connect(g); } else osc.connect(g); osc.start(when); osc.stop(when + dur + 0.15); const oscs = [osc], gain = (o.gain == null ? 0.25 : o.gain) * W.k;
+    g.gain.value = 0; const nodes = [g], oscs = [osc], gain = (o.gain == null ? 0.25 : o.gain) * W.k * (TB.trim || 1);
+    const bq = (type, hz, q) => { const f = c.createBiquadFilter(); f.type = type; f.frequency.value = hz; if (q) f.Q.value = q; nodes.push(f); return f; };
+    if (!TB.noOsc) {      // the oscillator's route: low-pass, clipping, then straight on or through the vowel filters
+      let src = osc; const chain = n => { src.connect(n); src = n; };
+      if (TB.lp) chain(bq('lowpass', Math.min(freq * TB.lp, 16000)));
+      if (TB.drive) { const sh = c.createWaveShaper(); sh.curve = this.driveCurve(TB.drive); nodes.push(sh); chain(sh); }
+      if (TB.formants) TB.formants.forEach(F => { const b = bq('bandpass', F[0], F[1]), fg = c.createGain(); fg.gain.value = F[2]; nodes.push(fg); src.connect(b); b.connect(fg); fg.connect(g); });
+      else src.connect(g);
+    }
+    osc.start(when); osc.stop(when + dur + 0.15);
+    if (TB.noise) {      // breath or wind: looped noise through a band-pass, shaped by the same envelope
+      const N = TB.noise, ns = c.createBufferSource(), nf = bq('bandpass', N[3] || clamp(freq * N[1], 80, 12000), N[2]), ng = c.createGain(); ng.gain.value = N[0]; nodes.push(ng);
+      ns.buffer = this.noiseBuffer(); ns.loop = true; ns.connect(nf); nf.connect(ng); ng.connect(g); ns.start(when, Math.random() * 0.5); ns.stop(when + dur + 0.15); oscs.push(ns);
+    }
     const at = Math.min(TB.a || 0.01, Math.max(0.01, dur * 0.4));      // attack: a bowed or blown sound swells, a struck one starts at once
     g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(gain, when + at);
     if (o.sustain || o.midi2 != null || TB.hold) { g.gain.setValueAtTime(gain, Math.max(when + at + 0.01, when + dur - 0.05)); g.gain.linearRampToValueAtTime(0, when + dur + 0.05); }
     else { g.gain.exponentialRampToValueAtTime(gain * (TB.f || 0.35), when + Math.max(at + 0.01, Math.min(dur, TB.T || 1.5))); g.gain.linearRampToValueAtTime(0, when + dur + 0.08); }
-    oscs[0].onended = () => { g.disconnect(); if (lp) lp.disconnect(); if (o.bend) oscs.forEach(x => { try { o.bend.disconnect(x.detune); } catch (e) { /* already gone */ } }); };
+    osc.onended = () => { nodes.forEach(n => { try { n.disconnect(); } catch (e) {} }); if (o.bend) try { o.bend.disconnect(osc.detune); } catch (e) { /* already gone */ } };
     return {
       stop: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + 0.02); oscs.forEach(x => x.stop(n + 0.03)); } catch (e) {} },      // short fade: cutting a sine mid-wave clicks
       release: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + 0.15); oscs.forEach(x => x.stop(n + 0.2)); } catch (e) {} }
@@ -243,7 +297,7 @@ const Engine = {
   /* Built-in General MIDI drum kit for when no SoundFont drums are available: every sound is a pitched sine sweep and/or filtered noise. */
   drum(note, when, vel, dest, nopool) {
     const c = this.ctx, parts = [], tail = { t: when }, v = Math.pow(clamp(vel || 100, 1, 127) / 127, 1.3), out = dest || this.master;
-    if (!this.noiseBuf) { const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; this.noiseBuf = b; }
+    this.noiseBuffer();
     const env = (g, peak, dur) => { g.gain.setValueAtTime(0.0001, when); g.gain.linearRampToValueAtTime(peak, when + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, when + dur); };
     const tone = (f0, f1, dur, peak) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(f0, when); o.frequency.exponentialRampToValueAtTime(f1, when + dur); env(g, peak * v, dur); o.connect(g); g.connect(out); o.start(when); o.stop(when + dur + 0.05); parts.push({ g, s: o }); tail.t = Math.max(tail.t, when + dur + 0.05); };
     const noise = (type, f, dur, peak) => { const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain(); s.buffer = this.noiseBuf; fl.type = type; fl.frequency.value = f; env(g, peak * v, dur); s.connect(fl); fl.connect(g); g.connect(out); s.start(when, Math.random() * 0.5); s.stop(when + dur + 0.05); parts.push({ g, s }); tail.t = Math.max(tail.t, when + dur + 0.05); };

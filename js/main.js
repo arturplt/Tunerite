@@ -13,6 +13,7 @@ function bind() {
   vz.onpointermove = e => { if (vz.hasPointerCapture(e.pointerId)) setVolFrom(e.clientX); };
   vz.onpointerup = vz.onpointercancel = () => { Store.save(); vHide = setTimeout(() => { vp.hidden = true; }, 400); };
   $('#setUi').onchange = e => { Store.data.settings.uiSize = e.target.value; Store.save(); applyUiSize(); };
+  $('#setTimbre').innerHTML = timbreOptions() + '<option value="sf" id="sfOpt" hidden>SoundFont</option>';
   set('#setInst', 'inst', e => e.value); set('#setKbPlay', 'kbPlay', e => e.checked); set('#setTimbre', 'timbre', e => e.value); $$('.fxRv').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.reverb = e.target.value; Knobs.free('reverb'); Store.save(); Engine.applySettings(); $$('.fxRv').forEach(x => x.value = e.target.value); });
   $$('.fxCh').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.chorus = e.target.checked; Knobs.free('chorus'); Store.save(); Engine.applySettings(); $$('.fxCh').forEach(x => x.checked = e.target.checked); }); set('#setKb', 'kbSound', e => e.checked);
   $('#setMic').onchange = async e => { Store.data.settings.micId = e.target.value; Store.save(); try { await Engine.setMic(e.target.value); toast('Microphone changed.'); } catch (err) { toast(micMessage(err)); } };
