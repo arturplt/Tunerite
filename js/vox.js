@@ -53,7 +53,7 @@ const Vox = {
     if (list && list.length) Seq.render();
   },
   /* ---- pitch correction ---- */
-  TKEYS: ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'], TSCALES: [['chrom', 'Chromatic'], ['follow', 'Editor scale / song key'], ['major', 'Major'], ['minor', 'Minor'], ['pentmaj', 'Pentatonic major'], ['pentmin', 'Pentatonic minor'], ['blues', 'Blues'], ['dorian', 'Dorian'], ['mixo', 'Mixolydian'], ['harm', 'Harmonic minor']],
+  TKEYS: ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'], TSCALES: [['chrom', 'Chromatic'], ['follow', 'Editor scale / song key'], ['major', 'Major'], ['minor', 'Minor'], ['pentmaj', 'Pentatonic major'], ['pentmin', 'Pentatonic minor'], ['blues', 'Minor blues'], ['bluesmaj', 'Major blues'], ['dorian', 'Dorian'], ['mixo', 'Mixolydian'], ['harm', 'Harmonic minor']],
   /* The tuning knobs. d: resting value; txt: the label shows the value in real units. */
   TKNOBS: [
     { k: 'amt', n: 'Tune', d: 0, bi: false, tip: 'How far the voice is pulled to the nearest note' },

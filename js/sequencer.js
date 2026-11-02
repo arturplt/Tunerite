@@ -65,7 +65,10 @@ const Seq = {
   /* Which sound a track plays: a SoundFont preset (index), a built-in voice, or the drum kit. */
   res(t) {
     const c = t.inst;
-    if (c.startsWith('sf:')) { const i = +c.slice(3); if (SF.sf && SF.sf.presets[i]) return { preset: i }; }
+    if (c.startsWith('sf:')) {   // 'sf:<font file>|<preset>' (a stored font of its own) or the older 'sf:<preset>' (the active font)
+      const m = /^sf:(.*)\|(\d+)$/.exec(c), F = m ? SF.fontOf(m[1]) : SF, i = m ? +m[2] : +c.slice(3);
+      if (F && F.sf && F.sf.presets[i]) return { preset: i, font: F };
+    }
     else if (c === 'kit') return { kit: true };
     else if (c.startsWith('syn:')) return { synth: c.slice(4) };
     const pi = SF.sf ? SF.findPreset(t.bank, t.program, t.drums) : -1;
@@ -73,9 +76,10 @@ const Seq = {
   },
   /* Decodes the SoundFont instruments the tracks use (the first time can take a moment). */
   async prepare() {
-    const seen = new Set(), ids = [];
-    this.tracks.forEach(t => { const r = this.res(t); if (r.preset != null && !seen.has(r.preset)) { seen.add(r.preset); ids.push(r.preset); } });
-    for (const i of ids) { try { await SF.build(i); } catch (e) { console.warn('instrument skipped', e); } }
+    for (const t of this.tracks) { const m = /^sf:(.*)\|\d+$/.exec(t.inst); if (m && !SF.fontOf(m[1])) { try { await SF.fontLoad(m[1]); } catch (e) { console.warn('SoundFont skipped', e); } } }   // a track's own font may not be loaded yet
+    const seen = [];
+    this.tracks.forEach(t => { const r = this.res(t); if (r.preset != null) { const F = r.font || SF; if (!seen.some(x => x.F === F && x.i === r.preset)) seen.push({ F, i: r.preset }); } });
+    for (const x of seen) { try { await SF.build(x.i, null, x.F); } catch (e) { console.warn('instrument skipped', e); } }
   },
   pos() { if (!this.playing) return this.base; return clamp(Math.max(this.base, this.base + (Engine.ctx.currentTime - this.T0) * this.tempo), 0, this.maxPos); },
   /* One chain per track: strip (the mixer's volume, mute and solo) -> ctl (volume events) -> pan -> master. Tracks without volume, pan or bend events have only the strip. */
@@ -287,10 +291,10 @@ const Seq = {
   },
   note(t, r, n, when, dur) {
     if (t.drums && Steps.silent(t, n.midi)) return;
-    const vel = n.vel || 90; let pre = -1, kit = !!r.kit, syn = r.synth;
-    if (r.preset != null) { if (SF.cache.has(r.preset)) pre = r.preset; else if (t.drums) kit = true; else syn = synthFor(t.program); }
+    const vel = n.vel || 90; let pre = -1, kit = !!r.kit, syn = r.synth; const F = r.font || SF;
+    if (r.preset != null) { if (F.cache.has(r.preset)) pre = r.preset; else if (t.drums) kit = true; else syn = synthFor(t.program); }
     const h = kit ? Engine.drum(n.midi, when, vel, t.strip, this.rendering)
-      : Engine.playNote(n.midi, when, t.drums ? Math.max(dur, 0.4) : dur, { preset: pre, synth: syn || 'soft', vel, dest: t.strip, seq: true, bend: t.bendSrc || undefined, nopool: this.rendering, gain: pre >= 0 ? 0.2 : 0.2 * (0.45 + 0.55 * vel / 127) });
+      : Engine.playNote(n.midi, when, t.drums ? Math.max(dur, 0.4) : dur, { preset: pre, font: pre >= 0 && F !== SF ? F : undefined, synth: syn || 'soft', vel, dest: t.strip, seq: true, bend: t.bendSrc || undefined, nopool: this.rendering, gain: pre >= 0 ? 0.2 : 0.2 * (0.45 + 0.55 * vel / 127) });
     if (h) this.nodes.push({ h, end: when + dur + 1.5 });
   },
   pause() { const p = this.pos(); this.halt(); this.release(); this.base = p; this.sync(); },
@@ -424,8 +428,8 @@ const Seq = {
   instOptions() {
     const g = (l, h) => '<optgroup label="' + l + '">' + h + '</optgroup>', o = (v, l) => '<option value="' + v + '">' + l + '</option>';
     let h = o('auto', 'Auto (from the file)');
-    if (SF.sf) h += g('SoundFont: ' + SF.name.replace(/[<>&"]/g, ''), SF.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).map(x => o('sf:' + x.i, (x.p.bank ? 'Bank ' + x.p.bank + ' · ' : '') + x.p.name.replace(/[<>&"]/g, ''))).join(''));
-    return h + timbreOptions().replace(/<optgroup label="/g, '<optgroup label="Built-in: ').replace(/value="/g, 'value="syn:') + g('Built-in: Drums', o('kit', 'Drum kit'));
+    if (SF.sf) h += g('SoundFont: ' + SF.name.replace(/[<>&"]/g, ''), SF.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).map(x => o('sf:' + (Store.data.settings.sfName ? Store.data.settings.sfName + '|' : '') + x.i, (x.p.bank ? 'Bank ' + x.p.bank + ' · ' : '') + x.p.name.replace(/[<>&"]/g, ''))).join(''));
+    return h + '<option value="\u0001sounds">🎼 Other SoundFonts…</option>' + timbreOptions().replace(/<optgroup label="/g, '<optgroup label="Built-in: ').replace(/value="/g, 'value="syn:') + g('Built-in: Drums', o('kit', 'Drum kit'));
   },
   render() {
     const box = $('#sqTracks'); if (!box) return; box.textContent = '';
@@ -439,7 +443,10 @@ const Seq = {
       const gm = t.drums ? 'Drums' : GM_FAMILY[t.program >> 3] + ' · program ' + (t.program + 1);
       d.innerHTML = '<div class="sqname"><b></b><small></small></div><button class="sqb" data-k="m" title="Mute">M</button><button class="sqb" data-k="s" title="Solo">S</button><button class="sqb sing" data-k="g" title="Sing this track in Train">SING</button><select class="sqinst"></select><input type="range" class="sqvol" min="0" max="100" aria-label="Volume" title="Volume"><div class="sqm" style="grid-column:1/4"><i></i></div><input type="range" class="sqpan" min="-100" max="100" aria-label="Pan" title="Pan (double-click to centre)"><button class="sqb sqfxb" title="Effects for this track">FX</button><div class="sqfx" hidden></div>';
       d.querySelector('b').textContent = t.name; d.querySelector('small').textContent = gm + ' · ' + t.notes.length + ' notes · ' + (t.drums ? 'kit' : noteName(t.lo) + '–' + noteName(t.hi));
-      const sel = d.querySelector('select'); sel.innerHTML = opts; sel.value = t.inst; if (sel.value !== t.inst) { t.inst = 'auto'; sel.value = 'auto'; }
+      const sel = d.querySelector('select'); sel.innerHTML = opts;
+      const nm = Store.data.settings.sfName; if (SF.sf && nm && /^sf:\d+$/.test(t.inst)) t.inst = 'sf:' + nm + '|' + t.inst.slice(3);      // the older form meant the active font: pin it to that font
+      if (/^sf:.*\|\d+$/.test(t.inst) && ![...sel.options].some(x => x.value === t.inst)) { const m = /^sf:(.*)\|(\d+)$/.exec(t.inst), F = SF.fontOf(m[1]), p = F && F.sf.presets[+m[2]], x = document.createElement('option'); x.value = t.inst; x.textContent = m[1].replace(/\.sf[23]$/i, '') + ' · ' + (p ? p.name : '#' + (+m[2] + 1)); sel.insertBefore(x, sel.options[1]); }   // an instrument from another stored font
+      sel.value = t.inst; if (sel.value !== t.inst) { t.inst = 'auto'; sel.value = 'auto'; }
       const vol = d.querySelector('.sqvol'); vol.value = Math.round(t.vol * 100);
       d.querySelector('[data-k=m]').classList.toggle('on', t.mute); d.querySelector('[data-k=s]').classList.toggle('on', t.solo); d.querySelector('[data-k=g]').classList.toggle('on', this.sing === t.i);
       d.querySelector('[data-k=m]').onclick = e => { t.mute = !t.mute; e.currentTarget.classList.toggle('on', t.mute); this.gains(); this.save(); };
@@ -450,7 +457,7 @@ const Seq = {
       pan.oninput = () => { t.panv = pan.value / 100; if (t.pan) t.pan.pan.setTargetAtTime(t.panv, Engine.ctx.currentTime, 0.015); }; pan.onchange = () => this.save();
       pan.ondblclick = () => { pan.value = 0; pan.oninput(); this.save(); };
       this.fxUI(d, t);
-      sel.onchange = async () => { t.inst = sel.value; this.save(); await this.prepare(); };
+      sel.onchange = async () => { if (sel.value === '\u0001sounds') { sel.value = t.inst; Ed.ti = t.ti; Ed.sel.clear(); $('#sfPop').hidden = false; SFMgr.refresh(true); return; } t.inst = sel.value; this.save(); await this.prepare(); };
       box.appendChild(d);
     });
     Vox.rows(box);

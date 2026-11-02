@@ -76,6 +76,7 @@ function bind() {
   $('#kyDown').onclick = () => Keys.shift(-1); $('#kyUp').onclick = () => Keys.shift(1); $('#kySpan').onchange = e => { Keys.span = +e.target.value; Keys.fit(); };
   $('#kyPedal').onclick = () => VKeys.setPedal(!VKeys.pedal);
   $('#sfLoadDir').onclick = () => $('#sfDir').click(); $('#sfDir').onchange = e => { const f = [...e.target.files]; e.target.value = ''; SFUI.onDir(f); };
+  SFMgr.init();
   $$('.sfQuickPre').forEach(el => el.onchange = e => { e.target.blur(); SFUI.prepare(+e.target.value); });
   $$('.sfQuick').forEach(el => el.onchange = e => { e.target.blur(); if (e.target.value === '\u0001dir') { SFUI.list(); $('#sfDir').click(); } else SFUI.pick(e.target.value); });
   SFUI.list();

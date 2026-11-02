@@ -261,7 +261,7 @@ const Engine = {
   },
   driveCurve(k) { const m = this.curves || (this.curves = {}); if (!m[k]) { const n = 1024, a = new Float32Array(n); for (let i = 0; i < n; i++) a[i] = Math.tanh(k * (i / (n - 1) * 2 - 1)) / Math.tanh(k); m[k] = a; } return m[k]; },
   _playNote(midi, when, dur, o) {
-    if (o.preset != null ? SF.cache.has(o.preset) : Store.data.settings.timbre === 'sf' && SF.ready) { try { const r = SF.play(midi, when, dur, o); if (r) return r; } catch (e) { console.error(e); } }   // notes the font has no sample for fall back to the built-in sound
+    if (o.preset != null ? (o.font || SF).cache.has(o.preset) : Store.data.settings.timbre === 'sf' && SF.ready) { try { const r = SF.play(midi, when, dur, o); if (r) return r; } catch (e) { console.error(e); } }   // notes the font has no sample for fall back to the built-in sound
     const c = this.ctx, a4 = Store.data.settings.a4;
     const g = c.createGain(); g.connect(o.dest || this.master);
     const tb = o.synth || Store.data.settings.timbre, TB = timbreOf(tb), W = this.voiceWave(tb), vib = this.vibOn(), freq = midiToFreq(midi, a4);

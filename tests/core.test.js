@@ -5,7 +5,7 @@ const CORE_FILES = ['pitch', 'scoring', 'exercises', 'midi-import', 'song', 'pro
 const core = CORE_FILES.map(f => fs.readFileSync(path.join(__dirname, '..', 'js', 'core', f + '.js'), 'utf8').replace(/^"use strict";\n/, '')).join('\n')
   .split('/* CORE:BEGIN */')[1].split('/* CORE:END */')[0];
 const C = new Function(core + `; return { freqToMidi, midiToFreq, noteName, centsOff, analyse, PitchTracker, scoreEvent, aggregate, starsFor,
-  buildExercise, parseMidi, newSong, newSongTrack, parseSong, writeSong, songSegs, songSec, songTick, songToUnits, gridTicks, snapTick, songSnapshot, songRestore, EditHistory, sortNotes, notesTranspose, notesQuantize, notesCopy, notesPaste, songEndTick, songBarLines, songBeats, framesToNotes, songTrackChannels, songFreeChannel, songAddTrack, songDeleteTrack, songMoveTrack, songSetProgram, songSetChannel, songTempoAt, songSetTempo, songRemoveTempo, songBarStart, songSetTimeSig, songRemoveTimeSig, keyName, songSetKey, songCtrlEvents, songSetCtrl, songRemoveCtrl, songClearCtrl, songNew, songAutomation, encodeWav, lastLoud, melodyFromNotes, buildCustom, EXERCISES, computeStreak, describeDeviation, TOLERANCE, HOP, targetAt,
+  buildExercise, parseMidi, newSong, newSongTrack, parseSong, writeSong, songSegs, songSec, songTick, songToUnits, gridTicks, snapTick, songSnapshot, songRestore, EditHistory, sortNotes, notesTranspose, notesFlip, notesReverse, notesArp, chordName, notesHumanize, notesSwing, notesScatter, notesRandomInScale, progChords, melodyIdea, scalePitches, notesQuantize, notesCopy, notesPaste, songEndTick, songBarLines, songBeats, framesToNotes, songTrackChannels, songFreeChannel, songAddTrack, songDeleteTrack, songMoveTrack, songSetProgram, songSetChannel, songTempoAt, songSetTempo, songRemoveTempo, songBarStart, songSetTimeSig, songRemoveTimeSig, keyName, songSetKey, songCtrlEvents, songSetCtrl, songRemoveCtrl, songClearCtrl, songNew, songAutomation, encodeWav, lastLoud, melodyFromNotes, buildCustom, EXERCISES, computeStreak, describeDeviation, TOLERANCE, HOP, targetAt,
   chordName, analyseTake, countIssues, adaptivePlan, ISSUES, refine, detectNotes, describeKeys, intervalName, buildPianoSteps, chordMatches, pianoSummary, pianoRoot, libraryItems, libraryFilter, SING_META, PIANO_LIB, LEVELS, parseSoundFont, soundFontVoices,
   SING_PATTERNS, SING_RANDOM, mulberry32, degSemis, romanChords, PIANO_PROGS, PIANO_OPTS, PIANO_CHORDS, PIANO_SCALES, PIANO_NAMES, PIANO_PATTERNS, PIANO_INTERVALS };`)();
 
@@ -516,6 +516,18 @@ test('edit: history is limited', () => { const h = new C.EditHistory(3); for (le
 test('edit: transpose stops at the ends of the MIDI range', () => {
   const n = [{ midi: 120, tick: 0, dur: 1 }, { midi: 100, tick: 0, dur: 1 }]; assert.strictEqual(C.notesTranspose(n, 12), 7); assert.deepStrictEqual(n.map(x => x.midi), [127, 107]);
   const m = [{ midi: 3, tick: 0, dur: 1 }, { midi: 9, tick: 0, dur: 1 }]; assert.strictEqual(C.notesTranspose(m, -12), -3); assert.strictEqual(C.notesTranspose([], 5), 0);
+  const fl = [{ midi: 60, tick: 0, dur: 1 }, { midi: 64, tick: 1, dur: 1 }, { midi: 70, tick: 2, dur: 1 }]; C.notesFlip(fl); assert.deepStrictEqual(fl.map(x => x.midi), [70, 66, 60]);
+  const rv = [{ midi: 60, tick: 10, dur: 2 }, { midi: 62, tick: 12, dur: 4 }]; C.notesReverse(rv); assert.deepStrictEqual(rv.map(x => [x.tick, x.dur]), [[14, 2], [10, 4]]);
+  assert.strictEqual(C.chordName([60, 64, 67]), 'C'); assert.strictEqual(C.chordName([57, 60, 64]), 'Am'); assert.strictEqual(C.chordName([55, 59, 62, 65]), 'G7'); assert.strictEqual(C.chordName([65, 69, 72, 60]), 'F/C'); assert.strictEqual(C.chordName([60]), '');
+  const sw = [{ midi: 60, tick: 0, dur: 1 }, { midi: 60, tick: 120, dur: 1 }, { midi: 60, tick: 240, dur: 1 }, { midi: 60, tick: 360, dur: 1 }]; C.notesSwing(sw, 120, 2 / 3); assert.deepStrictEqual(sw.map(x => x.tick), [0, 160, 240, 400]);
+  const hu = [{ midi: 60, tick: 5, dur: 1, vel: 120 }]; C.notesHumanize(hu, 10, 20, () => 1); assert.deepStrictEqual([hu[0].tick, hu[0].vel], [15, 127]);
+  const MAJ = new Set([0, 2, 4, 5, 7, 9, 11]); assert.deepStrictEqual(C.progChords(MAJ, 0, [0, 4, 5, 3], 60), [[60, 64, 67], [67, 71, 74], [69, 72, 76], [65, 69, 72]]);
+  assert.deepStrictEqual(C.progChords(MAJ, 7, [0], 60)[0], [67, 71, 74]);
+  const rs = [{ midi: 60 }, { midi: 61 }, { midi: 70 }]; C.notesRandomInScale(rs, MAJ, 0, () => 0.5); rs.forEach(x => assert.ok(MAJ.has(x.midi % 12)));
+  const mi = C.melodyIdea(MAJ, 0, 0, 480, 2, 1920, 67); assert.ok(mi.length > 2); mi.forEach(x => assert.ok(MAJ.has(x.midi % 12) && x.tick < 3840));
+  const ch = [{ midi: 64, tick: 0, dur: 8, ch: 0 }, { midi: 60, tick: 0, dur: 8, ch: 0 }, { midi: 67, tick: 0, dur: 8, ch: 0 }, { midi: 72, tick: 20, dur: 4, ch: 0 }];
+  const ar = C.notesArp(ch, 'up', 2); assert.deepStrictEqual(ar.add.map(x => [x.tick, x.midi, x.dur]), [[0, 60, 2], [2, 64, 2], [4, 67, 2], [6, 60, 2]]); assert.strictEqual(ar.del.length, 3);
+  assert.deepStrictEqual(C.notesArp(ch, 'updown', 2).add.map(x => x.midi), [60, 64, 67, 64]); assert.deepStrictEqual(C.notesArp(ch, 'down', 4).add.map(x => x.midi), [67, 64]);
 });
 test('edit: quantize, copy and paste', () => {
   const t = C.newSongTrack('a'); t.notes.push({ midi: 60, tick: 130, dur: 100, vel: 80, ch: 0 }, { midi: 64, tick: 250, dur: 50, vel: 70, ch: 0 });

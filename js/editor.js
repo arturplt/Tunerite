@@ -4,17 +4,63 @@
    rebuilds the playable tracks (Seq.rebuild) and saves the song. Every gesture takes one undo snapshot, the first time it changes something. */
 const Ed = {
   on: false, song: null, ti: 0, div: 8, tool: 'select', lane: 'vel', ls: {}, ltap: null, x0: 0, ppt: 0.1, topM: 72, sel: new Set(), hist: new EditHistory(), clip: null, ghost: true, lastDur: 480, lastVel: 90, drag: null, tap: null, geo: null, needFit: true, saveT: 0,
-  SCALES: { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], pentmaj: [0, 2, 4, 7, 9], pentmin: [0, 3, 5, 7, 10], blues: [0, 3, 5, 6, 7, 10], dorian: [0, 2, 3, 5, 7, 9, 10], mixo: [0, 2, 4, 5, 7, 9, 10], harm: [0, 2, 3, 5, 7, 8, 11] },
+  SCALES: { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], pentmaj: [0, 2, 4, 7, 9], pentmin: [0, 3, 5, 7, 10], blues: [0, 3, 5, 6, 7, 10], bluesmaj: [0, 2, 3, 4, 7, 9], dorian: [0, 2, 3, 5, 7, 9, 10], mixo: [0, 2, 4, 5, 7, 9, 10], harm: [0, 2, 3, 5, 7, 8, 11] },
   /* The pitch classes of the highlighted scale as {root, set}, or null. "Song key" follows the key signature written in the song. */
   scaleInfo() {
     const t = $('#edScale').value; if (t === 'off') return null;
     if (t === 'key') { const k = this.song && this.song.keySigs[0]; if (!k) return null; const maj = (((k.sf * 7) % 12) + 12) % 12, root = k.mi ? (maj + 9) % 12 : maj; return { root, set: new Set(this.SCALES[k.mi ? 'minor' : 'major']) }; }
     return { root: +$('#edRoot').value, set: new Set(this.SCALES[t]) };
   },
+  /* False for a pitch on a greyed-out row (outside the highlighted scale); always true while no scale is highlighted. */
+  inScale(midi) { const sc = this.scaleInfo(); return !sc || sc.set.has((((midi - sc.root) % 12) + 12) % 12); },
+  /* The nearest pitch of the highlighted scale (the lower one on a tie), or the pitch itself when no scale is on. */
+  snapScale(midi) { for (let d = 0; d < 7; d++) { if (midi - d >= 0 && this.inScale(midi - d)) return midi - d; if (midi + d <= 127 && this.inScale(midi + d)) return midi + d; } return midi; },
+  /* What a tap on a pitch means: with scale lock the nearest scale pitch, otherwise the pitch itself (which may be a greyed-out row). */
+  fitPitch(midi) { return this.lock ? this.snapScale(midi) : midi; },
+  /* The "Tricks" menu. */
+  trick(v) {
+    const song = this.song, tr = this.track; if (!song || !tr || this.busy()) return; const sel = this.chosen(), g = this.grid, sc = this.scaleInfo() || { root: 0, set: new Set(this.SCALES.major) }, ch = this.chan(tr);
+    const need = () => { if (sel.length) return true; toast('Select some notes first.', 2000); return false; };
+    const at = songBarStart(song, songTick(song, Seq.pos())), barLen = t => Steps.lenAt(song, t);
+    const put = made => { this.edit(() => { made.forEach(n => tr.notes.push(Object.assign({ ch, vel: 80 }, n))); sortNotes(tr); this.sel = new Set(made); }); };
+    if (v === 'human') { if (need()) this.edit(() => notesHumanize(sel, song.ppq / 40, 10)); }
+    else if (v === 'swing58' || v === 'swing67') { if (need()) this.edit(() => notesSwing(sel, g > 1 ? g : song.ppq / 2, v === 'swing58' ? 0.58 : 0.67)); }
+    else if (v === 'scatter') { if (need()) this.edit(() => notesScatter(sel)); }
+    else if (v === 'rand') { if (need()) this.edit(() => notesRandomInScale(sel, sc.set, sc.root)); }
+    else if (v === 'rep2' || v === 'rep4') {
+      if (!need()) return; const c = notesCopy(sel), from = Math.min.apply(null, sel.map(n => n.tick)), len = Math.max.apply(null, sel.map(n => n.tick + n.dur)) - from, times = v === 'rep2' ? 1 : 3;
+      this.edit(() => { const all = []; for (let k = 1; k <= times; k++) notesPaste(tr, c, from + k * len).forEach(n => all.push(n)); this.sel = new Set(all.concat(sel)); });
+    } else if (v.startsWith('prog:')) {
+      const degs = v.slice(5).split(',').map(Number), chords = progChords(sc.set, sc.root, degs, 60), made = []; let t = at;
+      chords.forEach(c => { const len = barLen(t); c.forEach(m => made.push({ midi: m, tick: t, dur: len })); t += len; }); put(made);
+    } else if (v === 'melody') {
+      const len = barLen(at), made = melodyIdea(sc.set, sc.root, at, song.ppq, 2, len, 67); if (!made.length) return toast('That scale is too small for a melody.', 2200); put(made);
+    }
+  },
+  /* Snapshots of the song to come back to, kept per song name (in memory, and in storage when small enough). */
+  snapList() { const st = Store.data; st.edSnaps = st.edSnaps || {}; const k = Seq.name || '', m = this.snapMem = this.snapMem || {}; return (m[k] = m[k] || st.edSnaps[k] || []); },
+  snapRender() {
+    const sel = $('#edSnaps'); if (!sel) return; const l = this.snapList();
+    sel.innerHTML = '<option value="">Snapshots (' + l.length + ')</option>' + l.map((s, i) => '<option value="' + i + '">' + s.name.replace(/[<>&"]/g, '') + '</option>').join('');
+  },
+  snapTake() {
+    if (!this.song || this.busy()) return; const l = this.snapList(), s = songSnapshot(this.song), d = new Date();
+    l.push({ name: '#' + (l.length ? +l[l.length - 1].name.slice(1).split(' ')[0] + 1 : 1) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'), snap: s }); while (l.length > 8) l.shift();
+    const key = Seq.name || ''; if (l.reduce((a, x) => a + x.snap.length, 0) < 400000) { Store.data.edSnaps[key] = l; Store.save(); } else { delete Store.data.edSnaps[key]; toast('Snapshot saved for this session only (the song is large).', 3000); }
+    this.snapRender(); toast('Snapshot saved.', 1400);
+  },
+  snapGo(i) {
+    const s = this.snapList()[i]; if (!s || !this.song || this.busy()) return;
+    this.hist.push(songSnapshot(this.song)); songRestore(this.song, s.snap); this.sel.clear(); this.commit(); toast('Back to snapshot ' + s.name.split(' ')[0] + ' (undo returns).', 2200);
+  },
+  /* The pitches of the chord the brush paints on a row: the chosen chord, or the scale triad when the chord menu is off. */
+  chordFor(m) { return [m].concat(this.chordNotes({ midi: m }, $('#edChord').value === '0' ? 'scale' : null)); },
+  /* The bar start ticks a brush drag covers, first to last. */
+  brushBars(d) { const a = Math.min(d.b0, d.b1), z = Math.max(d.b0, d.b1), out = []; for (let t = a; t <= z && out.length < 256;) { out.push(t); t += Steps.lenAt(this.song, t); } return out; },
   CHORDS: { maj: [4, 7], min: [3, 7], dim: [3, 6], sus4: [5, 7], pow: [7], maj7: [4, 7, 11], dom7: [4, 7, 10], min7: [3, 7, 10] },
   /* The other pitches stamped with a new note: a fixed chord shape, or the triad built on that note from the highlighted scale (stacked thirds within the scale). */
-  chordNotes(n) {
-    const t = $('#edChord').value; if (t === '0') return [];
+  chordNotes(n, type) {
+    const t = type || $('#edChord').value; if (t === '0') return [];
     if (t === 'scale') {
       const sc = this.scaleInfo(); if (!sc) return this.CHORDS.maj.map(i => n.midi + i);
       const deg = []; for (let m = n.midi; m <= n.midi + 24; m++) if (sc.set.has(((m - sc.root) % 12 + 12) % 12)) deg.push(m);
@@ -94,7 +140,7 @@ const Ed = {
     $('#edTrack').onchange = e => { if (Rec.state !== 'idle') { e.target.value = this.ti; return; } Vox.sel = null; this.ti = +e.target.value; this.sel.clear(); this.needFit = true; this.ls = {}; };
     $('#edGrid').onchange = e => { this.div = +e.target.value; };
     { const st = Store.data.settings, root = $('#edRoot'); ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'].forEach((n, i) => opt(root, i, n));
-      root.value = st.edRoot || 0; $('#edScale').value = st.edScale || 'off'; $('#edLen').value = st.edLen || '0'; this.ghost = st.edGhost !== false; $('#edGhost').classList.toggle('on', this.ghost);
+      root.value = st.edRoot || 0; $('#edScale').value = st.edScale || 'off'; $('#edLen').value = st.edLen || '0'; this.lock = !!st.edLock; $('#edLock').classList.toggle('on', this.lock); this.ghost = st.edGhost !== false; $('#edGhost').classList.toggle('on', this.ghost);
       root.onchange = () => { st.edRoot = +root.value; Store.save(); }; $('#edScale').onchange = e => { st.edScale = e.target.value; Store.save(); root.disabled = e.target.value === 'off' || e.target.value === 'key'; }; root.disabled = ['off', 'key'].includes($('#edScale').value);
       $('#edLen').onchange = e => { st.edLen = e.target.value; Store.save(); };
       $('#edChord').value = st.edChord || '0'; $('#edChord').onchange = e => { st.edChord = e.target.value; Store.save(); };
@@ -102,6 +148,9 @@ const Ed = {
       $('#edBass').onclick = () => { if (!this.song || this.busy()) return; const sc = this.scaleInfo(); br.value = sc ? sc.root : +root.value; $('#bassPop').hidden = !$('#bassPop').hidden; };
       $('#bpCancel').onclick = () => { $('#bassPop').hidden = true; };
       $('#bpOk').onclick = () => { st.bassPat = $('#bpPat').value; Store.save(); $('#bassPop').hidden = true; this.makeBass($('#bpPat').value, +br.value); };
+      $('#edTricks').onchange = e => { const v = e.target.value; e.target.value = ''; e.target.blur(); if (v) this.trick(v); };
+      $('#edSnap').onclick = () => this.snapTake(); $('#edSnaps').onchange = e => { const v = e.target.value; e.target.value = ''; e.target.blur(); if (v !== '') this.snapGo(+v); }; this.snapRender();
+      $('#edLock').onclick = e => { this.lock = !this.lock; st.edLock = this.lock; Store.save(); e.currentTarget.classList.toggle('on', this.lock); };
       $('#edGhost').onclick = e => { this.ghost = !this.ghost; st.edGhost = this.ghost; Store.save(); e.currentTarget.classList.toggle('on', this.ghost); }; }
     $$('[data-tool]').forEach(b => b.onclick = () => { this.tool = b.dataset.tool; $$('[data-tool]').forEach(x => x.classList.toggle('on', x === b)); });
     $$('[data-ed]').forEach(b => b.onclick = () => this.act(b.dataset.ed));
@@ -136,6 +185,7 @@ const Ed = {
   },
   /* Called when the editor opens and whenever a different song was loaded. */
   attach() {
+    this.snapRender();
     if (!Seq.song) return;
     if (this.song !== Seq.song) { this.song = Seq.song; this.hist = new EditHistory(); this.sel.clear(); this.ti = 0; this.lastDur = this.song.ppq; this.ppt = 56 * UIK / this.song.ppq; this.tap = null; this.drag = null; }
     this.ti = clamp(this.ti, 0, Math.max(0, this.song.tracks.length - 1)); this.needFit = true; this.ls = {}; this.fillTracks();
@@ -186,14 +236,17 @@ const Ed = {
   autosave() { Seq.keep(); },
   mark() { const d = this.drag; if (d && !d.pushed) { this.hist.push(d.snap); d.pushed = true; } },
   chosen() { return this.sel.size ? Array.from(this.sel) : []; },
+  /* Sounds a new note together with the chord that will be added to it. */
+  previewChord(n) { this.audition(n.midi, n.vel, n.ch); this.chordNotes(n).forEach((m, k) => setTimeout(() => this.audition(m, n.vel, n.ch), 30 * (k + 1))); },
   audition(midi, vel, ch) {
+    this.played = { midi, t: performance.now() };
     const c = Engine.ctx; if (!c || !Engine.master) return; if (c.state !== 'running') c.resume();
     const ti = this.ti, t = Seq.tracks.find(x => x.ti === ti && x.ch === ch) || Seq.tracks.find(x => x.ti === ti), when = c.currentTime + 0.01;
     try {
       if (t) {
         const r = Seq.res(t); if (r.kit || t.drums) { Engine.drum(midi, when, vel || 90); return; }
-        const pre = r.preset != null && SF.cache.has(r.preset) ? r.preset : -1;
-        Engine.playNote(midi, when, 0.4, { preset: pre, synth: r.synth || synthFor(t.program), vel: vel || 90, seq: true, gain: 0.2 });
+        const F = r.font || SF, pre = r.preset != null && F.cache.has(r.preset) ? r.preset : -1;
+        Engine.playNote(midi, when, 0.4, { preset: pre, font: pre >= 0 && F !== SF ? F : undefined, synth: r.synth || synthFor(t.program), vel: vel || 90, seq: true, gain: 0.2 });
       } else if (this.track && this.chan(this.track) === 9) Engine.drum(midi, when, vel || 90);
       else Engine.playNote(midi, when, 0.4, { preset: -1, synth: this.track ? synthFor(this.program(this.track, this.chan(this.track))) : 'soft', vel: vel || 90, seq: true, gain: 0.2 });   // a track with no notes yet is not in the mixer
     } catch (e) { console.warn(e); }
@@ -232,6 +285,12 @@ const Ed = {
     else if (k === 'up' || k === 'down' || k === 'octup' || k === 'octdown') {
       if (!sel.length) return toast('Select some notes first.', 2000);
       const d = (k === 'up' ? 1 : k === 'down' ? -1 : k === 'octup' ? 12 : -12); this.edit(() => notesTranspose(sel, d)); this.audition(sel[0].midi, sel[0].vel, sel[0].ch);
+    } else if (k === 'arp') {
+      const r = notesArp(sel, $('#edArpPat').value, gridTicks(song, +$('#edArpRate').value)); if (!r.add.length) return toast('Select a chord first: two or more notes that start together.', 2600);
+      this.edit(() => { const del = new Set(r.del); tr.notes = tr.notes.filter(n => !del.has(n)); r.add.forEach(n => tr.notes.push(n)); this.sel = new Set(r.add); });
+    } else if (k === 'flip' || k === 'rev') {
+      if (!sel.length) return toast('Select some notes first.', 2000);
+      this.edit(() => (k === 'flip' ? notesFlip : notesReverse)(sel));
     } else if (k === 'quant') {
       if (g <= 1) return toast('Choose a grid first (not "No snap").', 2200);
       this.edit(() => notesQuantize(sel.length ? sel : tr.notes, g));
@@ -288,7 +347,7 @@ const Ed = {
     if (!this.song || !this.geo || Rec.state !== 'idle') return; const cv = $('#edCv'), G = this.geo, { px, py } = this.pos(e), tick = this.tickAt(px), midi = this.midiAt(py), tr = this.track;
     try { cv.setPointerCapture(e.pointerId); } catch (err) { /* the gesture still works while the pointer stays over the canvas */ } e.preventDefault();
     if (py < G.rulerH) { this.drag = { mode: 'seek' }; this.seekTo(tick); return; }
-    if (px < G.keyW) { if (py < G.rulerH + G.noteH) this.audition(midi, 90, tr && tr.notes.length ? tr.notes[0].ch : 0); return; }
+    if (px < G.keyW) { if (py < G.rulerH + G.noteH && this.inScale(this.fitPitch(midi))) this.audition(this.fitPitch(midi), 90, tr && tr.notes.length ? tr.notes[0].ch : 0); return; }
     if (!tr) return;
     const snap = songSnapshot(this.song);
     if (py >= G.h - G.velH) {
@@ -296,6 +355,10 @@ const Ed = {
       const n = this.velHit(px); if (!n) return;
       if (!this.sel.has(n)) { this.sel.clear(); this.sel.add(n); }
       this.drag = { mode: 'vel', snap, note: n, base: n.vel, orig: Array.from(this.sel).map(x => ({ n: x, vel: x.vel })) }; this.setVel(py); return;
+    }
+    if (this.tool === 'brush') {
+      const m = this.fitPitch(midi); if (!this.inScale(m)) return; const b = songBarStart(this.song, Math.max(0, Math.round(tick)));
+      this.drag = { mode: 'brush', snap, m, b0: b, b1: b }; this.chordFor(m).forEach((x, k) => setTimeout(() => this.audition(x, 90, this.chan(tr)), 30 * k)); return;
     }
     const h = this.hit(px, py), now = performance.now();
     if (h) {
@@ -310,12 +373,13 @@ const Ed = {
     this.tap = null;
     const dbl = this.tool === 'select' && this.etap && now - this.etap.t < 350 && Math.abs(this.etap.px - px) < 10 * UIK && Math.abs(this.etap.py - py) < 10 * UIK;   // select tool: double-tap empty space adds a note
     this.etap = dbl ? null : { t: now, px, py };
+    if ((this.tool === 'draw' || dbl) && !this.inScale(this.fitPitch(midi))) { this.drag = null; return; }   // greyed-out row: no note
     if (this.tool === 'draw' || dbl) {
       const g = this.grid, ch = this.chan(tr);
       this.hist.push(snap);
-      const n = { midi, tick: g > 1 ? Math.floor(tick / g) * g : Math.round(tick), dur: this.newDur(tick), vel: this.lastVel, ch };
-      const extra = this.chordNotes(n).map(m => Object.assign({}, n, { midi: m })); tr.notes.push(n); extra.forEach(x => tr.notes.push(x)); this.sel = new Set([n].concat(extra));
-      this.drag = { mode: 'draw', snap, pushed: true, n, extra, px0: px, grew: false }; this.audition(midi, n.vel, ch); extra.forEach((x, k) => setTimeout(() => this.audition(x.midi, n.vel, ch), 30 * (k + 1)));
+      const n = { midi: this.fitPitch(midi), tick: g > 1 ? Math.floor(tick / g) * g : Math.round(tick), dur: this.newDur(tick), vel: this.lastVel, ch };
+      tr.notes.push(n); this.sel = new Set([n]);   // the chord notes are added when the pointer is released; until then dragging up or down previews it on other pitches
+      this.drag = { mode: 'draw', snap, pushed: true, n, px0: px, py0: py, grew: false }; this.previewChord(n);
     } else if (this.tool === 'select') {
       if (!e.shiftKey) this.sel.clear();
       this.drag = { mode: 'box', snap, x: px, y: py, cx: px, cy: py, add: e.shiftKey };
@@ -331,10 +395,12 @@ const Ed = {
       if (dir) for (let k = d.last + dir * stride; dir * (k - t) < 0; k += dir * stride) this.laneSet(k, py);
       this.laneSet(t, py); d.last = t;
     }
+    else if (d.mode === 'brush') d.b1 = songBarStart(this.song, Math.max(0, Math.round(tick)));
     else if (d.mode === 'pan') { this.x0 = d.x0 - (px - d.px) / this.ppt; this.topM = d.topM + (py - d.py) / G.rh; }
     else if (d.mode === 'box') { d.cx = px; d.cy = py; }
     else if (d.mode === 'draw') {
-      if (d.grew || Math.abs(px - d.px0) > 4 * UIK) { d.grew = true; d.n.dur = Math.max(g > 1 ? g : 1, step(tick - d.n.tick)); d.extra.forEach(x => { x.dur = d.n.dur; }); }
+      const m = this.fitPitch(this.midiAt(py)); if (m !== d.n.midi && this.inScale(m) && Math.abs(py - d.py0) > 2 * UIK) { d.n.midi = m; this.previewChord(d.n); }
+      if (d.grew || Math.abs(px - d.px0) > 4 * UIK) { d.grew = true; d.n.dur = Math.max(g > 1 ? g : 1, step(tick - d.n.tick)); }
     } else if (d.mode === 'resize') {
       const nd = o => Math.max(Math.min(g, o.dur), step(o.tick + o.dur + tick - d.t0) - o.tick);   // the note's end snaps to the grid lines (bar lines too), not by a grid step from where it was
       if (!d.pushed && d.orig.every(o => nd(o) === o.dur)) return; this.mark();
@@ -342,6 +408,7 @@ const Ed = {
     } else if (d.mode === 'move') {
       let dT = step(tick - d.t0), dM = this.midiAt(py) - d.m0; if (!dT && !dM && !d.pushed) return;
       dT = Math.max(dT, -Math.min.apply(null, d.orig.map(o => o.tick)));
+      { const lm = d.lead.midi - d.dm; if (this.lock) dM = this.snapScale(lm + dM) - lm; else if (!this.inScale(lm + dM)) dM = d.dm; }   // never drag onto a greyed-out row
       dM = clamp(dM, -Math.min.apply(null, d.orig.map(o => o.midi)), 127 - Math.max.apply(null, d.orig.map(o => o.midi)));
       this.mark(); d.orig.forEach(o => { o.n.tick = o.tick + dT; o.n.midi = o.midi + dM; });
       if (dM !== d.dm) { d.dm = dM; this.audition(d.lead.midi, d.lead.vel, d.lead.ch); }
@@ -353,7 +420,16 @@ const Ed = {
     if (d.mode === 'box') {
       const x0 = Math.min(d.x, d.cx), x1 = Math.max(d.x, d.cx), y0 = Math.min(d.y, d.cy), y1 = Math.max(d.y, d.cy), tr = this.track;
       if (tr && (x1 - x0 > 3 || y1 - y0 > 3)) tr.notes.forEach(n => { const nx = this.X(n.tick), nw = Math.max(3, n.dur * this.ppt), ny = this.Y(n.midi); if (nx <= x1 && nx + nw >= x0 && ny <= y1 && ny + this.geo.rh >= y0) this.sel.add(n); });
-    } else if (d.mode === 'draw') { this.lastDur = d.n.dur; this.commit(); }
+    } else if (d.mode === 'brush') {
+      const tr = this.track, song = this.song; if (!tr) return; const ch = this.chan(tr), bars = this.brushBars(d), pit = this.chordFor(d.m), made = [];
+      this.hist.push(d.snap);
+      bars.forEach(t => { const len = Steps.lenAt(song, t); tr.notes = tr.notes.filter(n => !(n.tick === t && n.dur >= len * 0.9)); pit.forEach(m => made.push({ midi: m, tick: t, dur: len, vel: 80, ch })); });
+      made.forEach(n => tr.notes.push(n)); this.sel = new Set(made); this.commit();
+    } else if (d.mode === 'draw') {
+      const tr = this.track, extra = this.chordNotes(d.n).map(m => Object.assign({}, d.n, { midi: m }));
+      if (tr) { extra.forEach(x => tr.notes.push(x)); this.sel = new Set([d.n].concat(extra)); }
+      this.lastDur = d.n.dur; this.commit();
+    }
     else if (d.pushed) { if (d.mode === 'resize') this.lastDur = d.lead ? d.lead.dur : this.lastDur; this.commit(); }
     void e;
   },
@@ -384,8 +460,11 @@ const Ed = {
       const blk = isBlack(m), pc = ((m - (scl ? scl.root : 0)) % 12 + 12) % 12, inSc = !scl || scl.set.has(pc);
       g.fillStyle = !inSc ? '#0b0a09' : blk ? '#100e0c' : '#1a1714'; g.fillRect(G.keyW, y, w - G.keyW, G.rh);
       if (scl && pc === 0) { g.fillStyle = 'rgba(255,179,71,.09)'; g.fillRect(G.keyW, y, w - G.keyW, G.rh); }
-      g.fillStyle = blk ? '#26221e' : '#d8cfbd'; g.fillRect(0, y, G.keyW - 1, G.rh - 1);
-      if (scl && !inSc) { g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(0, y, G.keyW - 1, G.rh - 1); } else if (scl && pc === 0) { g.fillStyle = '#ffb347'; g.fillRect(G.keyW - 5, y + 2, 3, G.rh - 5); }
+      const bw = Math.round((G.keyW - 1) * 0.6), gap = !blk && !isBlack(m - 1) ? 1 : 0, ky = Math.round(y), kh = Math.round(y + G.rh) - ky;   // whole pixels, so no antialiased seams between keys
+      // white keys run into each other around a black key (L shape); only E-F and B-C are split
+      g.fillStyle = '#d8cfbd'; g.fillRect(0, ky, G.keyW - 1, kh - gap);
+      if (blk) { g.fillStyle = '#26221e'; g.fillRect(0, ky, bw, kh - 1); g.fillStyle = '#141210'; g.fillRect(bw, ky + Math.floor(kh / 2), G.keyW - 1 - bw, 1); }
+      if (scl && !inSc) { if (blk) { g.fillStyle = '#0b0a09'; g.fillRect(0, ky, bw, kh - 1); g.strokeStyle = '#3a342d'; g.lineWidth = 1; g.strokeRect(0.5, ky + 0.5, bw - 1, kh - 2); g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(bw, ky, G.keyW - 1 - bw, kh); } else { g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(0, ky, G.keyW - 1, kh - gap); } }   // a black key is already dark, so it is hollowed out instead of dimmed else if (scl && pc === 0) { g.fillStyle = '#ffb347'; g.fillRect(G.keyW - 5, ky + 2, 3, kh - 5); }
       if (m % 12 === 0) { g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(G.keyW, y + G.rh - 1, w - G.keyW, 1); g.fillStyle = '#24211e'; g.textAlign = 'left'; g.fillText(noteName(m), 3, y + G.rh / 2); }
     }
     g.restore();
@@ -410,6 +489,25 @@ const Ed = {
       if (on) { g.strokeStyle = '#fff'; g.lineWidth = 2; g.strokeRect(x + 1, y + 2, Math.max(1, nw - 2), G.rh - 4); }
       else { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x, y + 1, 1, G.rh - 2); }
     });
+    const dr0 = this.drag; if (dr0 && dr0.mode === 'brush') { g.globalAlpha = 0.4; g.fillStyle = col; const pit = this.chordFor(dr0.m); this.brushBars(dr0).forEach(t => { const x = X(t), nw = Math.max(3, Steps.lenAt(song, t) * this.ppt - 2); pit.forEach(m => g.fillRect(x, Y(m) + 1, nw, G.rh - 2)); }); g.globalAlpha = 1; }   // the chord that is painted on release
+    const dr = this.drag; if (dr && dr.mode === 'draw') { g.globalAlpha = 0.45; g.fillStyle = col; const x = X(dr.n.tick), nw = Math.max(3, dr.n.dur * this.ppt); this.chordNotes(dr.n).forEach(m => { const y = Y(m); g.fillRect(x, y + 1, nw, G.rh - 2); }); g.globalAlpha = 1; }   // the chord that is added on release
+    // chord name at the start of each bar, from the notes that start in it
+    if (tr && bars.length < 80) {
+      g.font = '700 ' + Math.round(10 * U) + 'px sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(255,179,71,.85)';
+      bars.forEach((b, i) => { const nx = i + 1 < bars.length ? bars[i + 1].tick : b.tick + Steps.lenAt(song, b.tick), x = X(b.tick); if (X(nx) < G.keyW || x > w) return; const nm = chordName(tr.notes.filter(n => n.tick >= b.tick && n.tick < nx).map(n => n.midi)); if (nm) g.fillText(nm, Math.max(x + 3 * U, G.keyW + 3 * U), G.rulerH + 8 * U); });
+    }
+    // name tag above each note that is sounding: under the playhead while playing, or just auditioned
+    if (tr) {
+      const au = this.played && performance.now() - this.played.t < 600 ? this.played.midi : -1, tags = new Map();
+      tr.notes.forEach(n => { if ((Seq.playing && ph >= n.tick && ph < n.tick + n.dur) || (n.midi === au && n.midi !== -1 && this.sel.has(n))) tags.set(n.midi + ':' + n.tick, n); });
+      if (au >= 0 && !tags.size) tags.set('a', { midi: au, tick: ph, dur: 0, aud: true });
+      g.font = '700 ' + Math.round(9 * U) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      tags.forEach(n => {
+        const x0 = n.aud ? Math.max(X(ph), G.keyW + 20 * U) : X(n.tick), nw = Math.max(3, n.dur * this.ppt), y = Y(n.midi), cx = Math.min(Math.max(x0 + nw / 2, G.keyW + 14 * U), w - 14 * U), lw = 26 * U, lh = 13 * U, ly = y - lh - 2;
+        if (ly < G.rulerH) return;
+        g.fillStyle = '#ffb347'; g.fillRect(cx - lw / 2, ly, lw, lh); g.fillStyle = '#141210'; g.fillText(noteName(n.midi), cx, ly + lh / 2 + 0.5);
+      });
+    }
     if (Rec.state === 'rec' && Rec.song === song && Rec.src === 'keys') Rec.live().forEach(n => { const x = X(n.tick), nw = Math.max(3, n.dur * this.ppt), y = Y(n.midi); g.fillStyle = '#ff5a4a'; g.fillRect(x, y + 1, nw, G.rh - 2); });
     const d = this.drag; if (d && d.mode === 'box') { g.fillStyle = 'rgba(255,179,71,.15)'; g.strokeStyle = '#ffb347'; g.lineWidth = 1; g.fillRect(d.x, d.y, d.cx - d.x, d.cy - d.y); g.strokeRect(d.x, d.y, d.cx - d.x, d.cy - d.y); }
     g.restore();

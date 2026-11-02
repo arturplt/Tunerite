@@ -7,6 +7,15 @@ const SF = {
     if (!sf.compressed && !sf.smpl) sf.smpl = new Int16Array(buf.slice(sf.smplOff, sf.smplOff + (sf.smplLen & ~1)));
     this.sf = sf; this.buf = buf; this.name = sf.name || name; this.size = buf.byteLength; this.ready = false; this.cache.clear(); this.bufs = new Map(); return sf;
   },
+  pool: new Map(),      // other stored fonts that tracks use: name -> { name, sf, buf, cache, preset, bufs } (same shape as this object, so build and play work on either)
+  /* The font a track's instrument comes from: the active one, or one from the pool (null when it is not loaded yet). */
+  fontOf(name) { if (!name || (this.sf && name === Store.data.settings.sfName)) return this.sf ? this : null; return this.pool.get(name) || null; },
+  async fontLoad(name) {
+    const have = this.fontOf(name); if (have) return have;
+    const rec = await SFStore.get(name); if (!rec) return null;
+    const sf = parseSoundFont(rec.buf); if (!sf.presets.length) return null; if (!sf.compressed && !sf.smpl) sf.smpl = new Int16Array(rec.buf.slice(sf.smplOff, sf.smplOff + (sf.smplLen & ~1)));
+    const f = { name, sf, buf: rec.buf, cache: new Map(), preset: -1, bufs: new Map() }; this.pool.set(name, f); return f;
+  },
   defaultPreset() { const P = this.sf.presets; let i = P.findIndex(p => p.bank === 0 && /piano/i.test(p.name)); if (i < 0) i = P.findIndex(p => p.bank === 0 && p.program === 0); return i < 0 ? 0 : i; },
   /* GM lookup for the sequencer: the preset index for bank/program, or -1 when the font has none (the track then uses a built-in voice). Drums are bank 128. */
   findPreset(bank, program, drums) {
@@ -15,10 +24,10 @@ const SF = {
     i = P.findIndex(p => p.bank === bank && p.program === program); return i < 0 ? P.findIndex(p => p.bank === 0 && p.program === program) : i;
   },
   /* Makes AudioBuffers for every sample an instrument uses, so that playing a note later is instant. Other instruments stay ready (a few are kept for the sequencer). */
-  async build(i, progress) {
-    const have = this.cache.get(i); if (have) { this.cache.delete(i); this.cache.set(i, have); return have; }
-    const sf = this.sf, c = Engine.ctx, P = sf.presets[i], map = new Map(); if (!P || !c) return map;
-    const buf = this.buf;
+  async build(i, progress, F = this) {
+    const have = F.cache.get(i); if (have) { F.cache.delete(i); F.cache.set(i, have); return have; }
+    const sf = F.sf, c = Engine.ctx, P = sf.presets[i], map = new Map(); if (!P || !c) return map;
+    const buf = F.buf;
     const ids = new Set(); P.zones.forEach(pz => { const I = sf.insts[pz.link]; if (I) I.zones.forEach(iz => ids.add(iz.link)); });
     let n = 0;
     for (const si of ids) {
@@ -33,9 +42,9 @@ const SF = {
         }
       } catch (e) { console.warn('sample ' + S.name + ' skipped', e); }
     }
-    if (this.buf !== buf) return map;                                    // the font was replaced while this was decoding
-    this.cache.set(i, map);
-    for (const k of this.cache.keys()) { if (this.cache.size <= 10) break; if (k !== this.preset) this.cache.delete(k); }
+    if (F.buf !== buf) return map;                                    // the font was replaced while this was decoding
+    F.cache.set(i, map);
+    for (const k of F.cache.keys()) { if (F.cache.size <= 10) break; if (k !== F.preset) F.cache.delete(k); }
     return map;
   },
   async usePreset(i, progress) {
@@ -45,7 +54,7 @@ const SF = {
     this.bufs = m; this.ready = m.size > 0;
   },
   play(midi, when, dur, o) {
-    const c = Engine.ctx, st = Store.data.settings, sf = this.sf, vel = clamp(Math.round(o.vel || 100), 1, 127), pi = o.preset != null ? o.preset : this.preset, bufs = pi === this.preset ? this.bufs : this.cache.get(pi), all = bufs ? soundFontVoices(sf, pi, Math.round(midi), vel) : [], vs = o.nopool ? all : all.slice(0, o.seq ? 2 : 4);      // each layer is a source, a gain and maybe a panner: a song of many tracks keeps a stereo pair, an offline render keeps all
+    const c = Engine.ctx, st = Store.data.settings, F = o.font || this, sf = F.sf, vel = clamp(Math.round(o.vel || 100), 1, 127), pi = o.preset != null ? o.preset : F.preset, bufs = pi === F.preset ? F.bufs : F.cache.get(pi), all = bufs ? soundFontVoices(sf, pi, Math.round(midi), vel) : [], vs = o.nopool ? all : all.slice(0, o.seq ? 2 : 4);      // each layer is a source, a gain and maybe a panner: a song of many tracks keeps a stereo pair, an offline render keeps all
     if (!vs.length) return null;
     const out = c.createGain(); out.gain.value = (o.gain == null ? 0.25 : o.gain) * 1.8 * (0.35 + 0.65 * Math.pow(vel / 127, 1.4)); out.connect(o.dest || Engine.master);
     const a4f = st.a4 / 440, parts = [];
@@ -121,7 +130,7 @@ const SFUI = {
       $('#sfStatus').textContent = 'Reading ' + name + '…';
       await SF.load(rec.buf, name); this.fill(); st.sfName = name; const i = SF.defaultPreset(); $('#sfPreset').value = i; st.timbre = 'sf'; $('#setTimbre').value = 'sf'; await this.prepare(i);
     } catch (e) { toast(e.message || 'Could not use that SoundFont.', 5000); }
-    this.list();
+    this.list(); if (typeof Seq !== 'undefined' && Seq.loaded) Seq.prepare();
   },
   /* Stores every .sf2 / .sf3 found in a chosen folder (subfolders included), then uses the first if none is active. */
   /* Arrow keys on the Tune screen: up/down = next/previous SoundFont, left/right = next/previous instrument. */
@@ -178,3 +187,65 @@ const SFUI = {
   tryIt() { if (!Engine.ctx || !SF.ready) return; const t = Engine.ctx.currentTime + 0.05; [60, 64, 67, 72].forEach((m, k) => { const r = SF.play(m, t + k * 0.28, 1.6, { gain: 0.3, vel: 96 }); if (!r) toast('That instrument has no sound for note ' + noteName(m) + '.', 2500); }); }
 };
 
+
+/* ---- SoundFont manager inside the Composer: stored fonts, an instrument browser with preview, and the pick for the selected track.
+   Every track keeps its own font and instrument ('sf:<file>|<preset>'), so several fonts can sound in one song. ---- */
+const SFMgr = {
+  font: '', pick: -1,      // the font being browsed (a stored file name) and the highlighted instrument in it
+  open() { return !$('#sfPop').hidden; },
+  init() {
+    const pop = $('#sfPop'); if (!pop) return;
+    $('#edSounds').onclick = () => { pop.hidden = !pop.hidden; if (!pop.hidden) this.refresh(true); };
+    $('#sfpClose').onclick = () => { pop.hidden = true; };
+    $('#sfpAdd').onclick = () => $('#sfFile').click(); $('#sfpDir').onclick = () => $('#sfDir').click();
+    $('#sfpFind').oninput = () => this.rows();
+    $('#sfpUse').onclick = () => this.use(this.pick); $('#sfpAuto').onclick = () => this.use(null);
+    ['sfFile', 'sfDir'].forEach(id => $('#' + id).addEventListener('change', () => this.refreshSoon()));
+  },
+  refreshSoon() { const t = Date.now(), tick = () => { if (!this.open()) return; this.refresh(); if (Date.now() - t < 20000 && !(SF.sf && SF.ready)) setTimeout(tick, 800); }; setTimeout(tick, 400); },
+  track() { return typeof Seq !== 'undefined' && Seq.tracks.find(t => t.ti === Ed.ti); },
+  /* Which font and instrument the track plays now: { name, i } or null. */
+  current(t) { if (!t) return null; const m = /^sf:(.*)\|(\d+)$/.exec(t.inst); if (m) return { name: m[1], i: +m[2] }; return /^sf:\d+$/.test(t.inst) && Store.data.settings.sfName ? { name: Store.data.settings.sfName, i: +t.inst.slice(3) } : null; },
+  async refresh(first) {
+    const t = this.track(), cur = this.current(t), def = Store.data.settings.sfName, box = $('#sfpFonts'); $('#sfpTrack').textContent = t ? 'Track: ' + t.name : 'No track selected';
+    let names = []; try { names = ((await SFStore.keys()) || []).sort((a, b) => a.localeCompare(b)); } catch (e) {}
+    if (first || !names.includes(this.font)) this.font = cur && names.includes(cur.name) ? cur.name : names.includes(def) ? def : names[0] || '';
+    box.textContent = ''; if (!names.length) box.innerHTML = '<div class="sfpRow"><span class="muted">No SoundFonts stored yet. Add a .sf2 or .sf3 file.</span></div>';
+    names.forEach(n => {
+      const r = document.createElement('div'); r.className = 'sfpRow' + (n === this.font ? ' on' : ''); r.title = 'Browse this SoundFont';
+      const s = document.createElement('span'); s.textContent = n.replace(/\.sf[23]$/i, '');
+      const star = document.createElement('button'); star.className = 'sqb' + (n === def && Store.data.settings.timbre === 'sf' ? ' on' : ''); star.textContent = '★'; star.title = 'Default for the piano, exercises and tracks left on Auto';
+      const d = document.createElement('button'); d.className = 'sqb'; d.textContent = '🗑'; d.title = 'Delete from storage';
+      r.append(s, star, d); r.onclick = () => { this.font = n; this.pick = cur && cur.name === n ? cur.i : -1; this.refresh(); };
+      star.onclick = async e => { e.stopPropagation(); $('#sfpMsg').textContent = 'Loading…'; await SFUI.pick(n); $('#sfpMsg').textContent = ''; if (Seq.loaded) Seq.prepare(); this.refresh(); };
+      d.onclick = async e => { e.stopPropagation(); if (!confirm('Delete ' + n + ' from storage?')) return; try { await SFStore.del(n); } catch (er) {} SF.pool.delete(n); if (n === def) await SFUI.remove(); this.refresh(); };
+      box.appendChild(r);
+    });
+    this.pick = cur && cur.name === this.font ? cur.i : -1;
+    this.rec = this.font ? SF.fontOf(this.font) : null;
+    if (this.font && !this.rec) { $('#sfpMsg').textContent = 'Reading…'; try { this.rec = await SF.fontLoad(this.font); } catch (e) { this.rec = null; } $('#sfpMsg').textContent = this.rec ? '' : 'Could not read that SoundFont.'; }
+    this.rows();
+  },
+  rows() {
+    const list = $('#sfpList'), q = $('#sfpFind').value.trim().toLowerCase(), F = this.rec; list.textContent = '';
+    if (!F || !F.sf) { list.innerHTML = '<div class="sfpRow"><span class="muted">Pick a SoundFont above to browse its instruments.</span></div>'; return; }
+    F.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).filter(x => !q || x.p.name.toLowerCase().includes(q)).forEach(x => {
+      const r = document.createElement('div'); r.className = 'sfpRow' + (x.i === this.pick ? ' on' : ''); r.setAttribute('role', 'option');
+      r.innerHTML = '<span></span><i></i>'; r.firstChild.textContent = x.p.name; r.lastChild.textContent = x.p.bank === 128 ? 'drums' : x.p.bank ? 'bank ' + x.p.bank : x.p.program + 1;
+      r.onclick = () => { this.pick = x.i; list.querySelectorAll('.on').forEach(e => e.classList.remove('on')); r.classList.add('on'); this.preview(x.i, x.p.bank === 128); };
+      r.ondblclick = () => this.use(x.i); list.appendChild(r);
+    });
+  },
+  async preview(i, drums) {
+    const F = this.rec; if (!Engine.ctx || !F) return; const msg = $('#sfpMsg'); msg.textContent = 'Preparing…';
+    try { await SF.build(i, null, F); } catch (e) { msg.textContent = 'Could not load that instrument.'; return; }
+    msg.textContent = ''; const t0 = Engine.ctx.currentTime + 0.05, o = { preset: i, font: F === SF ? undefined : F, seq: true };
+    if (drums) { [36, 38, 42, 38].forEach((m, k) => Engine.playNote(m, t0 + k * 0.25, 0.4, Object.assign({ vel: 100, gain: 0.3 }, o))); return; }
+    [60, 64, 67, 72].forEach((m, k) => Engine.playNote(m, t0 + k * 0.22, 0.9, Object.assign({ vel: 96, gain: 0.25 }, o)));
+  },
+  async use(i) {
+    const t = this.track(); if (!t) return toast('Select a track first.', 1800);
+    if (i == null) t.inst = 'auto'; else if (i < 0 || !this.font) return toast('Pick an instrument first.', 1800); else t.inst = 'sf:' + this.font + '|' + i;
+    Seq.save(); Seq.render(); await Seq.prepare(); this.refresh(); toast(i == null ? 'Sound from the file.' : t.name + ': ' + this.rec.sf.presets[i].name, 1800);
+  }
+};

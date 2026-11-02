@@ -197,6 +197,83 @@ function notesTranspose(notes, d) {
   const lo = Math.min.apply(null, notes.map(n => n.midi)), hi = Math.max.apply(null, notes.map(n => n.midi));
   d = Math.max(-lo, Math.min(127 - hi, d)); notes.forEach(n => { n.midi += d; }); return d;
 }
+/* Mirrors pitches around the middle of the notes' range, so the top note swaps with the bottom one. */
+function notesFlip(notes) {
+  if (!notes.length) return;
+  const s = Math.min.apply(null, notes.map(n => n.midi)) + Math.max.apply(null, notes.map(n => n.midi)); notes.forEach(n => { n.midi = s - n.midi; });
+}
+/* Mirrors the notes in time between the first start and the last end, so the last note plays first. */
+function notesReverse(notes) {
+  if (!notes.length) return;
+  const s = Math.min.apply(null, notes.map(n => n.tick)) + Math.max.apply(null, notes.map(n => n.tick + n.dur)); notes.forEach(n => { n.tick = s - n.tick - n.dur; });
+}
+/* Arpeggiates chords: every group of two or more notes that start together is replaced by one note per `step` ticks, cycling through its pitches in the chosen order
+   ('up', 'down', 'updown' or 'random'; rnd gives numbers in [0,1)). Returns the notes to remove and the notes to add. */
+function notesArp(notes, pattern, step, rnd) {
+  rnd = rnd || Math.random; step = Math.max(1, Math.round(step));
+  const by = new Map(); notes.forEach(n => { const k = n.tick + ':' + n.ch; if (!by.has(k)) by.set(k, []); by.get(k).push(n); });
+  const del = [], add = [];
+  by.forEach(g => {
+    if (g.length < 2) return;
+    const ps = Array.from(new Set(g.map(n => n.midi))).sort((a, b) => a - b); if (ps.length < 2) return;
+    const dur = Math.max.apply(null, g.map(n => n.dur)), cnt = Math.max(1, Math.floor(dur / step)), base = g[0];
+    let seq = ps; if (pattern === 'down') seq = ps.slice().reverse(); else if (pattern === 'updown') seq = ps.concat(ps.slice(1, -1).reverse());
+    for (let i = 0; i < cnt; i++) {
+      const m = pattern === 'random' ? ps[Math.floor(rnd() * ps.length)] : seq[i % seq.length];
+      add.push(Object.assign({}, base, { midi: m, tick: base.tick + i * step, dur: i === cnt - 1 ? dur - i * step : step }));
+    }
+    g.forEach(n => del.push(n));
+  });
+  return { del, add };
+}
+/* Random small shifts of start time (up to `tickAmt` ticks either way) and velocity (up to `velAmt`), so a sequenced part sounds played. */
+function notesHumanize(notes, tickAmt, velAmt, rnd) {
+  rnd = rnd || Math.random;
+  notes.forEach(n => { n.tick = Math.max(0, n.tick + Math.round((rnd() * 2 - 1) * tickAmt)); n.vel = Math.max(1, Math.min(127, Math.round((n.vel || 90) + (rnd() * 2 - 1) * velAmt))); });
+}
+/* Swing: notes on the off-beat steps of a grid of `step` ticks are delayed so the pair splits `ratio` : 1 - ratio (0.5 straight, about 0.67 triplet feel). */
+function notesSwing(notes, step, ratio) {
+  notes.forEach(n => { const k = Math.round(n.tick / step); if (k % 2 && Math.abs(n.tick - k * step) <= step / 4) n.tick = Math.max(0, Math.round((k - 1) * step + ratio * 2 * step + (n.tick - k * step))); });
+}
+/* Each note goes up an octave, down an octave or stays (as far as the MIDI range allows). */
+function notesScatter(notes, rnd) {
+  rnd = rnd || Math.random; notes.forEach(n => { const d = [-12, 0, 12][Math.floor(rnd() * 3)]; if (n.midi + d >= 0 && n.midi + d <= 127) n.midi += d; });
+}
+/* The pitches of a scale (set of semitone offsets from rootPc) between lo and hi, ascending. */
+function scalePitches(set, rootPc, lo, hi) { const out = []; for (let m = Math.max(0, lo); m <= Math.min(127, hi); m++) if (set.has((((m - rootPc) % 12) + 12) % 12)) out.push(m); return out; }
+/* Every note gets a random pitch of the scale within the range the notes cover (at least an octave). */
+function notesRandomInScale(notes, set, rootPc, rnd) {
+  if (!notes.length) return; rnd = rnd || Math.random;
+  const lo = Math.min.apply(null, notes.map(n => n.midi)), hi = Math.max.apply(null, notes.map(n => n.midi)), ps = scalePitches(set, rootPc, lo, Math.max(hi, lo + 12)); if (!ps.length) return;
+  notes.forEach(n => { n.midi = ps[Math.floor(rnd() * ps.length)]; });
+}
+/* Triads on scale degrees (0 = the key note), stacked thirds within the scale, voiced from the key note at or above `base`. Returns one array of pitches per degree. */
+function progChords(set, rootPc, degrees, base) {
+  const start = base + ((rootPc - base) % 12 + 12) % 12, ps = scalePitches(set, rootPc, start, start + 60), n = set.size;
+  return degrees.map(d => { const k = ((d % n) + n) % n; return [ps[k], ps[k + 2], ps[k + 4]].filter(m => m != null); });
+}
+/* A short random melody in the scale: a gentle walk over scale steps with mixed note lengths, ending on the key note. Notes fill `bars` bars of `barLen` ticks from `tick`. */
+function melodyIdea(set, rootPc, tick, ppq, bars, barLen, base, rnd) {
+  rnd = rnd || Math.random; const ps = scalePitches(set, rootPc, base - 5, base + 14); if (ps.length < 3) return [];
+  const lens = [ppq / 2, ppq / 2, ppq, ppq, ppq / 4 * 3, ppq * 2], total = bars * barLen, out = []; let t = 0, i = Math.min(ps.length - 1, Math.max(0, ps.findIndex(m => m >= base)));
+  while (t < total) {
+    let d = lens[Math.floor(rnd() * lens.length)]; d = Math.min(d, total - t); const last = total - t - d < ppq / 4;
+    if (last) { const ti = ps.findIndex((m, j) => j >= i - 2 && ((m - rootPc) % 12 + 12) % 12 === 0); if (ti >= 0) i = ti; }
+    out.push({ midi: ps[i], tick: tick + Math.round(t), dur: Math.max(1, Math.round(d * 0.9)), vel: 80 + Math.floor(rnd() * 25) });
+    t += d; const r = rnd(); i = Math.max(0, Math.min(ps.length - 1, i + (r < 0.3 ? 1 : r < 0.6 ? -1 : r < 0.75 ? 2 : r < 0.9 ? -2 : 0)));
+  }
+  return out;
+}
+/* The name of the chord made by some MIDI pitches ('C', 'Am', 'G7', 'Dm7/F'...), or '' when they are not a chord I know. The lowest note decides which root is tried first. */
+const CHORD_SHAPES = [['', [0, 4, 7]], ['m', [0, 3, 7]], ['7', [0, 4, 7, 10]], ['maj7', [0, 4, 7, 11]], ['m7', [0, 3, 7, 10]], ['dim', [0, 3, 6]], ['m7b5', [0, 3, 6, 10]], ['dim7', [0, 3, 6, 9]], ['aug', [0, 4, 8]], ['sus4', [0, 5, 7]], ['sus2', [0, 2, 7]], ['6', [0, 4, 7, 9]], ['m6', [0, 3, 7, 9]], ['add9', [0, 2, 4, 7]], ['5', [0, 7]]];
+function chordName(midis) {
+  const pcs = Array.from(new Set(midis.map(m => ((m % 12) + 12) % 12))); if (pcs.length < 2) return '';
+  const bass = ((Math.min.apply(null, midis) % 12) + 12) % 12, roots = [bass].concat(pcs.filter(p => p !== bass));
+  for (const r of roots) for (const [nm, iv] of CHORD_SHAPES) {
+    if (iv.length !== pcs.length) continue; const set = new Set(iv.map(i => (r + i) % 12)); if (pcs.every(p => set.has(p))) return NOTE_NAMES[r] + nm + (r !== bass ? '/' + NOTE_NAMES[bass] : '');
+  }
+  return '';
+}
 /* Snaps note starts to the grid; durations stay (a note never gets shorter than one tick). */
 function notesQuantize(notes, g) { notes.forEach(n => { n.tick = snapTick(n.tick, g); n.dur = Math.max(1, n.dur); }); }
 /* Copies notes with their start relative to the earliest one. */

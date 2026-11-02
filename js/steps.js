@@ -80,6 +80,17 @@ const Steps = {
     if (k === 'prev') this.bar = Math.max(0, this.bar - 1);
     else if (k === 'next') this.bar = Math.min(G.bars.length - 1, this.bar + 1);
     else if (k === 'clear') Ed.edit(() => { tr.notes = tr.notes.filter(n => !this.inBar(n, G)); });
+    else if (k === 'vary') {
+      const ch = Ed.chan(tr), strong = i => (i * 16 / G.n) % 4 === 0, noteLen = Math.max(1, Math.round(Math.min(G.stepT, song.ppq / 4) / 2));
+      Ed.edit(() => {
+        tr.notes = tr.notes.filter(n => !(this.inBar(n, G) && [42, 46, 39, 37, 45].includes(n.midi) && Math.random() < 0.18));                                  // thin out some hats, claps and toms
+        tr.notes.forEach(n => { if (this.inBar(n, G)) n.vel = clamp(Math.round((n.vel || 90) + (Math.random() * 2 - 1) * 14), 20, 127); });                 // velocities breathe
+        for (let i = 0; i < G.n; i++) {                                                                                                                  // add a few off-beat extras; the backbone (kick and snare on the beats) is left alone
+          if (strong(i) || Math.random() > 0.14) continue; const m = [42, 42, 46, 36, 38][Math.floor(Math.random() * 5)], t = Math.round(G.start + i * G.stepT);
+          if (!tr.notes.some(n => n.midi === m && Math.abs(n.tick - t) < G.stepT * 0.4)) tr.notes.push({ midi: m, tick: t, dur: noteLen, vel: m === 38 ? 45 : 70, ch });
+        }
+      });
+    }
     else if (k === 'copy') {
       if (this.bar + 1 >= G.bars.length) return;
       const next = { start: G.bars[this.bar + 1], len: this.lenAt(song, G.bars[this.bar + 1]), stepT: G.stepT }, d = next.start - G.start, src = tr.notes.filter(n => this.inBar(n, G)).map(n => Object.assign({}, n, { tick: n.tick + d }));
