@@ -2,6 +2,25 @@
 /* The volume slider is squared, so the quiet half of it has fine steps, and the output stage sits 6 dB under full scale: earbuds were too loud at the old default. */
 const volGain = v => v * v, OUT_TRIM = 0.5;
 /* ---- Audio engine ---- */
+/* The built-in instruments: each is one oscillator with a stack of partials (amps), an attack (a), either held for the whole note (hold) or decaying to a fraction (f) of its level over T seconds, and an optional low-pass filter at lp times the pitch. */
+const saw = n => Array.from({ length: n }, (_, i) => 1 / (i + 1));
+const TIMBRES = {
+  soft: { label: 'Soft', amps: [1, 0.45, 0.2, 0.1] },
+  piano: { label: 'Piano-like', amps: [1, 0.6, 0.38, 0.22, 0.14, 0.09], f: 0.08, T: 2.2 },
+  organ: { label: 'Organ', amps: [1, 0.8, 0.55, 0.4, 0.25], hold: true },
+  pure: { label: 'Pure sine', amps: [1] },
+  epiano: { label: 'Electric piano', amps: [1, 0.25, 0.05, 0.18, 0.03], f: 0.1, T: 2.5 },
+  pluck: { label: 'Plucked string', amps: saw(9), f: 0.04, T: 1.2, lp: 7 },
+  mallet: { label: 'Mallet / bell', amps: [1, 0, 0, 0.35, 0, 0, 0.12], f: 0.03, T: 1.4 },
+  strings: { label: 'Strings', amps: saw(12), a: 0.12, hold: true, lp: 9 },
+  brass: { label: 'Brass', amps: [1, 0.9, 0.8, 0.6, 0.5, 0.35, 0.25, 0.15, 0.1], a: 0.05, hold: true, lp: 8 },
+  reed: { label: 'Reed', amps: [1, 0, 0.5, 0, 0.3, 0, 0.15, 0, 0.08], a: 0.03, hold: true },
+  flute: { label: 'Flute', amps: [1, 0.2, 0.08, 0.03], a: 0.06, hold: true },
+  bass: { label: 'Synth bass', amps: saw(8), f: 0.45, T: 1.5, lp: 4 },
+  lead: { label: 'Synth lead', amps: saw(14), a: 0.015, hold: true },
+  pad: { label: 'Pad', amps: [1, 0.5, 0.33, 0.25, 0.2, 0.15], a: 0.3, hold: true }
+};
+const timbreOf = tb => TIMBRES[tb] || TIMBRES.soft;      // anything else ('sf' while the font is still loading) sounds soft
 const Engine = {
   ctx: null, stream: null, master: null, node: null, inst: 'voice', tracker: null, listeners: new Set(), ready: false, level: -90, lat: 0,
   async start() {
@@ -195,7 +214,7 @@ const Engine = {
   /* The partial amplitudes of each built-in timbre as a cached periodic wave, plus the factor that gives it the loudness of the old stack of weighted sines. */
   voiceWave(tb) {
     const cache = this.waves || (this.waves = {}), c = this.ctx; if (cache[tb] && cache[tb].ctx === c) return cache[tb];
-    const amps = tb === 'pure' ? [1] : tb === 'organ' ? [1, 0.8, 0.55, 0.4, 0.25] : tb === 'piano' ? [1, 0.6, 0.38, 0.22, 0.14, 0.09] : [1, 0.45, 0.2, 0.1], sum = amps.reduce((a, b) => a + b, 0);
+    const amps = timbreOf(tb).amps, sum = amps.reduce((a, b) => a + b, 0);
     const real = new Float32Array(amps.length + 1), imag = new Float32Array(amps.length + 1); amps.forEach((a, i) => { imag[i + 1] = a / sum; });
     let peak = 0; for (let k = 0; k < 2048; k++) { const th = k / 2048 * 2 * Math.PI; let v = 0; amps.forEach((a, i) => { v += a / sum * Math.sin((i + 1) * th); }); peak = Math.max(peak, Math.abs(v)); }
     return cache[tb] = { ctx: c, wave: c.createPeriodicWave(real, imag), k: peak };      // a periodic wave is normalised to a peak of 1, the stack peaked at `peak`
@@ -204,17 +223,18 @@ const Engine = {
     if (o.preset != null ? SF.cache.has(o.preset) : Store.data.settings.timbre === 'sf' && SF.ready) { try { const r = SF.play(midi, when, dur, o); if (r) return r; } catch (e) { console.error(e); } }   // notes the font has no sample for fall back to the built-in sound
     const c = this.ctx, a4 = Store.data.settings.a4;
     const g = c.createGain(); g.connect(o.dest || this.master);
-    const tb = o.synth || Store.data.settings.timbre, W = this.voiceWave(tb), vib = this.vibOn();
+    const tb = o.synth || Store.data.settings.timbre, TB = timbreOf(tb), W = this.voiceWave(tb), vib = this.vibOn(), freq = midiToFreq(midi, a4);
     const osc = c.createOscillator(); osc.setPeriodicWave(W.wave);      // the whole timbre is one oscillator: a stack of sine partials cost four to six
-    osc.frequency.setValueAtTime(midiToFreq(midi, a4), when);
+    osc.frequency.setValueAtTime(freq, when);
     if (o.midi2 != null) osc.frequency.exponentialRampToValueAtTime(midiToFreq(o.midi2, a4), when + dur);
     if (this.fx && vib) this.fx.vibDepth.connect(osc.detune);      // a connected detune makes every oscillator compute its pitch per sample, so only when vibrato is on
     if (o.bend) o.bend.connect(osc.detune);      // pitch wheel of the sequencer track
-    g.gain.value = 0; osc.connect(g); osc.start(when); osc.stop(when + dur + 0.15); const oscs = [osc], gain = (o.gain == null ? 0.25 : o.gain) * W.k;
-    g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(gain, when + 0.01);
-    if (o.sustain || o.midi2 != null) { g.gain.setValueAtTime(gain, Math.max(when + 0.02, when + dur - 0.05)); g.gain.linearRampToValueAtTime(0, when + dur + 0.05); }
-    else { g.gain.exponentialRampToValueAtTime(gain * (tb === 'piano' ? 0.08 : 0.35), when + Math.min(dur, tb === 'piano' ? 2.2 : 1.5)); g.gain.linearRampToValueAtTime(0, when + dur + 0.08); }
-    oscs[0].onended = () => { g.disconnect(); if (o.bend) oscs.forEach(x => { try { o.bend.disconnect(x.detune); } catch (e) { /* already gone */ } }); };
+    g.gain.value = 0; let lp = null; if (TB.lp) { lp = c.createBiquadFilter(); lp.frequency.value = Math.min(freq * TB.lp, 16000); osc.connect(lp); lp.connect(g); } else osc.connect(g); osc.start(when); osc.stop(when + dur + 0.15); const oscs = [osc], gain = (o.gain == null ? 0.25 : o.gain) * W.k;
+    const at = Math.min(TB.a || 0.01, Math.max(0.01, dur * 0.4));      // attack: a bowed or blown sound swells, a struck one starts at once
+    g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(gain, when + at);
+    if (o.sustain || o.midi2 != null || TB.hold) { g.gain.setValueAtTime(gain, Math.max(when + at + 0.01, when + dur - 0.05)); g.gain.linearRampToValueAtTime(0, when + dur + 0.05); }
+    else { g.gain.exponentialRampToValueAtTime(gain * (TB.f || 0.35), when + Math.max(at + 0.01, Math.min(dur, TB.T || 1.5))); g.gain.linearRampToValueAtTime(0, when + dur + 0.08); }
+    oscs[0].onended = () => { g.disconnect(); if (lp) lp.disconnect(); if (o.bend) oscs.forEach(x => { try { o.bend.disconnect(x.detune); } catch (e) { /* already gone */ } }); };
     return {
       stop: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + 0.02); oscs.forEach(x => x.stop(n + 0.03)); } catch (e) {} },      // short fade: cutting a sine mid-wave clicks
       release: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + 0.15); oscs.forEach(x => x.stop(n + 0.2)); } catch (e) {} }

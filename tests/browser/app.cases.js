@@ -145,6 +145,12 @@ T.test('audio: a built-in voice is one oscillator at the old loudness', async ()
   try { Engine._playNote(60, c.currentTime + 1, 0.2, { synth: 'piano', nopool: true }); } finally { c.createOscillator = orig; }
   T.eq(made, 1, 'one oscillator for a six-partial timbre');
 });
+T.test('audio: every built-in instrument plays and every GM program has one', async () => {
+  await audio(); const c = Engine.ctx;
+  Object.keys(TIMBRES).forEach(k => { const h = Engine._playNote(48, c.currentTime + 1, 0.1, { synth: k, nopool: true }); T.ok(h && h.stop, k + ' plays'); h.stop(); });
+  for (let p = 0; p < 128; p++) T.ok(TIMBRES[synthFor(p)], 'program ' + p);
+  T.eq(synthFor(40), 'strings'); T.eq(synthFor(56), 'brass'); T.eq(synthFor(73), 'flute'); T.eq(synthFor(33), 'bass');
+});
 T.test('audio: vibrato is only connected to voices when it is on', async () => {
   await audio(); const st = Store.data.settings, c = Engine.ctx; let linked = 0; const orig = Engine.fx.vibDepth.connect.bind(Engine.fx.vibDepth);
   Engine.fx.vibDepth.connect = (...a) => { linked++; return orig(...a); };
