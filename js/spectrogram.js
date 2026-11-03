@@ -221,7 +221,7 @@ const Spec = {
     g.fillStyle = '#050506'; g.fillRect(0, top, w, kh);
     const felt = g.createLinearGradient(0, top, 0, y0); felt.addColorStop(0, '#2a0808'); felt.addColorStop(1, '#6e1a1a'); g.fillStyle = felt; g.fillRect(0, top, w, tb);       // a felt strip along the back of the keys, so no bright key edge touches the graph
     kh -= tb;
-    const art = KeyArt.begin(g, y0, kh - 1, kh * 0.62), stOf = m => m === sung ? 'heard' : held.includes(m) ? 'on' : null;
+    const art = KeyArt.begin(g, y0, kh - 1, kh * 0.62), lit = Scale.expand(held), stOf = m => m === sung ? 'heard' : lit.includes(m) ? 'on' : Scale.has(m) ? null : 'off';
     whites.forEach((m, i) => KeyArt.white(g, art, i * ww + 0.5, y0, ww - 1, kh - 1, stOf(m)));
     for (let m = lo; m <= hi; m++) if (isBlack(m)) KeyArt.black(g, art, kb[m - lo] - bw / 2, y0, bw, kh * 0.62, stOf(m));
     const wx = new Map(); whites.forEach((m, i) => wx.set(m, i * ww));
@@ -243,7 +243,7 @@ const Piano = {
     const bx = m => wx.get(m - 1) + ww - bw / 2 + (off[((m % 12) + 12) % 12] || 0) * ww;
     const colour = (m, black) => heardList.includes(m) ? '#9ccc65' : held.includes(m) ? '#ffb347' : black ? '#141210' : '#f3ead6';
     g.clearRect(0, 0, w, h);
-    const art = KeyArt.begin(g, top, kh, bh), stOf = (m) => heardList.includes(m) ? 'heard' : held.includes(m) ? 'on' : null, felt = g.createLinearGradient(0, 0, 0, top); felt.addColorStop(0, '#2a0808'); felt.addColorStop(1, '#6e1a1a'); g.fillStyle = felt; g.fillRect(0, 0, w, top);
+    const art = KeyArt.begin(g, top, kh, bh), lit = Scale.expand(held), stOf = (m) => heardList.includes(m) ? 'heard' : lit.includes(m) ? 'on' : Scale.has(m) ? null : 'off', felt = g.createLinearGradient(0, 0, 0, top); felt.addColorStop(0, '#2a0808'); felt.addColorStop(1, '#6e1a1a'); g.fillStyle = felt; g.fillRect(0, 0, w, top);
     const keyPath = (x, y, kw, kh2) => { const r = Math.min(3, kw / 3); g.beginPath(); g.moveTo(x, y); g.lineTo(x + kw, y); g.lineTo(x + kw, y + kh2 - r); g.quadraticCurveTo(x + kw, y + kh2, x + kw - r, y + kh2); g.lineTo(x + r, y + kh2); g.quadraticCurveTo(x, y + kh2, x, y + kh2 - r); g.closePath(); };
     whites.forEach(m => {
       const x = wx.get(m); KeyArt.white(g, art, x + 0.5, top, ww - 1, kh, stOf(m));
@@ -263,7 +263,7 @@ const Piano = {
     Spec.drawTags(tags, w);
     // text summary
     const parts = [];
-    if (held.length) { const dk = describeKeys(held); parts.push('Pressed: ' + held.map(noteName).join(' ') + (held.length >= 2 ? ' (' + dk.name + (held.length === 2 ? ', ' + dk.detail : '') + ')' : '')); }
+    if (held.length) { const pl = Scale.expand(held).slice().sort((x, y) => x - y), dk = describeKeys(pl); parts.push((pl.length > held.length ? 'Playing: ' : 'Pressed: ') + pl.map(noteName).join(' ') + (pl.length >= 2 ? ' (' + dk.name + (pl.length === 2 ? ', ' + dk.detail : '') + ')' : '')); }      // with a chord mode on, the chord that sounds
     if (chordOn) { const dk = describeKeys(heardNotes); parts.push('Hearing: ' + heardNotes.map(noteName).join(' ') + ' (' + dk.name + (heardNotes.length === 2 ? ', ' + dk.detail : '') + ')'); }
     else if (heard != null) parts.push('Hearing: ' + noteName(heard) + (Tuner.f ? ' ' + Tuner.f.toFixed(1) + ' Hz' : ''));
     if (typeof Arp !== 'undefined' && Arp.on) parts.push('Arp: ' + Arp.PATN[Arp.cfg().pat] + ' \u00b7 ' + (2 * Math.pow(8, Arp.cfg().rate)).toFixed(1) + '/s');

@@ -62,7 +62,7 @@ const Knobs = {
     $('#pnArp').innerHTML = `<div class="synsec lowsec lowarp"><span class="synlab">ARPEGGIO</span><div class="mixrow">${tgc('arpOn', 'Arp', 'Play the keys you hold one at a time instead of together')}<div id="arpKnobs" class="knobs"></div></div></div>`;
     host.innerHTML = `<span class="lowbreak"></span><div class="synsec lowsec lowpitch"><span class="synlab">PITCH</span><div id="lowPitchKnobs" class="knobs"></div></div>
       <div class="synsec lowsec lowdyn"><span class="synlab">DYNAMICS</span><div id="lowDynKnobs" class="knobs"></div></div>
-      <div class="synsec lowsec lowfilt"><span class="synlab">FILTERS</span><div id="lowFiltKnobs" class="knobs"></div></div>
+      <div class="synsec lowsec lowfilt"><span class="synlab">EQ</span><div id="lowFiltKnobs" class="knobs"></div></div>
       <div class="synsec lowsec lowflt"><span class="synlab">FILTER</span><div id="lowFltKnobs" class="knobs"></div></div>`;
     $('#pnRev').innerHTML = '<div class="synsec lowsec lowrev"><span class="synlab">REVERB</span><div id="lowRevKnobs" class="knobs"></div></div>';
     $('#pnVoice').innerHTML = '<div class="synsec lowsec lowvox"><span class="synlab">VOICE</span><div id="lowVoxKnobs" class="knobs"></div></div>';

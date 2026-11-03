@@ -425,15 +425,15 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 #volFill{background:linear-gradient(90deg,#c2410c,#ffa23a)}
 
 /* Preset, SoundFont and patch arrows: round matte buttons with a green triangle that turns orange while pressed */
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN){position:relative;flex:none;align-self:center;width:2.4rem;height:2.4rem;min-width:0;min-height:0;padding:0;border-radius:50%;font-size:0;color:transparent;background:#232326;border:0;box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN)::after{content:"";position:absolute;inset:0;margin:auto;width:0.85rem;height:0.85rem;background:#4af26a;filter:drop-shadow(0 0 3px rgba(74,242,106,.65))}
-.synbtn:is(.prPP,.sfPP)::after{clip-path:polygon(100% 0,0 50%,100% 100%);transform:translateX(-0.14rem)}
-.synbtn:is(.prPN,.sfPN)::after{clip-path:polygon(0 0,100% 50%,0 100%);transform:translateX(0.14rem)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN){position:relative;flex:none;align-self:center;width:2.4rem;height:2.4rem;min-width:0;min-height:0;padding:0;border-radius:50%;font-size:0;color:transparent;background:#232326;border:0;box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN)::after{content:"";position:absolute;inset:0;margin:auto;width:0.85rem;height:0.85rem;background:#4af26a;filter:drop-shadow(0 0 3px rgba(74,242,106,.65))}
+.synbtn:is(.prPP,.pkPP,.sfPP)::after{clip-path:polygon(100% 0,0 50%,100% 100%);transform:translateX(-0.14rem)}
+.synbtn:is(.prPN,.pkPN,.sfPN)::after{clip-path:polygon(0 0,100% 50%,0 100%);transform:translateX(0.14rem)}
 .synbtn.sfFP::after{clip-path:polygon(50% 0,100% 100%,0 100%);transform:translateY(-0.14rem)}
 .synbtn.sfFN::after{clip-path:polygon(0 0,100% 0,50% 100%);transform:translateY(0.14rem)}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN):hover{background:#27272b}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN):active{transform:none;background:#1e1e21;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN):active::after{background:#ffa23a;filter:drop-shadow(0 0 4px rgba(255,150,40,.8))}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):hover{background:#27272b}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active{transform:none;background:#1e1e21;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active::after{background:#ffa23a;filter:drop-shadow(0 0 4px rgba(255,150,40,.8))}
 
 /* Icon-only synth buttons; the resets are red */
 .synbtn.ico{width:2.4rem;padding:0;display:inline-flex;align-items:center;justify-content:center}.synbtn.ico svg{display:block}
@@ -481,11 +481,11 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .synbtn:active{box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
 
 /* Neumorphic dial buttons: a matte raised cap with a recessed face, like the knobs. Icons glow orange while pressed. */
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){position:relative;flex:none;align-self:center;width:2.6rem;height:2.6rem;min-width:0;min-height:0;padding:0;border:0;border-radius:50%;background:#232326;color:#8f9096;box-shadow:5px 6px 10px rgba(0,0,0,.85),-3px -3px 7px rgba(255,255,255,.05)}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{content:"";position:absolute;inset:0.42rem;border-radius:50%;background:#1b1b1d;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045);pointer-events:none}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){position:relative;flex:none;align-self:center;width:2.6rem;height:2.6rem;min-width:0;min-height:0;padding:0;border:0;border-radius:50%;background:#232326;color:#8f9096;box-shadow:5px 6px 10px rgba(0,0,0,.85),-3px -3px 7px rgba(255,255,255,.05)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{content:"";position:absolute;inset:0.42rem;border-radius:50%;background:#1b1b1d;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045);pointer-events:none}
 .synbtn.ico svg{position:relative;width:1.05rem;height:1.05rem;filter:drop-shadow(0 0 3px rgba(255,255,255,.12))}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover{background:#27272b}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:none;background:#1e1e21;box-shadow:inset 3px 3px 7px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.04)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover{background:#27272b}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:none;background:#1e1e21;box-shadow:inset 3px 3px 7px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.04)}
 .synbtn.ico:active{color:var(--accent)}.synbtn.ico:active svg{filter:drop-shadow(0 0 4px rgba(255,150,40,.85))}
 .synbtn.ico.red{color:#ff5d4f}.synbtn.ico.red svg{filter:drop-shadow(0 0 4px rgba(255,80,70,.55))}.synbtn.ico.red:hover{color:#ff8174}.synbtn.ico.red:active{color:#ffb0a8}
 .synhbtns{gap:0.7rem}
@@ -589,17 +589,17 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .lcdrow{min-height:2.4rem}
 
 /* The six arrow buttons are square; Save, Init and Full screen stay round */
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN){border-radius:6px}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN)::before{border-radius:3px}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN){border-radius:6px}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN)::before{border-radius:3px}
 
 /* ---- Hardware buttons for Compose and the synth panel: a cap standing on a side wall that drops when pressed, and sits a little low while latched ---- */
-.sqb,.daw .sqb,.pjrow .sqb,.dawpop .sqb,.synbtn,.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){--lift:4px;border:0;background:linear-gradient(180deg,var(--fa,#3a3b40),var(--fb,#2a2b2f));color:#d0cec6;transform:translateY(0);
+.sqb,.daw .sqb,.pjrow .sqb,.dawpop .sqb,.synbtn,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){--lift:4px;border:0;background:linear-gradient(180deg,var(--fa,#3a3b40),var(--fb,#2a2b2f));color:#d0cec6;transform:translateY(0);
   box-shadow:0 var(--lift) 0 var(--sd,#121315),0 calc(var(--lift) + 4px) 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
   transition:transform .05s linear,box-shadow .05s linear,color .1s;-webkit-tap-highlight-color:transparent}
 .sqb,.daw .sqb,.pjrow .sqb,.dawpop .sqb{border-radius:calc(7px*var(--k,1))}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{display:none}
-.sqb:hover,.daw .sqb:hover,.synbtn:hover,.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover{--fa:#44454b;--fb:#303135;background:linear-gradient(180deg,var(--fa),var(--fb))}
-.sqb:active,.daw .sqb:active,.pjrow .sqb:active,.dawpop .sqb:active,.synbtn:active,.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:translateY(var(--lift));background:linear-gradient(180deg,var(--fa,#3a3b40),var(--fb,#2a2b2f));
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{display:none}
+.sqb:hover,.daw .sqb:hover,.synbtn:hover,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover{--fa:#44454b;--fb:#303135;background:linear-gradient(180deg,var(--fa),var(--fb))}
+.sqb:active,.daw .sqb:active,.pjrow .sqb:active,.dawpop .sqb:active,.synbtn:active,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:translateY(var(--lift));background:linear-gradient(180deg,var(--fa,#3a3b40),var(--fb,#2a2b2f));
   box-shadow:0 0 0 var(--sd,#121315),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
 /* latched: sits two pixels low and the label lights */
 .sqb.on,.daw .sqb.on,.pjrow .sqb.on{--fa:#34353a;--fb:#26272b;background:linear-gradient(180deg,var(--fa),var(--fb));color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.85);border:0;transform:translateY(calc(var(--lift) - 2px));
@@ -616,12 +616,12 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),radial-gradient(130% 110% at 50% 50%,transparent 72%,rgba(0,0,0,.12))}
 
 /* Arrow buttons exactly as in the hardware preview: 54 by 42 caps, 6px corners, a small green triangle, 6px side wall */
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN){--lift:6px;width:54px;height:42px;border-radius:6px;box-shadow:0 var(--lift) 0 var(--sd,#121315),0 calc(var(--lift) + 5px) 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN):active{box-shadow:0 0 0 var(--sd,#121315),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
-.synbtn:is(.prPP,.prPN,.sfPP,.sfPN)::after{width:11px;height:14px;transform:none}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN){--lift:6px;width:54px;height:42px;border-radius:6px;box-shadow:0 var(--lift) 0 var(--sd,#121315),0 calc(var(--lift) + 5px) 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active{box-shadow:0 0 0 var(--sd,#121315),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfPP,.sfPN)::after{width:11px;height:14px;transform:none}
 .synbtn:is(.sfFP,.sfFN)::after{width:14px;height:11px;transform:none}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN)::after{filter:drop-shadow(0 0 3px rgba(74,242,106,.6))}
-.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN):active::after{filter:drop-shadow(0 0 4px rgba(255,150,40,.9))}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN)::after{filter:drop-shadow(0 0 3px rgba(74,242,106,.6))}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active::after{filter:drop-shadow(0 0 4px rgba(255,150,40,.9))}
 
 /* "Now" screen: what is pressed and what is heard, as its own small LCD above the effects */
 .synside{display:flex;flex-direction:column;gap:0.75rem;min-width:0}
@@ -1045,3 +1045,41 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .dawbody{grid-template-columns:calc(320px*var(--k)) minmax(0,1fr)}
 .sqfxk{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-width:760px){.dawbody{grid-template-columns:1fr}}
+
+/* Key, scale and chords panel under the keyboard */
+#pnKey.synknobarea{margin:0;padding:0.7rem 0.8rem 0.8rem;display:flex;flex-direction:column;gap:0.6rem}
+#pnKey .keyrow{margin:0;align-items:stretch;flex-wrap:wrap;gap:0.6rem 0.9rem}
+#pnKey .keyrow .synlcd{flex:1 1 11rem}
+#pnKey .keyrow .pntgl{align-self:center;flex:none}
+#pnKey .keyrow .pntgl:disabled{opacity:.4;pointer-events:none}
+.lcd.keychords{position:relative;overflow:hidden;flex:none;flex-direction:row;flex-wrap:wrap;justify-content:space-around;gap:0 calc(var(--dp,1px)*12);padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);--gn:2;font:400 calc(var(--dp,1px)*16)/calc(var(--dp,1px)*24) "Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);color:#ffb347;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
+.lcd.keychords[hidden]{display:none}
+.lcd.keychords::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+#pnKey .keyrow,.synthmain #pnKey .keyrow{flex:none}
+#pnKey .keyrow .synlcd,.synthmain #pnKey .keyrow .synlcd{flex:1 1 9rem}
+#pnKey .keyrow .synlcd:first-child,.synthmain #pnKey .keyrow .synlcd:first-child{flex:0.55 1 8rem}
+#pnKey .keyrow .synlcd,.synthmain #pnKey .keyrow .synlcd{flex:1 1 13rem}
+#pnKey .keyrow .tgcell{flex:none;min-width:0;align-self:center;padding-top:0}
+#pnKey .keyrow .tgcell:has(button:disabled){opacity:.4}
+#pnKey .keyrow{flex-wrap:nowrap;gap:0.6rem}
+#pnKey .keyrow .synlcd,.synthmain #pnKey .keyrow .synlcd{flex:1 1 0;min-width:0}
+#pnKey .keyrow .synlcd:first-child,.synthmain #pnKey .keyrow .synlcd:first-child{flex:0.55 1 0}
+@media(max-width:760px){#pnKey .keyrow{flex-wrap:wrap}#pnKey .keyrow .synlcd,.synthmain #pnKey .keyrow .synlcd{flex:1 1 9rem}}
+#pnKey .keyrow .synlcd:first-child,.synthmain #pnKey .keyrow .synlcd:first-child{flex:0.85 1 0}
+
+/* Text on the LCD grid: the chord readout sits in fixed cells with its baseline on the 2dp mesh, and the envelope readout's second column starts on the 3dp mesh */
+.lcd.keychords{padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);justify-content:flex-start;gap:0}
+.lcd.keychords span{display:block;flex:none;width:calc(var(--dp,1px)*96);text-align:left}
+#pnEnv .lcd.envread{grid-template-columns:round(down,calc(50% - var(--dp,1px)*7.5),calc(var(--dp,1px)*3)) 1fr}
+#pnKey .keyrow .synlcd:nth-child(3),.synthmain #pnKey .keyrow .synlcd:nth-child(3){flex:1.3 1 0}
+#pnKey .keyrow .synlcd:first-child,.synthmain #pnKey .keyrow .synlcd:first-child{flex:0.7 1 0}
+#pnKey .keyrow .synlcd:nth-child(2),.synthmain #pnKey .keyrow .synlcd:nth-child(2){flex:1.5 1 0}
+#pnKey .keyrow .synlcd:nth-child(3),.synthmain #pnKey .keyrow .synlcd:nth-child(3){flex:1.1 1 0}
+#pnKey .synbtn:is(.pkPP,.pkPN){width:40px}
+#pnKey .keyrow .synlcd:first-child,.synthmain #pnKey .keyrow .synlcd:first-child{flex:0.8 1 0}
+#pnKey .keyrow .synlcd:nth-child(3),.synthmain #pnKey .keyrow .synlcd:nth-child(3){flex:1.3 1 0}
+
+/* Key, scale and chords screens: 16dp labels in brighter amber, values at 16dp too, all on the 2dp mesh (baselines at 24 and 48) */
+#pnKey .synlcd .lcd{--gn:2;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12) 0}
+#pnKey .synlcd .lcd small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+#pnKey .synlcd .lcd b{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2)}

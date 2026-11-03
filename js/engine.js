@@ -270,6 +270,17 @@ const Engine = {
   playNote(midi, when, dur, o) {
     o = o || {}; const st = Store.data.settings;
     if (o.live && o.sustain && !o.arp && typeof Arp !== 'undefined' && Arp.on) return Arp.add(midi, o);      // the arpeggiator plays held keys one at a time
+    if (o.live && !o.chordSub && typeof Scale !== 'undefined') {      // a chord mode plays the chord of the key you pressed, each note through the rest of this function
+      if (Scale.blocked(midi)) return null;
+      const cn = Scale.chordFor(midi);
+      if (cn.length > 1) {
+        const g0 = (o.gain == null ? 0.25 : o.gain) * (cn.length > 3 ? 0.62 : 0.72), hs = cn.map(m => this.playNote(m, when, dur, Object.assign({}, o, { chordSub: true, gain: g0 }))).filter(Boolean);
+        if (!hs.length) return null; const h = { stop: () => hs.forEach(x => { try { x.stop(); } catch (e) {} }), release: () => hs.forEach(x => { try { x.release(); } catch (e) {} }) };
+        const now = this.ctx.currentTime, V = this.live || (this.live = []); for (let i = V.length - 1; i >= 0; i--) if (V[i].end < now) V.splice(i, 1); V.push({ h, end: when + dur + 1 });
+        while (V.length > 16) { const old = V.shift(); try { old.h.release(); } catch (e) {} }
+        return h;
+      }
+    }
     if (o.live && st.transpose) midi = clamp(midi + st.transpose, 0, 127);
     if (o.live && !o.dest && typeof Seq !== 'undefined') { const lt = Seq.liveTail(); if (lt) o = Object.assign({}, o, { dest: lt }); }      // notes you play go through the same per-track effects as Compose
     if (o.live && st.fxHuman) { when += Math.random() * 0.012; o = Object.assign({}, o, { gain: (o.gain == null ? 0.25 : o.gain) * (0.85 + Math.random() * 0.3), vel: clamp(Math.round((o.vel || 100) * (0.9 + Math.random() * 0.2)), 1, 127) }); }
@@ -293,7 +304,7 @@ const Engine = {
       const done = () => { if (pans.length) setTimeout(() => pans.forEach(sp => { try { sp.disconnect(); } catch (e) { /* already gone */ } }), 4000); };
       h = { stop: () => { hs.forEach(x => { try { x.stop(); } catch (e) {} }); done(); }, release: () => { hs.forEach(x => { try { x.release(); } catch (e) {} }); done(); } };
     }
-    if (o.nopool) return h;       // an offline render schedules the whole song at once: no voice is ever cut
+    if (o.nopool || o.chordSub) return h;       // an offline render schedules the whole song at once: no voice is ever cut
     /* Past MAX_VOICES the oldest note is faded out quickly rather than letting the audio thread overload and drop samples. */
     const now = this.ctx.currentTime, V = o.seq ? (this.seqLive || (this.seqLive = [])) : (this.live || (this.live = []));     // the sequencer has its own, larger pool so chords are not cut
     for (let i = V.length - 1; i >= 0; i--) if (V[i].end < now) V.splice(i, 1);

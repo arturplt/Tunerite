@@ -397,3 +397,16 @@ T.test('new effects: filter, unison, glide, pitch bend, reverb types, ping-pong 
     Seq.liveTail(); st.liveFx = { fcut: 0.3, freso: 0.8 }; Seq.liveFx(); const lp = (Seq.live.fxn || []).filter(n => n.type === 'lowpass'); T.eq(lp.length, 1, 'the resonant filter is in the chain'); T.near(lp[0].frequency.value, 80 * Math.pow(250, 0.3), 1, 'cutoff follows the knob');
   } finally { Engine._playNote = orig; const k = JSON.parse(keep); Object.assign(st, { fxUni: k.u, fxGlide: k.g, fxPing: k.p, fxK: k.k, liveFx: k.l }); Engine.setFx(); Seq.liveFx(); }
 });
+
+T.test('piano scale and chords: off-scale keys are locked, a key plays the chord of its scale degree', async () => {
+  await audio(); UI.show('piano'); const st = Store.data.settings, keep = JSON.stringify(st.pk), calls = [], orig = Engine._playNote.bind(Engine); Engine._playNote = (m, w, d, o) => { calls.push(m); return orig(m, w, d, o); };
+  const play = m => { calls.length = 0; const h = Engine.playNote(m, Engine.ctx.currentTime + 0.01, 1, { live: true, sustain: true, gain: 0.25 }); if (h) h.release(); return calls.slice(); };
+  try {
+    st.pk = { key: 0, scale: 'off', lock: true, chord: 'off' }; T.eq(play(61).join(), '61', 'no scale: every key plays');
+    st.pk = { key: 0, scale: 'major', lock: true, chord: 'off' }; T.eq(play(61).length, 0, 'C major: C sharp is locked'); T.eq(play(62).join(), '62', 'D plays alone with chords off'); st.pk.lock = false; T.eq(play(61).join(), '61', 'unlocked, a greyed key still plays');
+    st.pk = { key: 0, scale: 'major', lock: true, chord: 'triad' }; T.eq(play(60).join(), '60,64,67', 'C gives C major'); T.eq(play(62).join(), '62,65,69', 'D gives D minor'); T.eq(play(71).join(), '71,74,77', 'B gives B diminished'); T.eq(Scale.nameOf([71, 74, 77]), 'Bdim', 'and names it');
+    st.pk.chord = '7th'; T.eq(play(67).join(), '67,71,74,77', 'G gives G7'); st.pk = { key: 9, scale: 'minor', lock: true, chord: 'triad' }; T.eq(play(69).join(), '69,72,76', 'A minor: A gives A minor'); T.eq(play(64).join(), '64,67,71', 'E gives E minor in A natural minor');
+    st.pk = { key: 0, scale: 'major', lock: true, chord: 'off' }; T.ok(Midi.msg([0x90, 61, 90], true) === undefined && !Midi.down.has(61), 'a MIDI key outside the locked scale is ignored');
+    UI.show('train'); T.ok(!Scale.blocked(61), 'the lock only applies in the Piano tab');
+  } finally { Engine._playNote = orig; st.pk = JSON.parse(keep); Midi.panic && Midi.panic(); UI.show('piano'); }
+});

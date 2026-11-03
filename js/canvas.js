@@ -15,6 +15,7 @@ const KeyArt = {
     const v = (len, stops) => { const gr = g.createLinearGradient(0, top, 0, top + len); stops.forEach(([o, c]) => gr.addColorStop(o, c)); return gr; };
     const lip = Math.max(5, Math.round(kh * 0.07)), lv = (len, stops) => { const gr = g.createLinearGradient(0, top + kh - len, 0, top + kh); stops.forEach(([o, c]) => gr.addColorStop(o, c)); return gr; };
     return {
+      off: v(kh, [[0, '#6a665c'], [0.06, '#8a867a'], [0.82, '#928e82'], [1, '#77736a']]), blackOff: v(bh, [[0, '#26262a'], [1, '#3a3a40']]), front0: lv(lip, [[0, '#7c786c'], [0.18, '#8e8a7e'], [1, '#625e54']]),
       white: v(kh, [[0, '#bdb7a3'], [0.06, '#ece6d4'], [0.82, '#f6f2e6'], [1, '#d6cfba']]),
       on: v(kh, [[0, '#b97a1f'], [0.06, '#ffb347'], [1, '#ffd48a']]),
       heard: v(kh, [[0, '#6f9a3c'], [0.06, '#9ccc65'], [1, '#c5e39d']]),
@@ -29,21 +30,21 @@ const KeyArt = {
   },
   /* A white key is a top surface and a front face under it. Pressed, the key dips: the top moves down toward the front edge and the face gets shorter. */
   white(g, a, x, top, w, kh, st) {
-    const d = st ? 2.5 : 0, lip = a.lip, faceTop = top + kh - lip + d, r = Math.min(3, w / 3);
+    const d = st && st !== 'off' ? 2.5 : 0, lip = a.lip, faceTop = top + kh - lip + d, r = Math.min(3, w / 3);
     if (d) { g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(x, top, w, d); }
-    g.fillStyle = st === 'on' ? a.on : st === 'heard' ? a.heard : a.white; g.fillRect(x, top + d, w, faceTop - top - d);
+    g.fillStyle = st === 'on' ? a.on : st === 'heard' ? a.heard : st === 'off' ? a.off : a.white; g.fillRect(x, top + d, w, faceTop - top - d);
     g.beginPath(); g.moveTo(x, faceTop); g.lineTo(x + w, faceTop); g.lineTo(x + w, top + kh - r); g.quadraticCurveTo(x + w, top + kh, x + w - r, top + kh); g.lineTo(x + r, top + kh); g.quadraticCurveTo(x, top + kh, x, top + kh - r); g.closePath();
-    g.fillStyle = st === 'on' ? a.frontOn : st === 'heard' ? a.frontHeard : a.front; g.fill();
+    g.fillStyle = st === 'on' ? a.frontOn : st === 'heard' ? a.frontHeard : st === 'off' ? a.front0 : a.front; g.fill();
     g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(x, faceTop - 1, w, 1);
     g.fillStyle = 'rgba(255,255,255,0.55)'; g.fillRect(x + 1, faceTop, w - 2, 1);
     g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(x, top + d, 1, kh - lip); g.fillRect(x + w - 1, top + d, 1, kh - lip); g.fillRect(x, faceTop, 1, lip - r); g.fillRect(x + w - 1, faceTop, 1, lip - r);
   },
   black(g, a, x, top, w, bh, st) {
-    const d = st ? 2 : 0, h = bh - d, r = Math.min(3, w / 4);
+    const d = st && st !== 'off' ? 2 : 0, h = bh - d, r = Math.min(3, w / 4);
     const path = () => { g.beginPath(); g.moveTo(x, top); g.lineTo(x + w, top); g.lineTo(x + w, top + h - r); g.quadraticCurveTo(x + w, top + h, x + w - r, top + h); g.lineTo(x + r, top + h); g.quadraticCurveTo(x, top + h, x, top + h - r); g.closePath(); };
     g.save(); path(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 5; g.shadowOffsetX = 2; g.shadowOffsetY = st ? 1 : 4; g.fillStyle = '#0a0a0a'; g.fill(); g.restore();
-    path(); g.fillStyle = st === 'on' ? a.blackOn : st === 'heard' ? a.blackHeard : a.black; g.fill();
-    g.fillStyle = st ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.06)'; g.fillRect(x + w * 0.16, top, w * 0.68, h * 0.78);
+    path(); g.fillStyle = st === 'on' ? a.blackOn : st === 'heard' ? a.blackHeard : st === 'off' ? a.blackOff : a.black; g.fill();
+    g.fillStyle = st && st !== 'off' ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.06)'; g.fillRect(x + w * 0.16, top, w * 0.68, h * 0.78);
     g.beginPath(); g.moveTo(x + w * 0.16, top + h * 0.78); g.lineTo(x + w * 0.84, top + h * 0.78); g.lineTo(x + w - 1, top + h - 1); g.lineTo(x + 1, top + h - 1); g.closePath(); g.fillStyle = st ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.17)'; g.fill();
     g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(x + 2, top + h - 2, w - 4, 1);
     path(); g.strokeStyle = '#000'; g.lineWidth = 1; g.stroke();

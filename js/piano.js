@@ -33,6 +33,7 @@ const KEYMAP = { KeyA: [0, 'A'], KeyW: [1, 'W'], KeyS: [2, 'S'], KeyE: [3, 'E'],
 const VKeys = {
   used: false, oct: 4, vel: 100, voices: new Map(), pedal: false, sus: new Set(), ptr: new Map(), keys: new Map(),
   press(n, vel) {
+    if (typeof Scale !== 'undefined' && Scale.blocked(n)) return;      // greyed-out key
     if (this.voices.has(n) && !this.sus.has(n) && Midi.down.has(n)) return;
     this.used = true; vel = vel || this.vel;
     const old = this.voices.get(n); if (old) { old.release(); this.voices.delete(n); } this.sus.delete(n);
@@ -96,19 +97,19 @@ const Keys = {
   shift(d) { this.lo += 12 * d; this.fit(); },
   draw() {
     const cv = $('#kyCv'); if (!cv.clientWidth || !cv.clientHeight) return;
-    const { g, w, h } = fitCanvas(cv), lo = this.lo, hi = lo + 12 * this.span, held = Midi.keys();
+    const { g, w, h } = fitCanvas(cv), lo = this.lo, hi = lo + 12 * this.span, held = Midi.keys(), lit = Scale.expand(held);
     const whites = []; for (let m = lo; m <= hi; m++) if (!isBlack(m)) whites.push(m);
     const ww = w / whites.length, top = 2, kh = h - 4, bh = kh * 0.62, bw = ww * 0.62, wx = new Map(); whites.forEach((m, i) => wx.set(m, i * ww));
     const off = { 1: -0.08, 3: 0.08, 6: -0.08, 8: 0, 10: 0.08 }, bx = m => wx.get(m - 1) + ww - bw / 2 + (off[pcOf(m)] || 0) * ww;
     const label = {}; if (Store.data.settings.kyLetters) Object.keys(KEYMAP).forEach(c => { label[12 * (VKeys.oct + 1) + KEYMAP[c][0]] = KEYMAP[c][1]; });
     g.clearRect(0, 0, w, h); g.textAlign = 'center'; const art = KeyArt.begin(g, top, kh, bh);
     whites.forEach(m => {
-      const x = wx.get(m), on = held.includes(m); KeyArt.white(g, art, x + 1, top, ww - 2, kh, on ? 'on' : null);
+      const x = wx.get(m), on = lit.includes(m); KeyArt.white(g, art, x + 1, top, ww - 2, kh, on ? 'on' : Scale.has(m) ? null : 'off');
       g.fillStyle = on ? '#24211e' : '#b8a888'; g.font = '700 ' + (11 * UIK) + 'px sans-serif'; if (m % 12 === 0) g.fillText(noteName(m), x + ww / 2, top + kh - 8 * UIK);
       if (label[m]) { g.fillStyle = on ? '#24211e' : '#c58bff'; g.font = '700 ' + (14 * UIK) + 'px sans-serif'; g.fillText(label[m], x + ww / 2, top + kh - 28 * UIK); }
     });
     for (let m = lo; m <= hi; m++) if (isBlack(m)) {
-      const x = bx(m), on = held.includes(m); KeyArt.black(g, art, x, top, bw, bh, on ? 'on' : null);
+      const x = bx(m), on = lit.includes(m); KeyArt.black(g, art, x, top, bw, bh, on ? 'on' : Scale.has(m) ? null : 'off');
       if (label[m]) { g.fillStyle = on ? '#24211e' : '#c58bff'; g.font = '700 ' + (13 * UIK) + 'px sans-serif'; g.fillText(label[m], x + bw / 2, top + bh - 10 * UIK); }
     }
     cv._kb = kbGeom(lo, hi, whites, wx, ww, bx, bw, top, kh, bh); g.textAlign = 'start';

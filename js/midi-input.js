@@ -75,6 +75,7 @@ const Midi = {
   sound(n, vel) { if (Store.data.settings.kbSound && Engine.ctx && Engine.master) { this.stopVoice(n); this.voices.set(n, Engine.playNote(n, Engine.ctx.currentTime, 25, { gain: 0.04 + 0.26 * vel / 127, sustain: true, vel, live: true })); } },
   stopVoice(n) { const v = this.voices.get(n); if (v) { v.release(); this.voices.delete(n); } },
   msg(d, virtual) {
+    if ((d[0] & 0xf0) === 0x90 && d[2] > 0 && typeof Scale !== 'undefined' && Scale.blocked(d[1])) return;      // a key outside the locked scale
     if (this.rec) this.rec(d);
     const st = d[0] & 0xf0, n = d[1], lm = $('#midiLast'); if (lm) lm.textContent = 'Last received: ' + this.describe(d);
     if (st === 0x90 && d[2] > 0) { this.down.set(n, d[2]); this.at.set(n, performance.now()); this.held.delete(n); if (!virtual) this.sound(n, d[2]); if (this.onNote) this.onNote(n, d[2]); }
