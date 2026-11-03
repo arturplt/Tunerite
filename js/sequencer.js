@@ -115,11 +115,22 @@ const Seq = {
     { k: 'fsweep', n: 'Sweep', d: 0, tip: 'An automatic wah: a slow wave opens and closes the filter' }, { k: 'fswrate', n: 'Sweep rate', d: 0.4, sub: 'fsweep', bi: false, tip: 'How fast the filter sweeps, from a slow swell to a fast wobble' },
     { k: 'gate', n: 'Gate', d: 0, tip: 'Noise gate: silences the track between notes or phrases, so hiss and room noise disappear' },
     { k: 'comp', n: 'Compress', d: 0, tip: 'Compressor: evens out loud and quiet notes (threshold and ratio together, with make-up gain)' },
-    { k: 'attack', n: 'Attack', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor grabs a loud note' }, { k: 'release', n: 'Release', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor lets go afterwards' },
+    { k: 'attack', n: 'Comp atk', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor grabs a loud note' }, { k: 'release', n: 'Comp rel', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor lets go afterwards' },
     { k: 'deess', n: 'De-ess', d: 0, tip: 'Tames harsh "s" and "t" sounds in a voice' }, { k: 'drive', n: 'Drive', d: 0, tip: 'Overdrive: warm to crunchy' },
     { k: 'lofi', n: 'Lo-fi', d: 0, tip: 'Bit crusher with a telephone-like band' }, { k: 'trem', n: 'Tremolo', d: 0, tip: 'Volume pulse' },
     { k: 'apan', n: 'Auto-pan', d: 0, tip: 'Moves the sound from side to side' }, { k: 'apanrate', n: 'Pan rate', d: 0.5, sub: 'apan', bi: false, tip: 'How fast the auto-pan swings, 0.2 to 8 times a second' },
+    /* the track's volume envelope: not an effect in the signal path (sub: 'env' is no effect), it shapes each note as it starts; untouched, the instrument keeps its own */
+    { k: 'ea', n: 'Attack', d: 0.35, sub: 'env', bi: false, tip: 'How fast each note swells in', dv: v => Knobs.fmtT(0.003 * Math.pow(2 / 0.003, v)) }, { k: 'ed', n: 'Decay', d: 0.5, sub: 'env', bi: false, tip: 'How long each note takes to settle to its sustain level', dv: v => Knobs.fmtT(0.02 * Math.pow(150, v)) },
+    { k: 'es', n: 'Sustain', d: 0.7, sub: 'env', bi: false, tip: 'The level a held note stays at' }, { k: 'er', n: 'Release', d: 0.45, sub: 'env', bi: false, tip: 'How long each note rings after it ends', dv: v => Knobs.fmtT(0.03 * Math.pow(100, v)) },
   ],
+  /* The track's effect knobs, split into labelled groups. */
+  FXG: [['SPACE', ['reverb', 'echo', 'etime', 'efb']], ['MODULATION', ['chorus', 'trem', 'apan', 'apanrate']], ['TONE', ['tone', 'midgain', 'midfreq', 'lowcut', 'highcut']], ['FILTER', ['fcut', 'freso', 'fsweep', 'fswrate']],
+    ['DYNAMICS', ['gate', 'comp', 'attack', 'release', 'deess']], ['CHARACTER', ['drive', 'lofi']], ['ENVELOPE', ['ea', 'ed', 'es', 'er']]],
+  /* The track's envelope in seconds, or null while all four knobs rest (the instrument's own shape). */
+  envFor(t) {
+    const K = ['ea', 'ed', 'es', 'er'].map(k => this.fxVal(t, k)); if (K.every((v, i) => Math.abs(v - [0.35, 0.5, 0.7, 0.45][i]) < 0.005)) return null;
+    return Engine.envOf({ a: K[0], d: K[1], s: K[2], r: K[3] });
+  },
   /* The Piano tab's notes pass through a track-like chain of their own, so they get the same filters, dynamics and character effects as a Compose track. */
   liveTail() {
     const c = Engine.ctx; if (!c || !Engine.master) return null;
@@ -309,7 +320,7 @@ const Seq = {
     const vel = n.vel || 90; let pre = -1, kit = !!r.kit, syn = r.synth; const F = r.font || SF;
     if (r.preset != null) { if (F.cache.has(r.preset)) pre = r.preset; else if (t.drums) kit = true; else syn = synthFor(t.program); }
     const h = kit ? Engine.drum(n.midi, when, vel, t.strip, this.rendering)
-      : Engine.playNote(n.midi, when, t.drums ? Math.max(dur, 0.4) : dur, { preset: pre, font: pre >= 0 && F !== SF ? F : undefined, synth: syn || 'soft', vel, dest: t.strip, seq: true, bend: t.bendSrc || undefined, nopool: this.rendering, gain: pre >= 0 ? 0.2 : 0.2 * (0.45 + 0.55 * vel / 127) });
+      : Engine.playNote(n.midi, when, t.drums ? Math.max(dur, 0.4) : dur, { preset: pre, font: pre >= 0 && F !== SF ? F : undefined, synth: syn || 'soft', vel, dest: t.strip, seq: true, env: this.envFor(t), bend: t.bendSrc || undefined, nopool: this.rendering, gain: pre >= 0 ? 0.2 : 0.2 * (0.45 + 0.55 * vel / 127) });
     if (h) this.nodes.push({ h, end: when + dur + 1.5 });
   },
   pause() { const p = this.pos(); this.halt(); this.release(); this.base = p; this.sync(); },
@@ -483,7 +494,8 @@ const Seq = {
   fxUI(d, t) {
     const fxb = d.querySelector('.sqfxb'), fxp = d.querySelector('.sqfx');
     const mount = () => {
-      Knobs.mount(fxp, this.FX, k => this.fxVal(t, k), (k, v) => { this.setFx(t, k, v); fxMark(); });
+      fxp.innerHTML = this.FXG.map(g => `<div class="sqfxg"><span class="sqfxl">${g[0]}</span><div class="sqfxk"></div></div>`).join('');
+      fxp.querySelectorAll('.sqfxk').forEach((el, i) => Knobs.mount(el, this.FXG[i][1].map(k => this.FX.find(f => f.k === k)), k => this.fxVal(t, k), (k, v) => { this.setFx(t, k, v); fxMark(); }));
       const r = document.createElement('button'); r.className = 'knob rstknob'; r.setAttribute('aria-label', 'Reset effects'); r.title = 'Put every effect of this track back to rest'; r.innerHTML = '<svg viewBox="-50 -50 100 100" aria-hidden="true"><circle class="kb" r="27"/><circle class="kf" r="20"/></svg><b>Reset</b>'; fxp.appendChild(r);
       r.onclick = () => { this.FX.forEach(f => { if (this.fxVal(t, f.k) !== f.d) this.setFx(t, f.k, f.d); }); mount(); fxMark(); };
     };

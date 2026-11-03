@@ -183,6 +183,14 @@ T.test('track effect knobs: dragging one changes that track only', async () => {
   T.ok(Seq.tracks[0].fx && Seq.tracks[0].fx.reverb > 0.3, 'dragging up raises the amount ' + JSON.stringify(Seq.tracks[0].fx));
   T.ok(k.classList.contains('lit'), 'the knob lights up'); T.eq(Seq.tracks[1].fx, null, 'the other tracks are untouched');
 });
+T.test('track envelope: attack, decay, sustain and release shape that track\'s notes only', async () => {
+  await audio(); scene(s => s.tracks[1].notes.push({ midi: 40, tick: 0, dur: 900, vel: 90, ch: 1 })); T.eq(Seq.envFor(Seq.tracks[0]), null, 'at rest the instrument keeps its own shape');
+  ['ea', 'ed', 'es', 'er'].forEach(k => T.ok($('#sqTracks .sqtrack .sqfx .knob[data-k="' + k + '"]'), 'a knob for ' + k));
+  Seq.setFx(Seq.tracks[0], 'ea', 0.9); Seq.setFx(Seq.tracks[0], 'es', 0.2); const e = Seq.envFor(Seq.tracks[0]); T.ok(e && e.a > 0.3 && Math.abs(e.s - 0.2) < 1e-6, 'a slow attack and a low sustain: ' + JSON.stringify(e)); T.eq(Seq.envFor(Seq.tracks[1]), null, 'the other tracks are untouched');
+  const seen = []; const orig = Engine.playNote; Engine.playNote = (m, w, d, o) => { seen.push(o.env); return orig.call(Engine, m, w, d, o); };
+  try { Seq.note(Seq.tracks[0], {}, { midi: 60, vel: 90 }, Engine.ctx.currentTime + 0.05, 0.5); } finally { Engine.playNote = orig; }
+  T.ok(seen[0] && seen[0].a > 0.3, 'the note is played with the track\'s envelope'); Seq.tracks[0].fx = null;
+});
 T.test('voice tracks: a recording is a mixer channel that plays, mutes, saves and renders', async () => {
   await audio(); scene(); const sr = Engine.ctx.sampleRate, data = new Float32Array(sr).map((_, i) => 0.3 * Math.sin(i * 0.05));
   const v = Vox.add({ data, sr }, 0.5); T.eq(Seq.vox.length, 1); T.eq($$('#sqTracks .sqtrack').length, Seq.tracks.length + 1, 'a row for the recording');

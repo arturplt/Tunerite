@@ -68,7 +68,7 @@ const SF = {
         const rel = S.compressed ? 0 : S.start, r = S.rate || buf.sampleRate, ls = (S.loopStart + v.loopStartOff - rel) / r, le = (S.loopEnd + v.loopEndOff - rel) / r;
         if (le > ls && le <= buf.duration + 0.01) { src.loop = true; src.loopStart = Math.max(0, ls); src.loopEnd = Math.min(le, buf.duration); }
       }
-      const ev = o.live ? Engine.envCustom() : null, g = c.createGain(), e = ev ? Object.assign({}, v.env, { delay: 0, attack: Math.max(0.008, ev.a), hold: 0, decay: ev.d, sustain: (1 - ev.s) * 600, release: Math.max(0.025, ev.r) }) : v.env, t0 = when + e.delay, at = Math.max(0.002, e.attack), peak = Math.pow(10, -v.atten / 200), sus = peak * Math.pow(10, -e.sustain / 200), tD = t0 + at + e.hold, tR = when + dur;
+      const ev = o.env || (o.live ? Engine.envCustom() : null), g = c.createGain(), e = ev ? Object.assign({}, v.env, { delay: 0, attack: Math.max(0.008, ev.a), hold: 0, decay: ev.d, sustain: (1 - ev.s) * 600, release: Math.max(0.025, ev.r) }) : v.env, t0 = when + e.delay, at = Math.max(0.002, e.attack), peak = Math.pow(10, -v.atten / 200), sus = peak * Math.pow(10, -e.sustain / 200), tD = t0 + at + e.hold, tR = when + dur;
       g.gain.setValueAtTime(0, when); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(peak, t0 + at); g.gain.setValueAtTime(peak, tD); g.gain.setTargetAtTime(sus, tD, Math.max(0.01, e.decay / 3));
       g.gain.setTargetAtTime(0, tR, e.release / 4);
       let last = g; src.connect(g);

@@ -258,8 +258,9 @@ const Engine = {
   bendSrc() { if (!this.bend || this.bend.ctx !== this.ctx) { const b = this.ctx.createConstantSource(); b.offset.value = 0; b.start(); this.bend = Object.assign(b, { ctx: this.ctx }); } return this.bend; },
   setBend(x) { if (!this.ctx) return; this.bendSrc().offset.setTargetAtTime(clamp(x, -1, 1) * 200, this.ctx.currentTime, 0.015); },
   /* The envelope editor's shape for notes you play yourself: seconds and a sustain level, or null while the editor is off. */
-  envCustom() {
-    const s = Store.data.settings, e = s.envOn && s.env; if (!e) return null;
+  envCustom() { const s = Store.data.settings; return s.envOn && s.env ? this.envOf(s.env) : null; },
+  /* Envelope amounts (0 to 1 each) as seconds and a sustain level; shared by the Piano tab's editor and each Compose track. */
+  envOf(e) {
     return { a: 0.003 * Math.pow(2 / 0.003, e.a), d: 0.02 * Math.pow(150, e.d), s: e.s, r: 0.03 * Math.pow(100, e.r) };
   },
   /* Vibrato is wired into each voice as it starts, so it is only connected while the effect is on. */
@@ -334,7 +335,7 @@ const Engine = {
       if (TB.formants) TB.formants.forEach(F => { const b = bq('bandpass', F[0], F[1]), fg = c.createGain(); fg.gain.value = F[2]; nodes.push(fg); src.connect(b); b.connect(fg); fg.connect(g); });
       else src.connect(g);
     }
-    const ev = o.live ? this.envCustom() : null, tail = ev ? ev.r + 0.4 : 0.15;
+    const ev = o.env || (o.live ? this.envCustom() : null), tail = ev ? ev.r + 0.4 : 0.15;
     if (o.live || o.detune) osc.detune.value = (o.live ? Store.data.settings.fineTune || 0 : 0) + (o.detune || 0);
     osc.start(when); osc.stop(when + dur + tail);
     if (TB.noise) {      // breath or wind: looped noise through a band-pass, shaped by the same envelope
