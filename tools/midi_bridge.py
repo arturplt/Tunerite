@@ -16,17 +16,17 @@ import fcntl, http.server, json, os, queue, re, shutil, socket, ssl, subprocess,
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_FILES = {"/": "index.html", "/index.html": "index.html", "/manifest.webmanifest": "manifest.webmanifest", "/icon.svg": "icon.svg", "/sw.js": "sw.js", "/lame.min.js": "lame.min.js"}
-for folder in ("css", "js"):      # the app's own stylesheets and scripts, and nothing else in the folder
+for folder in ("css", "js", "fonts"):      # the app's own stylesheets, scripts and fonts, and nothing else in the folder
     for dirpath, _, names in os.walk(os.path.join(ROOT, folder)):
         for n in names:
             rel = os.path.relpath(os.path.join(dirpath, n), ROOT).replace(os.sep, "/")
             APP_FILES["/" + rel] = rel
 def app_script(path):
     """A stylesheet or script added after the server started: still the app's own files, and nothing outside css/ and js/."""
-    if not (path.startswith("/css/") or path.startswith("/js/")): return None
+    if not (path.startswith("/css/") or path.startswith("/js/") or path.startswith("/fonts/")): return None
     full = os.path.realpath(os.path.join(ROOT, path[1:])); top = os.path.realpath(os.path.join(ROOT, path[1:].split("/")[0]))
     return os.path.relpath(full, ROOT).replace(os.sep, "/") if full.startswith(top + os.sep) and os.path.isfile(full) else None
-TYPES = {".html": "text/html; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".js": "text/javascript", ".css": "text/css"}
+TYPES = {".html": "text/html; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".js": "text/javascript", ".css": "text/css", ".ttf": "font/ttf"}
 flags = {a for a in sys.argv[1:] if a.startswith("--")}
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 port = int(args[0]) if args else 8000

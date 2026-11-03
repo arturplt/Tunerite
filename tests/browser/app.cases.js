@@ -351,3 +351,23 @@ T.test('voice view: the A/B button switches between the original and the correct
   await audio(); scene(); const sr = 48000, v = Vox.add({ data: synthVoice(sr, 2), sr }, 0); Vox.tuneOf(v).amt = 1; await Vox.runTune(v); T.ok(v.tuned);
   T.eq(Vox.pb(v), v.tuned); v.bypass = true; T.eq(Vox.pb(v), v.buf, 'bypass plays the original'); v.bypass = false; Seq.vox = []; Seq.render();
 });
+
+/* ---- full-screen keyboard ---- */
+T.test('full-screen keyboard: effect knobs share the Compose settings, letters are hidden until asked for', () => {
+  const st = Store.data.settings, before = Object.assign({}, st.fxK); Keys.open(); st.kyLetters = false;
+  T.eq($$('#kyKnobs .knob').length, Knobs.list.length, 'one knob per effect');
+  Knobs.set('reverb', 0.6, true); T.eq($('#kyKnobs .knob[data-k="reverb"]').getAttribute('aria-valuenow'), '60', 'a Compose change shows on the keyboard');
+  const ky = $('#kyKnobs .knob[data-k="echo"]'); ky.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true })); T.ok(Knobs.val('echo') > 0, 'the keyboard knob moves the shared amount');
+  Keys.draw(); T.ok($('#kySfName').textContent.length > 0, 'the SoundFont name is shown');
+  Keys.close(); st.fxK = before; Knobs.sync();
+});
+T.test('synth panel: a preset keeps the sound and the knobs, and is an instrument in Compose', async () => {
+  await audio(); const st = Store.data.settings, keep = { fxK: st.fxK, timbre: st.timbre, presetId: st.presetId }, list = Store.data.presets;
+  Store.data.presets = []; st.timbre = 'soft'; st.fxK = { reverb: 0.7, drive: 0.4 }; Knobs.sync();
+  const p = Presets.save('Test lead'); T.eq(Presets.save('test LEAD').id, p.id, 'saving the same name replaces it'); T.eq(Presets.list().length, 1);
+  st.fxK = {}; Knobs.sync(); await Presets.apply(p.id); T.near(Knobs.val('reverb'), 0.7, 1e-6, 'knobs come back'); T.near(Knobs.val('drive'), 0.4, 1e-6);
+  T.eq(Seq.alias('up:' + p.id), 'syn:soft', 'a built-in sound maps to its voice'); T.near(Presets.trackFx(p).reverb, 0.7, 1e-6, 'the track gets the shared knobs');
+  Synth.show('user'); T.eq($$('#spPresets .lcdrow').length, 1, 'the Presets page lists it'); Synth.show('spec');
+  Presets.remove(p.id); T.eq(Seq.alias('up:' + p.id), 'auto', 'a deleted preset falls back to auto');
+  Store.data.presets = list; Object.assign(st, keep); Knobs.sync();
+});

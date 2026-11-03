@@ -193,7 +193,9 @@ const Engine = {
   },
   setFx() {
     if (!this.conv) return;
-    const s = Store.data.settings, t = this.ctx.currentTime, F = this.fx, lv = { off: 0, light: 1, medium: 2, deep: 3 };
+    const s0 = Store.data.settings, t = this.ctx.currentTime, F = this.fx, lv = { off: 0, light: 1, medium: 2, deep: 3 };
+    /* Bypass keeps every setting and knob where it is, but sends the sound through with all effects off. */
+    const s = this.fxBypass ? Object.assign({}, s0, { reverb: 'off', chorus: false, fxTrem: 'off', fxVib: 'off', fxDelay: 'off', fxWide: false, fxTone: 'neutral', fxPhase: 'off', fxDrive: 'off', fxK: {} }) : s0;
     /* The Compose knobs (settings.fxK, 0 to 1) win over the dropdowns for any effect they have touched; an untouched knob falls back to the dropdown's level. */
     const K = s.fxK || {}, kv = (k, d) => K[k] != null ? K[k] : d, dl = { short: 0.18, medium: 0.35, long: 0.6 }[s.fxDelay];
     const kTrem = kv('trem', [0, 0.25, 0.58, 1][lv[s.fxTrem] || 0]), kVib = kv('vib', [0, 0.24, 0.5, 1][lv[s.fxVib] || 0]), kEcho = kv('echo', dl ? 0.75 : 0), kWide = kv('wide', s.fxWide ? 0.75 : 0);
@@ -203,7 +205,8 @@ const Engine = {
       F.tr.gain.setTargetAtTime(1 - kTrem * 0.3, t, 0.05); F.trDepth.gain.setTargetAtTime(kTrem * 0.3, t, 0.05);
       F.vibDepth.gain.setTargetAtTime(kVib * 50, t, 0.05);
       F.lo.gain.setTargetAtTime(tn[0], t, 0.05); F.hi.gain.setTargetAtTime(tn[1], t, 0.05);
-      if (kEcho > 0.01) F.dl.delayTime.setTargetAtTime(dl || 0.35, t, 0.05); F.dlWet.gain.setTargetAtTime(kEcho * 0.6, t, 0.05);
+      if (kEcho > 0.01) F.dl.delayTime.setTargetAtTime(K.etime != null ? Seq.ECHO_BEATS[Math.round(K.etime * 5)] * 0.6 /* a note length at 100 beats a minute */ : dl || 0.35, t, 0.05);
+      F.dlWet.gain.setTargetAtTime(kEcho * 0.6, t, 0.05); F.dlFb.gain.setTargetAtTime(K.efb != null ? K.efb * 0.85 : 0.4, t, 0.05);
       F.wdWet.gain.setTargetAtTime(kWide * 0.8, t, 0.05);
       F.phWet.gain.setTargetAtTime(kPhase * 0.8, t, 0.05); F.flWet.gain.setTargetAtTime(s.fxPhase === 'flanger' ? 0.7 : 0, t, 0.05);
       const dr = kDrive != null ? [1 - 0.6 * kDrive, 0.7 * kDrive, 1 + 7 * kDrive] : { warm: [0.8, 0.35, 3], crunch: [0.4, 0.7, 8] }[s.fxDrive] || [1, 0, 1]; F.drDry.gain.setTargetAtTime(dr[0], t, 0.05); F.drWet.gain.setTargetAtTime(dr[1], t, 0.05); F.drPre.gain.setTargetAtTime(dr[2], t, 0.05);
@@ -225,12 +228,20 @@ const Engine = {
     this.rvWet.gain.setTargetAtTime(rk != null ? rk * 0.7 : kind === 'hall' ? 0.55 : kind === 'room' ? 0.4 : 0, t, 0.02);
     this.chWet.gain.setTargetAtTime(kChor * 0.5, t, 0.05);
   },
+  /* The envelope editor's shape for notes you play yourself: seconds and a sustain level, or null while the editor is off. */
+  envCustom() {
+    const s = Store.data.settings, e = s.envOn && s.env; if (!e) return null;
+    return { a: 0.003 * Math.pow(2 / 0.003, e.a), d: 0.02 * Math.pow(150, e.d), s: e.s, r: 0.03 * Math.pow(100, e.r) };
+  },
   /* Vibrato is wired into each voice as it starts, so it is only connected while the effect is on. */
-  vibOn() { const s = Store.data.settings; return !!((s.fxK && s.fxK.vib > 0.01) || (s.fxVib && s.fxVib !== 'off')); },
+  vibOn() { if (this.fxBypass) return false; const s = Store.data.settings; return !!((s.fxK && s.fxK.vib > 0.01) || (s.fxVib && s.fxVib !== 'off')); },
   outLatency() { const c = this.ctx; return (c.outputLatency || c.baseLatency || 0); },
   /* Soft piano-like tone: a few harmonics with a gentle decay. sustain=true gives a steady tone (guide, glides). */
   playNote(midi, when, dur, o) {
     o = o || {}; const st = Store.data.settings;
+    if (o.live && o.sustain && !o.arp && typeof Arp !== 'undefined' && Arp.on) return Arp.add(midi, o);      // the arpeggiator plays held keys one at a time
+    if (o.live && st.transpose) midi = clamp(midi + st.transpose, 0, 127);
+    if (o.live && !o.dest && typeof Seq !== 'undefined') { const lt = Seq.liveTail(); if (lt) o = Object.assign({}, o, { dest: lt }); }      // notes you play go through the same per-track effects as Compose
     if (o.live && st.fxHuman) { when += Math.random() * 0.012; o = Object.assign({}, o, { gain: (o.gain == null ? 0.25 : o.gain) * (0.85 + Math.random() * 0.3), vel: clamp(Math.round((o.vel || 100) * (0.9 + Math.random() * 0.2)), 1, 127) }); }
     let h = this._playNote(midi, when, dur, o); if (!h) return h;
     const lay = o.live ? { up: [12], down: [-12], both: [-12, 12] }[st.fxOct] : null;       // the octave layer is only for notes you play, never for exercise tones
@@ -279,19 +290,23 @@ const Engine = {
       if (TB.formants) TB.formants.forEach(F => { const b = bq('bandpass', F[0], F[1]), fg = c.createGain(); fg.gain.value = F[2]; nodes.push(fg); src.connect(b); b.connect(fg); fg.connect(g); });
       else src.connect(g);
     }
-    osc.start(when); osc.stop(when + dur + 0.15);
+    const ev = o.live ? this.envCustom() : null, tail = ev ? ev.r + 0.4 : 0.15;
+    if (o.live && Store.data.settings.fineTune) osc.detune.value = Store.data.settings.fineTune;
+    osc.start(when); osc.stop(when + dur + tail);
     if (TB.noise) {      // breath or wind: looped noise through a band-pass, shaped by the same envelope
       const N = TB.noise, ns = c.createBufferSource(), nf = bq('bandpass', N[3] || clamp(freq * N[1], 80, 12000), N[2]), ng = c.createGain(); ng.gain.value = N[0]; nodes.push(ng);
-      ns.buffer = this.noiseBuffer(); ns.loop = true; ns.connect(nf); nf.connect(ng); ng.connect(g); ns.start(when, Math.random() * 0.5); ns.stop(when + dur + 0.15); oscs.push(ns);
+      ns.buffer = this.noiseBuffer(); ns.loop = true; ns.connect(nf); nf.connect(ng); ng.connect(g); ns.start(when, Math.random() * 0.5); ns.stop(when + dur + tail); oscs.push(ns);
     }
     const at = Math.min(TB.a || 0.01, Math.max(0.01, dur * 0.4));      // attack: a bowed or blown sound swells, a struck one starts at once
     g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(gain, when + at);
-    if (o.sustain || o.midi2 != null || TB.hold) { g.gain.setValueAtTime(gain, Math.max(when + at + 0.01, when + dur - 0.05)); g.gain.linearRampToValueAtTime(0, when + dur + 0.05); }
+    if (ev) try { const a2 = Math.max(0.008, ev.a); g.gain.cancelScheduledValues(when); g.gain.setValueAtTime(0, when); for (let i = 1; i <= 8; i++) g.gain.linearRampToValueAtTime(gain * (1 - Math.cos(Math.PI * i / 8)) / 2, when + a2 * i / 8); g.gain.setTargetAtTime(gain * ev.s, when + a2, Math.max(0.005, ev.d / 3)); g.gain.setTargetAtTime(0, when + dur, Math.max(0.02, ev.r / 6)); } catch (e) { g.gain.cancelScheduledValues(when); g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(gain, when + 0.01); }      // a raised-cosine rise in small steps (a value curve can clash with the next event and throw, which left the note playing with no handle) and exponential tails
+    else if (o.sustain || o.midi2 != null || TB.hold) { g.gain.setValueAtTime(gain, Math.max(when + at + 0.01, when + dur - 0.05)); g.gain.linearRampToValueAtTime(0, when + dur + 0.05); }
     else { g.gain.exponentialRampToValueAtTime(gain * (TB.f || 0.35), when + Math.max(at + 0.01, Math.min(dur, TB.T || 1.5))); g.gain.linearRampToValueAtTime(0, when + dur + 0.08); }
+    const cut = () => { try { g.gain.cancelScheduledValues(0); g.gain.value = 0; } catch (e) {} oscs.forEach(x => { try { x.stop(); } catch (e) {} }); };      // last resort: silence the note whatever the timeline says
     osc.onended = () => { nodes.forEach(n => { try { n.disconnect(); } catch (e) {} }); if (o.bend) try { o.bend.disconnect(osc.detune); } catch (e) { /* already gone */ } };
     return {
-      stop: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + 0.02); oscs.forEach(x => x.stop(n + 0.03)); } catch (e) {} },      // short fade: cutting a sine mid-wave clicks
-      release: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + 0.15); oscs.forEach(x => x.stop(n + 0.2)); } catch (e) {} }
+      stop: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + 0.02); oscs.forEach(x => x.stop(n + 0.03)); } catch (e) { cut(); } },      // short fade: cutting a sine mid-wave clicks
+      release: () => { try { const n = c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); const rr = ev ? Math.max(0.025, ev.r) : 0.15; if (ev) g.gain.setTargetAtTime(0, n, rr / 6); else g.gain.linearRampToValueAtTime(0, n + rr); oscs.forEach(x => x.stop(n + rr + (ev ? 0.1 : 0.05))); } catch (e) { cut(); } }
     };
   },
   /* Built-in General MIDI drum kit for when no SoundFont drums are available: every sound is a pitched sine sweep and/or filtered noise. */

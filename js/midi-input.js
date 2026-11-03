@@ -68,9 +68,11 @@ const Midi = {
   panic() {
     const had = this.down.size; this.down.clear(); this.at.clear(); this.held.clear(); this.pedal = false; this.voices.forEach((v, k) => this.stopVoice(k));
     if (typeof VKeys !== 'undefined') { VKeys.voices.forEach(v => v.release()); VKeys.voices.clear(); VKeys.sus.clear(); VKeys.keys.clear(); }      // the on-screen keys too
+    if (typeof Engine !== 'undefined' && Engine.live) { Engine.live.forEach(v => { try { v.h.release(); } catch (e) { /* already gone */ } }); Engine.live.length = 0; }      // and any voice that lost its key
+    if (typeof Arp !== 'undefined') Arp.clear();
     return had;
   },
-  sound(n, vel) { if (Store.data.settings.kbSound && Engine.ctx && Engine.master) { this.stopVoice(n); this.voices.set(n, Engine.playNote(n, Engine.ctx.currentTime, 25, { gain: 0.04 + 0.26 * vel / 127, sustain: true, vel })); } },
+  sound(n, vel) { if (Store.data.settings.kbSound && Engine.ctx && Engine.master) { this.stopVoice(n); this.voices.set(n, Engine.playNote(n, Engine.ctx.currentTime, 25, { gain: 0.04 + 0.26 * vel / 127, sustain: true, vel, live: true })); } },
   stopVoice(n) { const v = this.voices.get(n); if (v) { v.release(); this.voices.delete(n); } },
   msg(d, virtual) {
     if (this.rec) this.rec(d);

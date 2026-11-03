@@ -45,7 +45,7 @@ const VKeys = {
     if (this.pedal) this.sus.add(n); else { v.release(); this.voices.delete(n); }
   },
   setPedal(on) {
-    this.pedal = on; const b = $('#kyPedal'); if (b) b.classList.toggle('primary', on); const f = $('#fxSus'); if (f) f.checked = on;
+    this.pedal = on; const b = $('#kyPedal'); if (b) b.classList.toggle('primary', on); const f = $('#fxSus'); if (f) f.checked = on; if (typeof Knobs !== 'undefined' && Knobs.paintLow) Knobs.paintLow();
     if (!on) { this.sus.forEach(n => { const v = this.voices.get(n); if (v && !Midi.down.has(n)) { v.release(); this.voices.delete(n); } }); this.sus.clear(); }
   },
   releaseAll() { this.ptr.clear(); Midi.panic(); },
@@ -76,7 +76,9 @@ const VKeys = {
     }
     if (!down) { if (e.code === 'Space' && (Keys.on || PX.on)) { e.preventDefault(); this.setPedal(false); } return; }
     if (e.repeat) return;
-    if (e.code === 'KeyZ') { this.oct = Math.max(1, this.oct - 1); toast('Octave C' + this.oct, 800); }
+    const sf = Keys.on && { ArrowUp: () => SFUI.stepFont(-1), ArrowDown: () => SFUI.stepFont(1), ArrowLeft: () => SFUI.stepPreset(-1), ArrowRight: () => SFUI.stepPreset(1) }[e.code];
+    if (sf) sf();
+    else if (e.code === 'KeyZ') { this.oct = Math.max(1, this.oct - 1); toast('Octave C' + this.oct, 800); }
     else if (e.code === 'KeyX') { this.oct = Math.min(7, this.oct + 1); toast('Octave C' + this.oct, 800); }
     else if (e.code === 'KeyC') { this.vel = Math.max(20, this.vel - 20); toast('Volume ' + Math.round(this.vel / 1.27) + '%', 800); }
     else if (e.code === 'KeyV') { this.vel = Math.min(127, this.vel + 20); toast('Volume ' + Math.round(this.vel / 1.27) + '%', 800); }
@@ -98,15 +100,15 @@ const Keys = {
     const whites = []; for (let m = lo; m <= hi; m++) if (!isBlack(m)) whites.push(m);
     const ww = w / whites.length, top = 2, kh = h - 4, bh = kh * 0.62, bw = ww * 0.62, wx = new Map(); whites.forEach((m, i) => wx.set(m, i * ww));
     const off = { 1: -0.08, 3: 0.08, 6: -0.08, 8: 0, 10: 0.08 }, bx = m => wx.get(m - 1) + ww - bw / 2 + (off[pcOf(m)] || 0) * ww;
-    const label = {}; Object.keys(KEYMAP).forEach(c => { label[12 * (VKeys.oct + 1) + KEYMAP[c][0]] = KEYMAP[c][1]; });
-    g.clearRect(0, 0, w, h); g.textAlign = 'center';
+    const label = {}; if (Store.data.settings.kyLetters) Object.keys(KEYMAP).forEach(c => { label[12 * (VKeys.oct + 1) + KEYMAP[c][0]] = KEYMAP[c][1]; });
+    g.clearRect(0, 0, w, h); g.textAlign = 'center'; const art = KeyArt.begin(g, top, kh, bh);
     whites.forEach(m => {
-      const x = wx.get(m), on = held.includes(m); g.beginPath(); g.roundRect ? g.roundRect(x + 1, top, ww - 2, kh, 6) : g.rect(x + 1, top, ww - 2, kh); g.fillStyle = on ? '#ffb347' : '#f2f4fb'; g.fill();
+      const x = wx.get(m), on = held.includes(m); KeyArt.white(g, art, x + 1, top, ww - 2, kh, on ? 'on' : null);
       g.fillStyle = on ? '#24211e' : '#b8a888'; g.font = '700 ' + (11 * UIK) + 'px sans-serif'; if (m % 12 === 0) g.fillText(noteName(m), x + ww / 2, top + kh - 8 * UIK);
       if (label[m]) { g.fillStyle = on ? '#24211e' : '#c58bff'; g.font = '700 ' + (14 * UIK) + 'px sans-serif'; g.fillText(label[m], x + ww / 2, top + kh - 28 * UIK); }
     });
     for (let m = lo; m <= hi; m++) if (isBlack(m)) {
-      const x = bx(m), on = held.includes(m); g.beginPath(); g.roundRect ? g.roundRect(x, top, bw, bh, 5) : g.rect(x, top, bw, bh); g.fillStyle = on ? '#ffb347' : '#141210'; g.fill(); g.strokeStyle = '#0d0b09'; g.lineWidth = 1; g.stroke();
+      const x = bx(m), on = held.includes(m); KeyArt.black(g, art, x, top, bw, bh, on ? 'on' : null);
       if (label[m]) { g.fillStyle = on ? '#24211e' : '#c58bff'; g.font = '700 ' + (13 * UIK) + 'px sans-serif'; g.fillText(label[m], x + bw / 2, top + bh - 10 * UIK); }
     }
     cv._kb = kbGeom(lo, hi, whites, wx, ww, bx, bw, top, kh, bh); g.textAlign = 'start';

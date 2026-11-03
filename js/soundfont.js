@@ -60,7 +60,7 @@ const SF = {
     const a4f = st.a4 / 440, parts = [];
     vs.forEach(v => {
       const buf = bufs.get(v.si), S = sf.samples[v.si]; if (!buf) return;
-      const src = c.createBufferSource(); src.buffer = buf; if (Engine.fx && Engine.vibOn()) Engine.fx.vibDepth.connect(src.detune); if (o.bend) o.bend.connect(src.detune);
+      const src = c.createBufferSource(); src.buffer = buf; if (o.live && st.fineTune) src.detune.value = st.fineTune; if (Engine.fx && Engine.vibOn()) Engine.fx.vibDepth.connect(src.detune); if (o.bend) o.bend.connect(src.detune);
       const rate = m => Math.pow(2, ((m - v.root) * v.scale / 100 + v.coarse + v.fine / 100) / 12) * a4f;
       src.playbackRate.setValueAtTime(rate(midi), when);
       if (o.midi2 != null) src.playbackRate.exponentialRampToValueAtTime(rate(o.midi2), when + dur);       // glides bend the sample
@@ -68,7 +68,7 @@ const SF = {
         const rel = S.compressed ? 0 : S.start, r = S.rate || buf.sampleRate, ls = (S.loopStart + v.loopStartOff - rel) / r, le = (S.loopEnd + v.loopEndOff - rel) / r;
         if (le > ls && le <= buf.duration + 0.01) { src.loop = true; src.loopStart = Math.max(0, ls); src.loopEnd = Math.min(le, buf.duration); }
       }
-      const g = c.createGain(), e = v.env, t0 = when + e.delay, at = Math.max(0.002, e.attack), peak = Math.pow(10, -v.atten / 200), sus = peak * Math.pow(10, -e.sustain / 200), tD = t0 + at + e.hold, tR = when + dur;
+      const ev = o.live ? Engine.envCustom() : null, g = c.createGain(), e = ev ? Object.assign({}, v.env, { delay: 0, attack: Math.max(0.008, ev.a), hold: 0, decay: ev.d, sustain: (1 - ev.s) * 600, release: Math.max(0.025, ev.r) }) : v.env, t0 = when + e.delay, at = Math.max(0.002, e.attack), peak = Math.pow(10, -v.atten / 200), sus = peak * Math.pow(10, -e.sustain / 200), tD = t0 + at + e.hold, tR = when + dur;
       g.gain.setValueAtTime(0, when); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(peak, t0 + at); g.gain.setValueAtTime(peak, tD); g.gain.setTargetAtTime(sus, tD, Math.max(0.01, e.decay / 3));
       g.gain.setTargetAtTime(0, tR, e.release / 4);
       let last = g; src.connect(g);
@@ -111,7 +111,7 @@ const SFUI = {
   async list() {
     this.label = this.now(); const el = $('#sfNow'); if (el) el.textContent = this.label;
     let names = []; try { names = ((await SFStore.keys()) || []).sort((a, b) => a.localeCompare(b)); } catch (e) {}
-    const cur = Store.data.settings.sfName;
+    const cur = Store.data.settings.sfName; this.names = names;
     $$('.sfQuick').forEach(sel => {
       sel.textContent = '';
       const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
@@ -119,7 +119,10 @@ const SFUI = {
       sel.value = SF.sf && Store.data.settings.timbre === 'sf' && names.includes(cur) ? cur : '';
     });
     const on = !!SF.sf && Store.data.settings.timbre === 'sf' && names.includes(cur);
+    const fn = on ? SF.name.replace(/\.sf[23]$/i, '') : 'Built-in sound', fp = on ? (SF.sf.presets[SF.preset] ? SF.sf.presets[SF.preset].name : '–') : timbreOf(Store.data.settings.timbre).label;
+    $$('.sfOutN').forEach(el => el.textContent = fn); $$('.sfOutP').forEach(el => el.textContent = fp);
     $$('.sfQuickPre').forEach(q => { q.hidden = !on; if (on) q.value = SF.preset; });
+    if (typeof Synth !== 'undefined') Synth.refresh();
   },
   async pick(name) {
     const st = Store.data.settings;
@@ -142,7 +145,10 @@ const SFUI = {
     await this.pick(names[n]); if (SF.sf) toast(SF.name, 1500);
   },
   stepPreset(d) {
-    if (!SF.sf || Store.data.settings.timbre !== 'sf') return toast('Choose a SoundFont first (up/down arrows).', 2000);
+    if (!SF.sf || Store.data.settings.timbre !== 'sf') {          // built-in sound: step through its own voices
+      const keys = Object.keys(TIMBRES), cur = Store.data.settings.timbre === 'sf' ? 'soft' : Store.data.settings.timbre, k = keys[(Math.max(0, keys.indexOf(cur)) + d + keys.length) % keys.length], el = $('#setTimbre');
+      el.value = k; el.dispatchEvent(new Event('change')); return toast(TIMBRES[k].label, 1500);
+    }
     const o = [...$('#sfPreset').options].map(x => +x.value), j = o.indexOf(SF.preset), i = o[(j + d + o.length) % o.length];
     $('#sfPreset').value = i; this.prepare(i).then(() => toast(SF.sf.presets[i].name, 1500));
   },
@@ -205,7 +211,7 @@ const SFMgr = {
   refreshSoon() { const t = Date.now(), tick = () => { if (!this.open()) return; this.refresh(); if (Date.now() - t < 20000 && !(SF.sf && SF.ready)) setTimeout(tick, 800); }; setTimeout(tick, 400); },
   track() { return typeof Seq !== 'undefined' && Seq.tracks.find(t => t.ti === Ed.ti); },
   /* Which font and instrument the track plays now: { name, i } or null. */
-  current(t) { if (!t) return null; const m = /^sf:(.*)\|(\d+)$/.exec(t.inst); if (m) return { name: m[1], i: +m[2] }; return /^sf:\d+$/.test(t.inst) && Store.data.settings.sfName ? { name: Store.data.settings.sfName, i: +t.inst.slice(3) } : null; },
+  current(t) { if (!t) return null; const ti = Seq.alias(t.inst), m = /^sf:(.*)\|(\d+)$/.exec(ti); if (m) return { name: m[1], i: +m[2] }; return /^sf:\d+$/.test(t.inst) && Store.data.settings.sfName ? { name: Store.data.settings.sfName, i: +t.inst.slice(3) } : null; },
   async refresh(first) {
     const t = this.track(), cur = this.current(t), def = Store.data.settings.sfName, box = $('#sfpFonts'); $('#sfpTrack').textContent = t ? 'Track: ' + t.name : 'No track selected';
     let names = []; try { names = ((await SFStore.keys()) || []).sort((a, b) => a.localeCompare(b)); } catch (e) {}

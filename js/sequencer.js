@@ -63,8 +63,10 @@ const Seq = {
   },
   save() { Store.data.seq = Object.assign(Store.data.seq || {}, { name: this.name, sing: this.sing, tempo: this.tempo, loop: this.loop, loopA: this.loopA, loopB: this.loopB, vox: this.vox.map(v => ({ id: v.id, name: v.name, start: v.start, vol: v.vol, pan: v.panv || 0, mute: v.mute, solo: v.solo, fx: v.fx || null, tune: v.tune || null })), tracks: this.tracks.map(t => ({ inst: t.inst, vol: t.vol, pan: t.panv || 0, fx: t.fx || null, mute: t.mute, solo: t.solo })) }); Store.save(); },
   /* Which sound a track plays: a SoundFont preset (index), a built-in voice, or the drum kit. */
+  /* A saved panel preset ('up:<id>') stands for its font and patch. */
+  alias(inst) { if (!inst || !inst.startsWith('up:')) return inst; const p = Presets.get(inst.slice(3)); return !p ? 'auto' : p.font ? 'sf:' + p.font + '|' + p.patch : p.timbre && p.timbre !== 'sf' ? 'syn:' + p.timbre : 'auto'; },
   res(t) {
-    const c = t.inst;
+    const c = this.alias(t.inst);
     if (c.startsWith('sf:')) {   // 'sf:<font file>|<preset>' (a stored font of its own) or the older 'sf:<preset>' (the active font)
       const m = /^sf:(.*)\|(\d+)$/.exec(c), F = m ? SF.fontOf(m[1]) : SF, i = m ? +m[2] : +c.slice(3);
       if (F && F.sf && F.sf.presets[i]) return { preset: i, font: F };
@@ -76,7 +78,7 @@ const Seq = {
   },
   /* Decodes the SoundFont instruments the tracks use (the first time can take a moment). */
   async prepare() {
-    for (const t of this.tracks) { const m = /^sf:(.*)\|\d+$/.exec(t.inst); if (m && !SF.fontOf(m[1])) { try { await SF.fontLoad(m[1]); } catch (e) { console.warn('SoundFont skipped', e); } } }   // a track's own font may not be loaded yet
+    for (const t of this.tracks) { const m = /^sf:(.*)\|\d+$/.exec(this.alias(t.inst)); if (m && !SF.fontOf(m[1])) { try { await SF.fontLoad(m[1]); } catch (e) { console.warn('SoundFont skipped', e); } } }   // a track's own font may not be loaded yet
     const seen = [];
     this.tracks.forEach(t => { const r = this.res(t); if (r.preset != null) { const F = r.font || SF; if (!seen.some(x => x.F === F && x.i === r.preset)) seen.push({ F, i: r.preset }); } });
     for (const x of seen) { try { await SF.build(x.i, null, x.F); } catch (e) { console.warn('instrument skipped', e); } }
@@ -116,6 +118,13 @@ const Seq = {
     { k: 'lofi', n: 'Lo-fi', d: 0, tip: 'Bit crusher with a telephone-like band' }, { k: 'trem', n: 'Tremolo', d: 0, tip: 'Volume pulse' },
     { k: 'apan', n: 'Auto-pan', d: 0, tip: 'Moves the sound from side to side' }, { k: 'apanrate', n: 'Pan rate', d: 0.5, sub: 'apan', bi: false, tip: 'How fast the auto-pan swings, 0.2 to 8 times a second' },
   ],
+  /* The Piano tab's notes pass through a track-like chain of their own, so they get the same filters, dynamics and character effects as a Compose track. */
+  liveTail() {
+    const c = Engine.ctx; if (!c || !Engine.master) return null;
+    if (!this.live || this.live.ctx !== c) { this.live = { ctx: c, tail: c.createGain(), fx: Store.data.settings.liveFx || {} }; this.wireFx(this.live); }
+    return this.live.tail;
+  },
+  liveFx() { if (this.live) { this.live.fx = Store.data.settings.liveFx || {}; this.wireFx(this.live); } },
   fxVal(t, k) { const v = t.fx && t.fx[k]; return v != null ? v : this.FX.find(f => f.k === k).d; },
   isBi(f) { return f.bi != null ? f.bi : f.d > 0; },
   fxSig(t) { return this.FX.map(f => f.sub ? 0 : (this.isBi(f) ? Math.abs(this.fxVal(t, f.k) - f.d) > 0.02 : this.fxVal(t, f.k) > 0.01) ? 1 : 0).join(''); },
@@ -429,6 +438,7 @@ const Seq = {
     const g = (l, h) => '<optgroup label="' + l + '">' + h + '</optgroup>', o = (v, l) => '<option value="' + v + '">' + l + '</option>';
     let h = o('auto', 'Auto (from the file)');
     if (SF.sf) h += g('SoundFont: ' + SF.name.replace(/[<>&"]/g, ''), SF.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).map(x => o('sf:' + (Store.data.settings.sfName ? Store.data.settings.sfName + '|' : '') + x.i, (x.p.bank ? 'Bank ' + x.p.bank + ' · ' : '') + x.p.name.replace(/[<>&"]/g, ''))).join(''));
+    const up = Presets.list(); if (up.length) h += g('My presets', up.map(p => o('up:' + p.id, p.name.replace(/[<>&"]/g, ''))).join(''));
     return h + '<option value="\u0001sounds">🎼 Other SoundFonts…</option>' + timbreOptions().replace(/<optgroup label="/g, '<optgroup label="Built-in: ').replace(/value="/g, 'value="syn:') + g('Built-in: Drums', o('kit', 'Drum kit'));
   },
   render() {
@@ -457,7 +467,7 @@ const Seq = {
       pan.oninput = () => { t.panv = pan.value / 100; if (t.pan) t.pan.pan.setTargetAtTime(t.panv, Engine.ctx.currentTime, 0.015); }; pan.onchange = () => this.save();
       pan.ondblclick = () => { pan.value = 0; pan.oninput(); this.save(); };
       this.fxUI(d, t);
-      sel.onchange = async () => { if (sel.value === '\u0001sounds') { sel.value = t.inst; Ed.ti = t.ti; Ed.sel.clear(); $('#sfPop').hidden = false; SFMgr.refresh(true); return; } t.inst = sel.value; this.save(); await this.prepare(); };
+      sel.onchange = async () => { if (sel.value === '\u0001sounds') { sel.value = t.inst; Ed.ti = t.ti; Ed.sel.clear(); $('#sfPop').hidden = false; SFMgr.refresh(true); return; } t.inst = sel.value; if (t.inst.startsWith('up:')) { t.fx = Object.assign({}, t.fx, Presets.trackFx(Presets.get(t.inst.slice(3)))); if (t.tail) this.wireFx(t); } this.save(); await this.prepare(); this.render(); };
       box.appendChild(d);
     });
     Vox.rows(box);

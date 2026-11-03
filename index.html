@@ -69,38 +69,29 @@
   </div></div>
   </section>
   <section id="s-piano" class="screen">
-    <h1 style="margin-bottom:0.375rem">Piano</h1>
-    <span id="specPhCv"></span><canvas id="specCv" style="height:18rem;border-radius:10px 10px 0 0;display:block"></canvas>
-    <canvas id="pianoCv" style="height:11rem;margin-top:0;display:block"></canvas>
-    <p class="center muted" id="pianoInfo">&nbsp;</p>
-    <p class="center small" id="sfNow" style="margin:0.125rem 0 0.5rem;font-weight:700"></p>
-    <div class="row" style="justify-content:center;gap:0.75rem;align-items:center"><label class="small muted">SoundFont <select class="sfQuick" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem;max-width:11rem"></select></label><select class="sfQuickPre" hidden title="Instrument in this SoundFont" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem;max-width:12rem"></select></div>
-    <details id="fxBox" class="card"><summary style="cursor:pointer;font-weight:700">🎚 More effects</summary>
-      <div class="row" style="margin:0.5rem 0"><button class="btn" id="fxReset" style="min-height:2.4rem;padding:0.2rem 0.8rem" title="Switch every effect off, press again to bring them back">↺ Reset all effects</button></div>
-      <div class="fxgrid">
-        <label class="small muted">Reverb<select class="fxRv"><option value="off">Off</option><option value="room">Room</option><option value="hall">Hall</option></select></label>
-        <label class="small muted chk" title="Slightly detunes the sound; leave off for ear training"><input type="checkbox" class="fxCh"> Chorus</label>
-        <label class="small muted">Tremolo (volume pulse)<select data-fx="fxTrem"><option value="off">Off</option><option value="light">Light</option><option value="medium">Medium</option><option value="deep">Deep</option></select></label>
-        <label class="small muted" title="Bends the pitch up and down; leave off for ear training">Vibrato (pitch wobble)<select data-fx="fxVib"><option value="off">Off</option><option value="light">Light</option><option value="medium">Medium</option><option value="deep">Deep</option></select></label>
-        <label class="small muted">Echo<select data-fx="fxDelay"><option value="off">Off</option><option value="short">Short</option><option value="medium">Medium</option><option value="long">Long</option></select></label>
-        <label class="small muted">Tone<select data-fx="fxTone"><option value="dark">Dark</option><option value="warm">Warm</option><option value="neutral">Neutral</option><option value="bright">Bright</option></select></label>
-        <label class="small muted">Phaser / flanger<select data-fx="fxPhase"><option value="off">Off</option><option value="phaser">Phaser</option><option value="flanger">Flanger</option></select></label>
-        <label class="small muted">Overdrive<select data-fx="fxDrive"><option value="off">Off</option><option value="warm">Warm</option><option value="crunch">Crunch</option></select></label>
-        <label class="small muted" title="Only for notes you play, not exercise tones">Octave layer<select data-fx="fxOct"><option value="off">Off</option><option value="up">Octave up</option><option value="down">Octave down</option><option value="both">Both</option></select></label>
-        <label class="small muted chk"><input type="checkbox" data-fx="fxWide"> Stereo widener</label>
-        <label class="small muted chk" title="Only for notes you play, not exercise tones"><input type="checkbox" data-fx="fxHuman"> Humanize (tiny timing and volume changes)</label>
-        <label class="small muted chk"><input type="checkbox" id="fxSus"> Sustain pedal held</label>
+    <div class="synth synthmain" id="pnFx">
+      <div class="synhead">
+        <div class="synlcdrow" role="group" aria-label="Sound">
+          <div class="synlcd"><button class="synbtn prPP" title="Previous preset" aria-label="Previous preset">◀</button><div class="lcd"><small>PRESET</small><b class="prOut">Init</b></div><button class="synbtn prPN" title="Next preset" aria-label="Next preset">▶</button></div>
+          <div class="synlcd"><button class="synbtn sfFP" title="Previous SoundFont (Up arrow)" aria-label="Previous SoundFont">▲</button><div class="lcd"><small>SOUNDFONT</small><b class="sfOutN">Built-in sound</b></div><button class="synbtn sfFN" title="Next SoundFont (Down arrow)" aria-label="Next SoundFont">▼</button></div>
+          <div class="synlcd"><button class="synbtn sfPP" title="Previous instrument (Left arrow)" aria-label="Previous instrument">◀</button><div class="lcd"><small>INSTRUMENT</small><b class="sfOutP">–</b></div><button class="synbtn sfPN" title="Next instrument (Right arrow)" aria-label="Next instrument">▶</button></div>
+        </div>
+        <div class="synhbtns"><button class="synbtn ico" id="prSave" aria-label="Save preset" title="Keep this sound and every knob as a preset. It also becomes an instrument in Compose."><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v14H5z"/><path d="M8 3v6h7V3"/><rect x="8" y="14" width="8" height="7"/></svg></button><button class="synbtn ico" id="prInit" aria-label="Init" title="Init: effects off and no preset selected"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></svg></button><button class="synbtn ico" id="specFull" aria-label="Play on-screen piano" title="Play on-screen piano: a full-screen keyboard"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M9 5v14M15 5v14"/><path d="M7.5 5v8M12 5v8M16.5 5v8" stroke-width="3"/></svg></button></div>
       </div>
-      <p class="muted small" style="margin-top:0.5rem">Octave layer and Humanize only change notes you play yourself, so exercise tones stay exact. Vibrato and the sweeping effects move the sound around: leave them off for ear training.</p>
-    </details>
-    <div class="row" style="justify-content:center"><button class="btn primary" id="btnPlayKeys">🎹 Play on-screen piano</button><button class="btn" id="btnRelease" title="Release every key that is stuck down">Release keys</button></div>
-    <p class="center muted small" id="keysHint" style="margin-top:0.25rem">Tap the keys above, or play with your computer keyboard: A W S E D F T G Y H U J K. Z and X change octave.</p>
-    <details id="specBox" class="card" open><summary style="cursor:pointer;font-weight:700">🎛 Spectrogram settings</summary>
-      <button class="btn primary" id="specFull" style="margin-top:0.625rem;width:100%">⛶ Full screen</button>
-      <span id="specPhCtl"></span><div id="specCtl"><div class="row" style="margin-top:0.625rem;flex-wrap:nowrap"><span class="muted small" style="flex:none">Detail</span><div class="seg" id="specFft" style="flex:1"><button data-f="low">Low</button><button data-f="mid">Mid</button><button data-f="high">High</button></div></div><div class="seg" id="specRange" hidden><button data-r="voice" class="on">Voice</button><button data-r="piano">Piano</button><button data-r="max">Max mic</button><button data-r="whistle">Whistle</button></div>
+      <div class="synknobarea"><div id="pnKnobs" class="synsecs"></div><div id="pnLow" class="synlow"></div></div>
+      <div class="syngrid"><svg class="syncables" aria-hidden="true"></svg>
+        <div class="synscreen"><div class="synglass">
+          <div class="syntabs" role="tablist"><button data-t="spec" class="on" role="tab"><i></i>Spectrum</button><button data-t="banks" role="tab"><i></i>Banks</button><button data-t="patch" role="tab"><i></i>Instruments</button><button data-t="user" role="tab"><i></i>Presets</button></div>
+          <div class="synpane" data-p="spec"><span id="specPhCv"></span><canvas id="specCv" style="height:100%;display:block"></canvas><canvas id="specBloom" aria-hidden="true"></canvas><canvas id="specTags" aria-hidden="true"></canvas></div>
+          <div class="synpane lcdlist" data-p="banks" hidden><div id="spBanks" class="lcdrows"></div><div class="synspecbar"><button class="synbtn" id="spAdd">＋ File</button><button class="synbtn" id="spDir">📁 Folder</button><button class="synbtn" id="spBuiltin">Built-in</button></div></div>
+          <div class="synpane lcdlist" data-p="patch" hidden><input id="spFind" class="lcdfind" placeholder="Search instruments…" aria-label="Search instruments"><div id="spPatches" class="lcdrows"></div></div>
+          <div class="synpane lcdlist" data-p="user" hidden><div id="spPresets" class="lcdrows"></div></div>
+        <div class="synkeys"><canvas id="pianoCv" style="height:5.8rem;display:block"></canvas></div>
+          <div class="synspecbar"><span id="specPhCtl"></span><div id="specCtl"><div class="seg" id="specRange" hidden><button data-r="voice" class="on">Voice</button><button data-r="piano">Piano</button><button data-r="max">Max mic</button><button data-r="whistle">Whistle</button></div></div><p class="lcdlab" id="specNote" hidden></p></div>
+        </div><i class="jack screenjack" data-j="graph"></i></div>
+        <div class="synside"><div class="lcd synnow" aria-live="polite"><small>NOW</small><b id="pianoInfo">&nbsp;</b></div><div id="pnArp"></div><div id="pnEnv"></div><div id="pnDisplay"></div></div>
       </div>
-      <p class="muted small" id="specNote">Brightness is how loud each pitch is. It rises from the piano keys, newest at the bottom. The line is the note the tuner locked on to.</p>
-    </details>
+    </div>
   </section>
 
   <!-- TRAIN -->
@@ -330,6 +321,8 @@
   </section>
 </main>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="crt" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/><feOffset in="r" dx="-1.5" dy="0" result="r2"/><feOffset in="b" dx="1.5" dy="0" result="b2"/><feBlend in="r2" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b2" mode="screen"/></filter></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><radialGradient id="kcap" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".35" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient></defs></svg>
 <nav id="nav"><button data-s="tuner" class="on"><i>🎵</i>Tuner</button><button data-s="piano"><i>🎹</i>Piano</button><button data-s="train"><i>🎯</i>Practice</button><button data-s="seq"><i>🎼</i>Compose</button><button data-s="progress"><i>📈</i>Progress</button><button data-s="settings"><i>⚙️</i>Settings</button></nav>
 
 <!-- START -->
@@ -376,17 +369,35 @@
 
 <!-- ON-SCREEN PIANO -->
 <div id="o-keys" class="overlay" style="padding:0.5rem;gap:0.5rem;justify-content:flex-start;border-top:0.4rem solid var(--piano)">
-  <div class="row" style="width:100%;flex-wrap:nowrap"><button class="btn" id="kyClose" style="min-height:2.75rem;padding:4px 1rem">✕</button><div style="flex:1;min-width:0;text-align:center"><div id="kyName" style="font-size:1.8rem;font-weight:800;min-height:2.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div><div id="kyNotes" class="muted small" style="min-height:1.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div><button class="btn" id="kyPedal" style="min-height:2.75rem;padding:4px 0.875rem">Sustain</button></div>
-  <canvas id="kyCv" style="flex:1;min-height:12rem;width:100%"></canvas>
-  <div class="row" style="justify-content:center;gap:0.75rem;align-items:center"><label class="small muted">Reverb <select class="fxRv" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem"><option value="off">Off</option><option value="room">Room</option><option value="hall">Hall</option></select></label><label class="small muted" title="Slightly detunes the sound; leave off for ear training"><input type="checkbox" class="fxCh"> Chorus</label><label class="small muted">SoundFont <select class="sfQuick" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem;max-width:11rem"></select></label><select class="sfQuickPre" hidden title="Instrument in this SoundFont" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem;max-width:12rem"></select></div>
-  <div class="row" style="justify-content:center;gap:0.5rem"><button class="btn" id="kyDown">◀ Octave</button><b id="kyRange" class="small" style="min-width:5.5rem;text-align:center"></b><button class="btn" id="kyUp">Octave ▶</button><select id="kySpan" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem"><option value="2">2 octaves</option><option value="3">3 octaves</option><option value="4">4 octaves</option></select></div>
-  <div class="muted small" style="text-align:center">Computer keys: A W S E D F T G Y H U J K O L P ; · Z / X octave · C / V volume · Space holds notes · Tap with several fingers for chords.</div>
+  <div class="kydev">
+    <div class="kytop">
+      <button class="synbtn ico" id="kyClose" aria-label="Back" title="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div class="lcd kyscr kynow" aria-live="polite"><small>NOW</small><b id="kyName"></b><span id="kyNotes"></span></div>
+      <button class="synbtn kypedal" id="kyPedal" type="button" aria-label="Sustain pedal"><i class="kylamp"></i>Sustain</button>
+    </div>
+    <div class="kykeys"><canvas id="kyCv" style="flex:1;min-height:12rem;width:100%"></canvas></div>
+  <div class="synth kysynth">
+    <div class="synlcdrow" role="group" aria-label="Sound">
+      <div class="synlcd"><button class="synbtn sfFP" title="Previous SoundFont (Up arrow)" aria-label="Previous SoundFont">▲</button><div class="lcd"><small>SOUNDFONT</small><b class="sfOutN" id="kySfName">Built-in sound</b></div><button class="synbtn sfFN" title="Next SoundFont (Down arrow)" aria-label="Next SoundFont">▼</button></div>
+      <div class="synlcd"><button class="synbtn sfPP" title="Previous instrument (Left arrow)" aria-label="Previous instrument">◀</button><div class="lcd"><small>INSTRUMENT</small><b class="sfOutP" id="kySfPre">–</b></div><button class="synbtn sfPN" title="Next instrument (Right arrow)" aria-label="Next instrument">▶</button></div>
+    </div>
+    <div class="kyfx"><div id="kyKnobs" class="synsecs"></div><button class="synbtn ico red" id="kyKnobReset" aria-label="Reset effects" title="Turn every effect off"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg></button></div>
+  </div>
+    <div class="kyctl">
+      <button class="synbtn kyoct" id="kyDown" type="button"><i class="tr l"></i>Octave</button>
+      <div class="lcd kyscr kyrange"><b id="kyRange"></b></div>
+      <button class="synbtn kyoct" id="kyUp" type="button">Octave<i class="tr r"></i></button>
+      <select id="kySpan" class="kysel" aria-label="Octaves shown"><option value="2">2 octaves</option><option value="3">3 octaves</option><option value="4">4 octaves</option></select>
+      <label class="synbtn kyletters"><input type="checkbox" id="kyLetters"><i class="kylamp"></i>Letters</label>
+    </div>
+    <div class="lcd kyscr kyhelp">Arrows: ▲▼ SoundFont · ◀▶ instrument · Z / X octave · C / V volume · Space holds notes · Tap with several fingers for chords.</div>
+  </div>
 </div>
 
 <!-- SPECTROGRAM FULL SCREEN -->
 <div id="o-spec" class="overlay" style="padding:0.5rem;gap:0.5rem;background:#000;justify-content:flex-start">
   <div class="row" style="width:100%;flex-wrap:nowrap"><button class="btn" id="specClose" style="min-height:2.75rem;padding:4px 1rem">✕</button><div id="specFullCtl" style="flex:1;min-width:0"></div></div>
-  <div id="specFullCv" style="flex:1;min-height:0;width:100%;display:flex"></div>
+  <div id="specFullCv" style="flex:1;min-height:0;width:100%;display:flex;position:relative"><canvas id="specFullTags" aria-hidden="true"></canvas></div>
 </div>
 
 <!-- PIANO PRACTICE -->
@@ -466,7 +477,9 @@
 <script src="js/markers.js"></script>
 <script src="js/frame.js"></script>
 <script src="js/sequencer.js"></script>
+<script src="js/arp.js"></script>
 <script src="js/knobs.js"></script>
+<script src="js/synth.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/tune.js"></script>
 <script src="js/vox.js"></script>

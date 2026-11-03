@@ -351,7 +351,7 @@ const Ed = {
     if (i === this.ti) return; Vox.sel = null; this.ti = i; this.sel.clear(); this.needFit = true; this.ls = {}; Seq.markSel(); const t = this.song.tracks[i]; toast((i + 1) + ' · ' + (t && t.name || 'Track'), 900);
   },
   key(e) {
-    if (!this.on || UI.screen !== 'seq' || !this.song) return;
+    if (!this.on || UI.screen !== 'seq' || !this.song || Keys.on) return;      // the full-screen piano owns the computer keyboard
     const t = e.target && e.target.tagName, mod = e.ctrlKey || e.metaKey, k = e.key; let a = null;
     const history = mod && /^[zy]$/i.test(k) && t !== 'TEXTAREA' && !(t === 'INPUT' && /^(text|search|number)$/.test(e.target.type));   // a dropdown or checkbox keeps focus after use: undo must still work
     if ((t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') && !history) return;

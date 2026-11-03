@@ -1,5 +1,8 @@
 "use strict";
 /* ---- Wiring ---- */
+/* LCD scanlines are one device pixel thick and three apart, so every line is the same however the page is zoomed. --dp is one device pixel in CSS pixels. */
+function setDevicePixel() { document.documentElement.style.setProperty('--dp', (1 / (window.devicePixelRatio || 1)).toFixed(4) + 'px'); }
+setDevicePixel(); window.addEventListener('resize', setDevicePixel);
 function bind() {
   $$('#nav button').forEach(b => b.onclick = () => UI.show(b.dataset.s));
   $$('#menuDiff button').forEach(b => b.onclick = () => { Store.data.settings.diff = b.dataset.d; Store.save(); UI.refresh(); });
@@ -20,20 +23,7 @@ function bind() {
   if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => Engine.listMics());
   $('#setTimbre').addEventListener('change', () => SFUI.list());
   $$('[data-fx]').forEach(el => el.onchange = e => { const k = el.dataset.fx; Store.data.settings[k] = el.type === 'checkbox' ? el.checked : el.value; Knobs.free({ fxTrem: 'trem', fxVib: 'vib', fxDelay: 'echo', fxWide: 'wide', fxTone: 'tone', fxPhase: 'phase', fxDrive: 'drive' }[k]); Store.save(); Engine.setFx(); if (el.tagName === 'SELECT') el.blur(); });
-  $('#fxSus').onchange = e => VKeys.setPedal(e.target.checked);
-  /* One button: switches every effect off, and brings the previous settings back on the second press. */
-  const FX_KEYS = ['reverb', 'chorus', 'fxTrem', 'fxVib', 'fxDelay', 'fxWide', 'fxTone', 'fxPhase', 'fxDrive', 'fxOct', 'fxHuman'];
-  let fxSaved = null;
-  $('#fxReset').onclick = () => {
-    const st = Store.data.settings, from = fxSaved || FX_KEYS.reduce((o, k) => (o[k] = DEFAULTS[k], o), {});
-    if (!fxSaved) fxSaved = FX_KEYS.reduce((o, k) => (o[k] = st[k], o), {});
-    else fxSaved = null;
-    FX_KEYS.forEach(k => { st[k] = from[k]; });
-    $$('.fxRv').forEach(x => x.value = st.reverb); $$('.fxCh').forEach(x => x.checked = !!st.chorus);
-    $$('[data-fx]').forEach(el => { const v = st[el.dataset.fx]; if (el.type === 'checkbox') el.checked = !!v; else el.value = v; });
-    st.fxK = {}; Knobs.sync(); Store.save(); Engine.applySettings(); Engine.setFx();
-    $('#fxReset').textContent = fxSaved ? '\u21ba Restore effects' : '\u21ba Reset all effects';
-  };
+  { const sus = $('#fxSus'); if (sus) sus.onchange = e => VKeys.setPedal(e.target.checked); }
   $('#setInst').addEventListener('change', e => Spec.setMode(instMode(e.target.value)));
   $$('#instSeg button').forEach(b => b.onclick = () => setInst(b.dataset.i));
   { const pop = $('#sqSavePop'), mb = $('#sqSaveMenu'), close = () => { pop.hidden = true; mb.setAttribute('aria-expanded', 'false'); };
@@ -66,12 +56,11 @@ function bind() {
   $('#sqTempo').oninput = e => { $('#sqTempoOut').textContent = e.target.value + '%'; }; $('#sqTempo').onchange = e => Seq.setTempo(e.target.value / 100);
   { const cv = $('#seqCv'); cv.onpointerdown = e => Seq.ovDown(e); cv.onpointermove = e => Seq.ovMove(e); cv.onpointerup = () => Seq.ovUp(); cv.onpointercancel = () => { Seq.ovDrag = null; Seq.ovMode = null; Seq.ovReg = null; }; }
   $('#sqSeek').oninput = e => { Seq.drag = true; $('#sqTime').textContent = Seq.fmt(+e.target.value) + ' / ' + Seq.fmt(Seq.length); }; $('#sqSeek').onchange = e => { Seq.drag = false; Seq.seek(+e.target.value); };
-  Ed.init(); Knobs.init(); Vox.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
+  Ed.init(); Knobs.init(); Synth.init(); Vox.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
   for (let o = 1; o <= 7; o++) { const d = document.createElement('div'); d.className = 'ppoct'; d.innerHTML = '<b>' + o + '</b><div class="ppn">' + [...'CDEFGAB'].map(l => '<i>' + l + '</i>').join('') + '</div>'; $('#ppOcts').appendChild(d); }
   $('#instHintBtn').onclick = () => { if (Tuner.hint.want) setInst(Tuner.hint.want); $('#instHint').hidden = true; };
   $('#instHintNo').onclick = () => { Tuner.hint.dismissed[Tuner.hint.want] = true; $('#instHint').hidden = true; };
-  $$('#specFft button').forEach(b => b.onclick = () => { Store.data.settings.fft = b.dataset.f; Store.save(); Spec.applyFft(); Spec.key = ''; });
-  $('#specFull').onclick = () => Spec.openFull(); $('#specClose').onclick = () => Spec.closeFull();
+  $('#specFull').onclick = () => Keys.open(); $('#specClose').onclick = () => Spec.closeFull();
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) Spec.closeFull(); });
   $('#specSynth').onchange = e => { Store.data.settings.specSynth = e.target.checked; Store.save(); };
   $('#specLine').onchange = e => { Store.data.settings.specLine = e.target.checked; Store.save(); };
@@ -80,9 +69,11 @@ function bind() {
   VKeys.attach($('#pianoCv')); VKeys.attach($('#specCv')); VKeys.attach($('#pxCv')); VKeys.attach($('#kyCv'));
   document.addEventListener('keydown', e => VKeys.onKey(e, true)); document.addEventListener('keyup', e => VKeys.onKey(e, false));
   window.addEventListener('blur', () => VKeys.releaseAll());
-  $('#btnPlayKeys').onclick = () => Keys.open(); $('#kyClose').onclick = () => Keys.close(); $('#btnRelease').onclick = () => { VKeys.releaseAll(); toast('All keys released.', 1200); };
+  $('#kyClose').onclick = () => Keys.close();
   $('#kyDown').onclick = () => Keys.shift(-1); $('#kyUp').onclick = () => Keys.shift(1); $('#kySpan').onchange = e => { Keys.span = +e.target.value; Keys.fit(); };
   $('#kyPedal').onclick = () => VKeys.setPedal(!VKeys.pedal);
+  $$('.sfFP').forEach(b => b.onclick = () => SFUI.stepFont(-1)); $$('.sfFN').forEach(b => b.onclick = () => SFUI.stepFont(1)); $$('.sfPP').forEach(b => b.onclick = () => SFUI.stepPreset(-1)); $$('.sfPN').forEach(b => b.onclick = () => SFUI.stepPreset(1));
+  $('#kyLetters').checked = !!Store.data.settings.kyLetters; $('#kyLetters').onchange = e => { Store.data.settings.kyLetters = e.target.checked; Store.save(); };
   $('#sfLoadDir').onclick = () => $('#sfDir').click(); $('#sfDir').onchange = e => { const f = [...e.target.files]; e.target.value = ''; SFUI.onDir(f); };
   SFMgr.init();
   $$('.sfQuickPre').forEach(el => el.onchange = e => { e.target.blur(); SFUI.prepare(+e.target.value); });
@@ -124,7 +115,7 @@ function bind() {
   { const seq = $('#s-seq'), tipOf = el => { const t = el.closest('[title],[aria-label]'); return t ? (t.title || t.getAttribute('aria-label')) : ''; },
       setHelp = on => { seq.classList.toggle('helping', on); toast(on ? 'Help on: click any button to see what it does. Press I or Esc to leave.' : 'Help off.', 2500); };
     document.addEventListener('keydown', e => {
-      if (UI.screen !== 'seq' || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (UI.screen !== 'seq' || Keys.on || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable) return;
       if (e.code === 'KeyI') { e.preventDefault(); setHelp(!seq.classList.contains('helping')); }
       else if (e.code === 'Escape' && seq.classList.contains('helping')) setHelp(false);
     });
