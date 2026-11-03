@@ -71,16 +71,16 @@ function renderPianoRecent(box, n) {
 const PX = {
   on: false, def: null, steps: [], i: 0, rec: [], prev: new Set(), wrong: [], t0: 0, tStep: 0, chordAt: 0, needRelease: false, flash: new Map(), pc: 0, timer: 0, advanceAt: 0, finished: false,
   open(id, preset) {
-    this.def = PXS.find(d => d.id === id); this.on = true; this.pc = 0;
+    this.def = PXS.find(d => d.id === id); this.on = true; this.pc = 0; this.course = preset && preset.course || null;
     const st = Store.data.settings; $('#pxShow').checked = st.pxShow !== false; $('#pxAny').checked = !!st.pxAny;
     const key = $('#pxKey'); if (!key.options.length) NOTE_NAMES.forEach((n, p) => { const o = document.createElement('option'); o.value = p; o.textContent = n; key.appendChild(o); });
     const fill = (sel, list) => { sel.textContent = ''; list.forEach(x => { const o = document.createElement('option'); o.value = x[0]; o.textContent = x[1]; sel.appendChild(o); }); sel.hidden = !list.length; };
     fill($('#pxO1'), this.def.o1); fill($('#pxO2'), this.def.o2); key.value = 0;
-    if (preset) { if (preset.o1) $('#pxO1').value = preset.o1; if (preset.o2) $('#pxO2').value = preset.o2; } key.parentNode.hidden = !!this.def.noKey;
+    if (preset) { if (preset.o1) $('#pxO1').value = preset.o1; if (preset.o2) $('#pxO2').value = preset.o2; if (preset.key != null) key.value = preset.key; } key.parentNode.hidden = !!this.def.noKey;
     if (!Midi.inputCount() && st.inst !== 'piano') { setInst('piano'); toast('No keyboard connected. Play on the on-screen keys or your computer keyboard, or play a real piano and I will listen through the microphone.', 6000); }
     $('#o-pex').classList.add('on'); this.start();
   },
-  close() { this.on = false; clearInterval(this.timer); $('#o-pex').classList.remove('on'); VKeys.releaseAll(); UI.refresh(); },
+  close() { this.on = false; this.course = null; clearInterval(this.timer); $('#o-pex').classList.remove('on'); VKeys.releaseAll(); UI.refresh(); },
   start() {
     this.pc = +$('#pxKey').value || 0;
     this.steps = buildPianoSteps(this.def.id, this.pc, $('#pxO1').value, $('#pxO2').value);
@@ -156,12 +156,15 @@ const PX = {
     $('#pxHear').hidden = $('#pxSkip').hidden = true; $('#pxCv').hidden = true;
     const box = $('#pxRes'); box.textContent = ''; box.hidden = false;
     const stat = (a, b) => { const d = document.createElement('div'); d.className = 'stat'; d.innerHTML = '<span></span><b></b>'; d.children[0].textContent = a; d.children[1].textContent = b; box.appendChild(d); };
+    const cr = this.course ? Course.record('piano', this.course.id, sm.firstTryPct) : null;
+    if (cr) { const d = document.createElement('div'); d.className = 'card'; d.textContent = Course.note(cr); box.appendChild(d); }
     stat('Steps', sm.steps); stat('Right first time', sm.firstTry + ' of ' + sm.steps); stat('Mistakes', sm.mistakes); stat('Time', secs + ' s'); stat('Typical time per step', (sm.medianMs / 1000).toFixed(1) + ' s');
     sm.tips.forEach(t => { const d = document.createElement('div'); d.className = 'card'; d.textContent = t; box.appendChild(d); });
     const row = document.createElement('div'); row.className = 'row'; row.style.marginTop = '0.625rem';
     const mk = (txt, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = txt; b.onclick = fn; row.appendChild(b); };
-    mk('Again', 'primary', () => this.start());
-    if (!this.def.noKey) mk('Next key (up a fifth)', '', () => { $('#pxKey').value = (this.pc + 7) % 12; this.start(); });
+    if (cr && cr.passed && cr.nxt) mk('Next level ▶', 'primary', () => Course.start('piano', cr.nxt.id));
+    mk('Again', cr && cr.passed && cr.nxt ? '' : 'primary', () => this.start());
+    if (!this.def.noKey && !this.course) mk('Next key (up a fifth)', '', () => { $('#pxKey').value = (this.pc + 7) % 12; this.start(); });
     mk('Done', '', () => this.close()); box.appendChild(row);
   },
   /* keyboard: target keys amber (when "show keys" is on), pressed keys blue, wrong presses flash red */

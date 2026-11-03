@@ -2,7 +2,7 @@
 /* ---- Training session ---- */
 const Session = {
   s: null,
-  async begin(id) {
+  async begin(id, opts) {
     const st = Store.data.settings, M = Store.data.midi, tempo = (st.tempo || 100) / 100, ex = id === 'midi' && M ? buildCustom(M.name, M.notes, M.bpm, getRange(), tempo) : buildExercise(id, getRange(), tempo);
     if (this.starting) return; this.starting = true;
     const acc = id === 'midi' && !st.wait && Seq.accompanies(); if (acc) await Seq.prepare();      // the other tracks of the file play along, so decode their instruments first
@@ -13,7 +13,7 @@ const Session = {
     const tL = now + 0.35;
     const listenEnd = hear ? tL + ex.total + 0.2 : tL;
     const t0 = hear ? listenEnd + 3 * beat + 0.4 : wait ? tL + 3 * beat + 0.2 : tL + 1.5 * beat + 3 * beat + 0.2;
-    const s = this.s = { ex, wait, find: st.find, gi: 0, waiting: false, shift: 0, wbuf: [], ref: null, nextRef: 0, tol: TOLERANCE[st.diff], hear, tL, listenEnd, t0, lat, frames: [], nodes: [], raf: 0, done: false, lock: { i: -1, run: 0, locked: false, off: 0 }, bleed: [], bleedWarned: false, rec: null, recStart: 0, chunks: [], wake: null };
+    const s = this.s = { course: opts && opts.course, ex, wait, find: st.find, gi: 0, waiting: false, shift: 0, wbuf: [], ref: null, nextRef: 0, tol: TOLERANCE[st.diff], hear, tL, listenEnd, t0, lat, frames: [], nodes: [], raf: 0, done: false, lock: { i: -1, run: 0, locked: false, off: 0 }, bleed: [], bleedWarned: false, rec: null, recStart: 0, chunks: [], wake: null };
     const guideLevel = wait || st.guide === 'off' ? 0 : st.guide === 'on' ? 1 : Math.max(0, 1 - 0.25 * (Store.data.passes[id] || 0));
     // reference / start tone
     if (hear) ex.events.forEach(ev => s.nodes.push(Engine.playNote(ev.midi, tL + ev.start, ev.dur, { midi2: ev.midi2 })));
@@ -170,7 +170,9 @@ const Session = {
     st.tempo = t; Store.save(); $('#sTempo').textContent = t + '%'; $('#tmVal').textContent = t + '%'; $('#tempoVal').textContent = t + '%'; $('#setTempo').value = t;
     if (this.s) { toast('Tempo ' + t + '%', 900); clearTimeout(this.tempoTimer); this.tempoTimer = setTimeout(() => this.restart(), 700); }
   },
-  restart() { const s = this.s; if (!s || this.starting) return; const id = s.ex.id; this.stop(); Session.begin(id); },
+  restart() { const s = this.s; if (!s || this.starting) return; const id = s.ex.id, course = s.course; this.stop(); Session.begin(id, course ? { course } : undefined); },
+  /* Run the exercise on the results screen again, in the same course level if it was one. */
+  again() { const c = UI.curSession && UI.curSession.course; return this.begin(UI.lastExercise, c ? { course: { kind: c.kind, id: c.id } } : undefined); },
   stop() { const s = this.s; if (!s) return; this.teardown(); if (s.ref) s.ref.stop(); if (s.rec && s.rec.state !== 'inactive') { try { s.rec.stop(); } catch (e) {} } this.s = null; if (Routine.active) Routine.abort('Routine stopped'); else UI.trainView('menu'); },
   finish() {
     const s = this.s; this.teardown();
@@ -191,7 +193,7 @@ const Session = {
       Takes.put(s.take).catch(() => {}); UI.enableReplay(s.take);
     };
     if (s.rec && s.rec.state !== 'inactive') { s.rec.onstop = finalize; try { s.rec.stop(); } catch (e) { finalize(); } } else finalize();
-    UI.showResults(s);
+    UI.showResults(s); Course.sessionDone(s);
   }
 };
 

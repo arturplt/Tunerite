@@ -85,3 +85,13 @@ To add a Polish tune properly:
 
 ## Content rules
 Only ship melodies you can show are in the public domain, and keep the source in the code comment.
+
+## Courses (Sing, Whistle, Piano)
+The Practice tab opens on a **Course** view for each mode, built like the Ear course: units of levels, each level an exercise you perform and the app scores. A level opens when the one before it has a star.
+
+| Mode | A level is | Pass / 2nd star / 3rd star |
+|---|---|---|
+| Sing, Whistle | an id in `EXERCISES`, run as a normal session | score 70 / 85 / 95 |
+| Piano | a `PIANO_OPTS` exercise with its two choices and a key | 80% / 90% / 100% right first time |
+
+The levels are plain data in `js/core/course.js` (`E(exId, title)` for singing and whistling, `P(px, o1, o2, key, title, desc)` for piano). A browser test checks every level builds. Progress is saved in `Store.data.course[kind]`; runs where you skipped around do not count. The tempo and difficulty settings still apply to singing levels.

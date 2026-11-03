@@ -134,10 +134,10 @@ function bind() {
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     if (RangeFinder.active) { RangeFinder.best[RangeFinder.step] = null; RangeFinder.buf = []; RangeFinder.render(); toast('Reset. Sing again.', 1500); }
     else if (Session.s) Session.restart();
-    else if (UI.screen === 'train' && !$('#tr-res').hidden && UI.lastExercise) Session.begin(UI.lastExercise);
+    else if (UI.screen === 'train' && !$('#tr-res').hidden && UI.lastExercise) Session.again();
     else if (UI.screen === 'seq' && !$('.overlay.on')) { if (Rec.state !== 'idle') Rec.stop(); else Seq.toggle(); }
   });
-  $('#rAgain').onclick = () => Session.begin(UI.lastExercise);
+  $('#rAgain').onclick = () => Session.again();
   $('#rBack').onclick = () => Routine.active ? Routine.abort() : UI.trainView('menu');
   const openRange = () => { RangeFinder.open(Store.data.settings.inst === 'whistle'); };
   const findRange = w => { const want = w ? 'whistle' : 'voice'; if (Store.data.settings.inst !== want) setInst(want); RangeFinder.open(w); };
@@ -156,7 +156,7 @@ function bind() {
   $('#rbClose').onclick = () => Builder.close(); $('#rbSave').onclick = () => Builder.save(); $('#rbDel').onclick = () => Builder.del();
   $('#rbAddBtn').onclick = () => { Builder.cur.steps.push($('#rbAdd').value); Builder.render(); };
   $('#rtClose').onclick = () => Routine.abort('Routine stopped'); $('#rtSkip').onclick = () => Routine.next(); $('#rtDone').onclick = () => Routine.next();
-  $('#rNext').onclick = () => Routine.next();
+  $('#rNext').onclick = () => Course.next();
   $('#gBack').onclick = () => Guide.go(Guide.done ? 0 : Guide.i - 1); $('#gSkip').onclick = () => { Guide.skips++; Guide.go(Guide.i + 1); }; $('#gHear').onclick = () => Guide.hear();
   $('#gRoot').onchange = e => { Store.data.settings.guideRoot = e.target.value; Store.save(); Guide.root = Guide.pickRoot(); Guide.go(Guide.i >= 8 ? 0 : Guide.i); };
   $('#gNames').onchange = e => { Store.data.settings.guideNames = e.target.value; Store.save(); Guide.go(Guide.i); };

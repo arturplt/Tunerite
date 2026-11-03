@@ -1153,3 +1153,7 @@ button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
 .synknobarea:not(.synplay){row-gap:0;column-gap:0.75rem}
 .synknobarea:not(.synplay) .lowbreak{height:0.75rem}
 .synthmain .synhead{margin-bottom:0.75rem}.synknobarea:not(.synplay){margin-bottom:0.75rem}
+
+/* ---- Courses (Sing, Whistle, Piano): the level map reuses the Ear course rows ---- */
+#trCourse{margin-top:1rem}
+#rCourse{margin:0.5rem 0;text-align:center}

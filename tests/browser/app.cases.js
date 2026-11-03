@@ -484,3 +484,36 @@ T.test('arpeggio rate: note lengths like the echo time, and Echo follows the ech
     st.arp.rate = 3 / 7; T.near(Arp.stepSec(), Seq.ECHO_BEATS[Math.round(0.4 * 5)] * 0.6, 1e-9, 'dotted 1/8 on both: the same time');
   } finally { const k = JSON.parse(keep); st.arp = k.arp; st.fxK = k.fxK; }
 });
+
+T.test('courses: every level of the sing, whistle and piano courses builds, stars and unlocking follow the score', async () => {
+  const bad = [];
+  ['sing', 'whistle'].forEach(k => COURSE.LEVELS[k].forEach(l => { const ex = EXERCISES.find(e => e.id === l.ex); if (!ex) return bad.push(k + ' ' + l.id + ': no exercise ' + l.ex); try { const b = buildExercise(l.ex, { lo: 48, hi: 72 }, 1); if (!b.events.length) bad.push(l.id + ': empty'); } catch (e) { bad.push(l.id + ': ' + e.message); } }));
+  COURSE.LEVELS.piano.forEach(l => {
+    const d = PXS.find(x => x.id === l.px); if (!d) return bad.push(l.id + ': no piano exercise ' + l.px);
+    if (d.o1.length && !d.o1.some(o => o[0] === l.o1)) bad.push(l.id + ': o1 ' + l.o1); if (d.o2.length && !d.o2.some(o => o[0] === l.o2)) bad.push(l.id + ': o2 ' + l.o2);
+    if (!buildPianoSteps(l.px, l.key, l.o1, l.o2).length) bad.push(l.id + ': no steps');
+  });
+  Object.keys(COURSE.KINDS).forEach(k => { const ids = COURSE.LEVELS[k].map(l => l.id); if (new Set(ids).size !== ids.length) bad.push(k + ': duplicate level ids'); COURSE.LEVELS[k].forEach(l => { if (!l.title || !l.desc) bad.push(l.id + ': no text'); }); });
+  T.eq(bad.slice(0, 5).join(' | '), '', 'no broken level');
+  T.eq([60, 70, 85, 95, 100].map(p => COURSE.stars('sing', p)).join(), '0,1,2,3,3', 'sing: 70, 85 and 95'); T.eq([79, 80, 90, 100].map(p => COURSE.stars('piano', p)).join(), '0,1,2,3', 'piano: 80, 90 and 100');
+  const P = {}; T.ok(COURSE.unlocked('piano', P, 'p1l1') && !COURSE.unlocked('piano', P, 'p1l2'), 'only the first level is open'); T.eq(COURSE.next('piano', P).id, 'p1l1');
+  P.p1l1 = { best: 70, stars: 0 }; T.ok(!COURSE.unlocked('piano', P, 'p1l2')); P.p1l1 = { best: 80, stars: 1 }; T.ok(COURSE.unlocked('piano', P, 'p1l2')); T.eq(COURSE.next('piano', P).id, 'p1l2');
+});
+T.test('courses: the Course view lists the levels, a piano level scores and passing opens the next', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, v: st.prView, c: JSON.stringify(Store.data.course), click: Engine.click, hear: PX.hear }; Store.data.course = {}; Engine.click = () => {}; PX.hear = () => {};
+  try {
+    for (const [mode, inst] of [['sing', 'voice'], ['whistle', 'whistle'], ['piano', 'voice']]) {
+      st.trainMode = mode === 'piano' ? 'piano' : 'sing'; st.inst = inst; st.prView = 'course'; UI.show('train'); UI.refresh();
+      T.ok(!$('#trCourse').hidden && $('#trEx').hidden, mode + ': the course replaces the exercise list'); T.eq($$('#courseMap .earlvl').length, COURSE.LEVELS[mode].length, mode + ': a row for every level'); T.eq($$('#courseMap .earlvl:not(.locked)').length, 1, mode + ': only the first level is open');
+    }
+    const lv = COURSE.LEVELS.piano[0]; Course.start('piano', lv.id); T.ok(PX.on && PX.course && PX.course.id === lv.id, 'the piano level opens');
+    while (!PX.finished) { const s = PX.step(); PX.good(); if (PX.advanceAt) PX.advance(); } 
+    const rec = Store.data.course.piano[lv.id]; T.ok(rec && rec.stars === 3 && rec.best === 100, 'a clean run earns three stars: ' + JSON.stringify(rec)); T.ok(COURSE.unlocked('piano', Course.prog('piano'), 'p1l2'), 'the next level is open');
+    T.ok(/Next level/.test($('#pxRes').textContent), 'the result offers the next level'); PX.close();
+    Store.data.course.piano = {}; Course.start('piano', lv.id); PX.skip(); while (!PX.finished) PX.skip(); T.eq(Store.data.course.piano[lv.id].stars, 0, 'skipping every step earns nothing'); PX.close();
+    Course.start('piano', 'p1l3'); T.ok(!PX.on, 'a locked level does not open');
+    st.trainMode = 'sing'; st.inst = 'voice'; UI.show('train'); const sl = COURSE.LEVELS.sing[0], fake = { course: { kind: 'sing', id: sl.id }, practice: false, result: { agg: { score: 88 } } };
+    Course.sessionDone(fake); T.eq(Store.data.course.sing[sl.id].stars, 2, 'a score of 88 earns two stars'); T.eq(fake.course.next, COURSE.LEVELS.sing[1].id, 'and offers the next level'); T.ok(!$('#rCourse').hidden && !$('#rNext').hidden, 'the result shows the course line');
+    Course.sessionDone({ course: { kind: 'sing', id: COURSE.LEVELS.sing[1].id }, practice: true, result: { agg: { score: 99 } } }); T.ok(!Store.data.course.sing[COURSE.LEVELS.sing[1].id], 'a practice run is not saved'); T.ok($('#rCourse').hidden, 'and shows no course line');
+  } finally { Engine.click = keep.click; PX.hear = keep.hear; PX.on && PX.close(); Store.data.course = JSON.parse(keep.c || 'null') || undefined; st.trainMode = keep.m; st.prView = keep.v; UI.show('tuner'); }
+});

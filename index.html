@@ -97,7 +97,7 @@
     <div id="tr-menu">
       <h1>Practice</h1>
       <div class="seg modeseg" id="trMode"><button data-m="sing">🎤 Sing</button><button data-m="piano">🎹 Piano</button><button data-m="whistle">😗 Whistle</button><button data-m="ear">👂 Ear</button></div>
-      <div class="seg" id="prView"><button data-v="ex">Exercises</button><button data-v="lib">📚 Library</button></div>
+      <div class="seg" id="prView"><button data-v="course">🎓 Course</button><button data-v="ex">Exercises</button><button data-v="lib">📚 Library</button></div>
       <div id="trLib" hidden>
         <input id="libSearch" class="lib-input" type="search" placeholder="Search: scales, chords, vowels, breath…" autocomplete="off">
         <div class="row" style="margin:0.5rem 0"><select id="libLevel" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem"><option value="0">Any level</option><option value="1">Beginner</option><option value="2">Intermediate</option><option value="3">Advanced</option></select><select id="libCat" style="font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem;max-width:11rem"></select><button class="btn" id="libFav" style="min-height:2.75rem;padding:0 0.875rem">☆ Favourites</button></div>
@@ -105,6 +105,7 @@
         <div id="libSugg"></div>
         <div id="libList"></div>
       </div>
+      <div id="trCourse" hidden><div id="courseMap"></div></div>
       <div id="trEar" class="zone zone-ear" hidden>
         <div class="zonehead"><span class="ico">👂</span><div><b>Ear training</b><div class="muted small">Learn to recognise intervals, chords, scales and progressions by listening. A step-by-step course.</div></div></div>
         <div id="earMap"></div>
@@ -154,6 +155,7 @@
       <h1 id="rTitle">Results</h1>
       <div class="big" id="rScore">0</div>
       <div class="stars" id="rStars"></div>
+      <div class="card" id="rCourse" hidden></div>
       <canvas id="resCv" style="height:12.5rem;margin:0.75rem 0"></canvas>
       <div id="rStats"></div>
       <h2>Coach</h2><div id="rTips"></div>
@@ -282,6 +284,10 @@
         <div class="stat" style="border:0"><span>Right first time</span><b id="pPianoPct">–</b></div></div>
       <h2>Best by exercise</h2><div id="pPianoBest"></div>
       <h2>Recent</h2><div id="pPianoRecent"></div>
+    </div>
+    <div class="zone">
+      <div class="zonehead"><span class="ico">🎓</span><b>Courses</b></div>
+      <div class="card" id="pCourse"></div>
     </div>
     <div class="zone zone-ear">
       <div class="zonehead"><span class="ico">👂</span><b>Ear training</b></div>
@@ -480,6 +486,7 @@
 <script src="js/core/progress.js"></script>
 <script src="js/core/ear.js"></script>
 <script src="js/core/library.js"></script>
+<script src="js/core/course.js"></script>
 <script src="js/core/soundfont-read.js"></script>
 <script src="js/app-base.js"></script>
 <script src="js/storage.js"></script>
@@ -493,6 +500,7 @@
 <script src="js/piano.js"></script>
 <script src="js/scale.js"></script>
 <script src="js/ear-ui.js"></script>
+<script src="js/course-ui.js"></script>
 <script src="js/soundfont.js"></script>
 <script src="js/library-ui.js"></script>
 <script src="js/range-finder.js"></script>
