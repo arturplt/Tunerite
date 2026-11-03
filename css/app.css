@@ -1121,3 +1121,8 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 button.card.earlvl{display:grid;grid-template-columns:2.2rem minmax(0,1fr) auto;align-items:center;gap:0 0.75rem;text-align:left;padding:0.6rem 0.8rem}
 button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
 .earunit>summary{text-align:left}.earunit>summary span{flex:1;text-align:left}
+
+/* Preset, SoundFont and Instrument screens: the same 16dp labels and values as the Key panel, baselines at 24 and 48 on the 2dp mesh */
+.synlcd .lcd{--gn:2;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12) 0}
+.synlcd .lcd small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+.synlcd .lcd b{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2)}
