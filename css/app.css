@@ -903,3 +903,13 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .kysynth .synsec .knob{min-width:calc(70px*var(--k))}
 .kyfx .synbtn.ico.red{width:calc(70px*var(--k));height:calc(70px*var(--k));flex:none;border-radius:50%}
 .kyfx .synbtn.ico.red svg{width:56%;height:56%}
+
+/* Full-screen spectrogram: the same CRT look as the LCD screens, and the view and colour buttons up top */
+#o-spec .row{align-items:center}
+#o-spec #specFullCtl{display:flex;align-items:center;justify-content:flex-end}
+#o-spec .disprow{flex:1;justify-content:flex-end;gap:1.2rem;padding:0 0.5rem}
+#o-spec .dispgrp{gap:0.4rem}
+#o-spec .dispgrp .synbtn.envp{width:44px;height:36px}
+#o-spec .dispgrp .envp svg{width:18px;height:18px}
+#specFullCv{--gn:3}
+#specFullCv::after{content:"";position:absolute;inset:0 0 var(--kh,0px) 0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}

@@ -16,6 +16,7 @@ const Spec = {
     this.full = true; const cv = $('#specCv');
     { const t = $('#specTags'); if (t) t.width = t.width; }        // drop the note chips left on the page behind the overlay
     $('#specFullCtl').appendChild($('#specCtl')); $('#specFullCv').appendChild(cv); cv.classList.add('sfull-cv'); cv.style.height = '';
+    { const d = $('.disprow'); if (d) { if (!this.dispHome) { this.dispHome = document.createComment('disprow'); d.before(this.dispHome); } $('#specFullCtl').appendChild(d); } }       // view and colour buttons come along
     $('#o-spec').classList.add('on');
     try { if (document.documentElement.requestFullscreen) await $('#o-spec').requestFullscreen(); } catch (e) {}
     try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {}    // only possible in full screen on some phones
@@ -25,6 +26,7 @@ const Spec = {
     if (!this.full) return; this.full = false; const cv = $('#specCv');
     { const t = $('#specFullTags'); if (t) t.width = t.width; }
     $('#specPhCtl').after($('#specCtl')); $('#specPhCv').after(cv); cv.classList.remove('sfull-cv'); cv.style.height = '100%';
+    { const d = $('.disprow'); if (d && this.dispHome && this.dispHome.parentNode) this.dispHome.after(d); }
     $('#o-spec').classList.remove('on');
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
@@ -167,12 +169,13 @@ const Spec = {
   drawSound(h, kh) {
     const cv = $('#specFullTags'); if (!cv) return;
     const { g, w, h: H } = fitCanvas(cv); g.clearRect(0, 0, w, H);
+    $('#specFullCv').style.setProperty('--kh', Math.round(kh) + 'px');       // the mesh stops above the piano
     if (!this.full || !w) return;
     const u = 1 / (window.devicePixelRatio || 1), f = n => n * u, sn = v => Math.round(v / u) * u, st = Store.data.settings, on = SF.sf && st.timbre === 'sf';
     let t = on ? SF.name.replace(/\.sf[23]$/i, '') + (SF.sf.presets[SF.preset] ? ' \u00b7 ' + SF.sf.presets[SF.preset].name : '') : 'Built-in \u00b7 ' + timbreOf(st.timbre).label;
     t = t.toUpperCase(); g.font = f(16) + 'px Silkscreen, ui-monospace, monospace'; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
     const padX = f(8), chH = f(20), maxW = w - f(24) - 2 * padX; while (t.length > 4 && g.measureText(t).width > maxW) t = t.slice(0, -2).trimEnd() + '\u2026';
-    const tw = Math.ceil(g.measureText(t).width) + 2 * padX, x0 = sn(f(12)), y0 = sn(H - kh - chH - f(10));
+    const tw = Math.ceil(g.measureText(t).width) + 2 * padX, x0 = sn(f(12)), y0 = sn(H - kh - chH - f(52));
     g.fillStyle = '#000'; g.fillRect(x0 - f(2), y0 - f(2), tw + f(4), chH + f(4));
     g.fillStyle = '#1a120a'; g.fillRect(x0, y0, tw, chH);
     g.fillStyle = '#6b4513'; g.fillRect(x0, y0, tw, f(2)); g.fillRect(x0, y0 + chH - f(2), tw, f(2));
