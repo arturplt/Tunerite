@@ -410,3 +410,35 @@ T.test('piano scale and chords: off-scale keys are locked, a key plays the chord
     UI.show('train'); T.ok(!Scale.blocked(61), 'the lock only applies in the Piano tab');
   } finally { Engine._playNote = orig; st.pk = JSON.parse(keep); Midi.panic && Midi.panic(); UI.show('piano'); }
 });
+
+T.test('ear training: every level makes valid questions, stars and unlocking follow the score', async () => {
+  let r = 1; const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647, bad = [];
+  EAR.LEVELS.forEach(l => {
+    let prev = null;
+    for (let i = 0; i < 120; i++) {
+      const q = EAR.make(l, rnd, prev); prev = q; const ids = q.options.map(o => o.id);
+      if (q.options.length < 2 || new Set(ids).size !== ids.length) bad.push(l.id + ': options ' + ids.join());
+      if (q.seq ? !q.seq.every(x => ids.includes(x)) : !ids.includes(q.answer)) bad.push(l.id + ': the answer is not an option');
+      if (!q.events.length || q.events.some(e => !(e.d > 0) || e.t < 0 || e.n.some(m => !(m >= 28 && m <= 100)))) bad.push(l.id + ': events out of range');
+      if (!q.explain || !q.prompt) bad.push(l.id + ': no text');
+    }
+  });
+  T.eq(bad.slice(0, 5).join(' | '), '', 'no invalid question in ' + EAR.LEVELS.length + ' levels');
+  T.eq([0.5, 0.8, 0.9, 1].map(p => EAR.stars(p)).join(), '0,1,2,3', 'stars: 80%, 90% and 100%');
+  const P = {}; T.ok(EAR.unlocked(P, 'u1l1') && !EAR.unlocked(P, 'u1l2'), 'only the first level is open at the start'); T.eq(EAR.next(P).id, 'u1l1');
+  P.u1l1 = { best: 0.7, stars: 0 }; T.ok(!EAR.unlocked(P, 'u1l2'), 'below 80% the next level stays shut'); P.u1l1 = { best: 0.8, stars: 1 }; T.ok(EAR.unlocked(P, 'u1l2'), 'a star opens the next level'); T.eq(EAR.next(P).id, 'u1l2');
+  T.eq(EAR.rnChord(0, 'V').join(), '55,59,62', 'the V chord in C is G B D'); T.eq(EAR.rnChord(0, 'vi').join(), '57,60,64', 'the vi chord in C is A C E');
+});
+T.test('ear training: the Ear mode lists the course, a drill scores, and passing opens the next level', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, e: JSON.stringify(Store.data.ear), l: JSON.stringify(Store.data.earLog) }; Store.data.ear = { levels: {} }; Store.data.earLog = [];
+  try {
+    st.trainMode = 'ear'; UI.show('train'); UI.refresh(); T.ok(!$('#trEar').hidden && $('#trEx').hidden, 'the Ear zone replaces the exercises'); T.eq($$('#earMap .earlvl').length, EAR.LEVELS.length, 'a row for every level');
+    T.eq($$('#earMap .earlvl:not(.locked)').length, 1, 'only the first level is open');
+    Ear.open('u1l1'); T.ok($('#o-ear').classList.contains('on'), 'the drill opens'); T.eq($$('#earOpts .earopt').length, 2);
+    for (let i = 0; i < 10; i++) { T.ok(!Ear.locked, 'ready for question ' + (i + 1)); const right = Ear.q.answer, b = $('#earOpts [data-id="' + right + '"]'); b.click(); T.ok(b.classList.contains('ok'), 'the right answer lights up'); Ear.advance(); }
+    T.ok(!$('#earRes').hidden, 'results show'); const rec = Store.data.ear.levels.u1l1; T.ok(rec && rec.stars === 3 && rec.best === 1, 'ten right earn three stars: ' + JSON.stringify(rec)); T.ok(EAR.unlocked(Ear.prog(), 'u1l2'), 'the next level is open'); T.eq(Store.data.earLog.length, 1, 'the session is logged for the streak');
+    Ear.open('u1l2'); for (let i = 0; i < 10; i++) { const right = Ear.q.answer, wrong = Ear.q.options.find(o => o.id !== right).id; $('#earOpts [data-id="' + wrong + '"]').click(); T.ok(!$('#earNext').hidden, 'a miss waits for Next'); Ear.advance(); }
+    T.eq(Store.data.ear.levels.u1l2.stars, 0, 'ten wrong earn nothing'); T.ok(!EAR.unlocked(Ear.prog(), 'u1l3'), 'and open nothing');
+    Ear.open('u7l1'); T.ok(!$('#o-ear').classList.contains('on') || Ear.lv.id !== 'u7l1', 'a locked level does not open');
+  } finally { Ear.close(); st.trainMode = keep.m; Store.data.ear = JSON.parse(keep.e || 'null') || undefined; Store.data.earLog = JSON.parse(keep.l || 'null') || undefined; UI.show('tuner'); }
+});

@@ -96,7 +96,7 @@
   <section id="s-train" class="screen">
     <div id="tr-menu">
       <h1>Practice</h1>
-      <div class="seg modeseg" id="trMode"><button data-m="sing">🎤 Sing</button><button data-m="piano">🎹 Piano</button><button data-m="whistle">😗 Whistle</button></div>
+      <div class="seg modeseg" id="trMode"><button data-m="sing">🎤 Sing</button><button data-m="piano">🎹 Piano</button><button data-m="whistle">😗 Whistle</button><button data-m="ear">👂 Ear</button></div>
       <div class="seg" id="prView"><button data-v="ex">Exercises</button><button data-v="lib">📚 Library</button></div>
       <div id="trLib" hidden>
         <input id="libSearch" class="lib-input" type="search" placeholder="Search: scales, chords, vowels, breath…" autocomplete="off">
@@ -104,6 +104,10 @@
         <div class="muted small" id="libCount"></div>
         <div id="libSugg"></div>
         <div id="libList"></div>
+      </div>
+      <div id="trEar" class="zone zone-ear" hidden>
+        <div class="zonehead"><span class="ico">👂</span><div><b>Ear training</b><div class="muted small">Learn to recognise intervals, chords, scales and progressions by listening. A step-by-step course.</div></div></div>
+        <div id="earMap"></div>
       </div>
       <div id="trEx">
       <div id="trSing" class="zone zone-sing">
@@ -279,6 +283,12 @@
       <h2>Best by exercise</h2><div id="pPianoBest"></div>
       <h2>Recent</h2><div id="pPianoRecent"></div>
     </div>
+    <div class="zone zone-ear">
+      <div class="zonehead"><span class="ico">👂</span><b>Ear training</b></div>
+      <div class="card"><div class="stat"><span>Levels passed</span><b id="pEar">0</b></div>
+        <div class="stat"><span>Stars</span><b id="pEarStars">0</b></div>
+        <div class="stat" style="border:0"><span>Answers right</span><b id="pEarPct">–</b></div></div>
+    </div>
   </section>
 
   <!-- SETTINGS -->
@@ -392,6 +402,21 @@
   </div>
 </div>
 
+<!-- EAR TRAINING -->
+<div id="o-ear" class="overlay earov">
+  <div class="row earbar"><button class="btn" id="earClose" style="min-height:2.5rem;padding:4px 0.875rem" aria-label="Close">✕</button><b id="earTitle"></b><span class="muted small" id="earStep"></span></div>
+  <div class="meter earmeter"><i id="earBar"></i></div>
+  <div id="earBody" class="earbody">
+    <div class="earlcd"><small id="earPrompt"></small><b id="earSub"></b></div>
+    <div class="row earplayrow"><button class="synbtn earplay" id="earPlay" type="button">▶ Hear it again</button></div>
+    <div id="earMel" class="earmel" hidden><div id="earMelRow"></div><button class="synbtn earback" id="earBack" type="button" aria-label="Undo the last note">⌫</button></div>
+    <div id="earOpts" class="earopts"></div>
+    <div id="earFb" class="earfb"></div>
+    <div class="row"><button class="btn primary" id="earNext" hidden>Next ▶</button></div>
+  </div>
+  <div id="earRes" class="earres" hidden></div>
+</div>
+
 <!-- SPECTROGRAM FULL SCREEN -->
 <div id="o-spec" class="overlay" style="padding:0.5rem;gap:0.5rem;background:#000;justify-content:flex-start">
   <div class="row" style="width:100%;flex-wrap:nowrap"><button class="btn" id="specClose" style="min-height:2.75rem;padding:4px 1rem">✕</button><div id="specFullCtl" style="flex:1;min-width:0"></div></div>
@@ -453,6 +478,7 @@
 <script src="js/core/midi-import.js"></script>
 <script src="js/core/song.js"></script>
 <script src="js/core/progress.js"></script>
+<script src="js/core/ear.js"></script>
 <script src="js/core/library.js"></script>
 <script src="js/core/soundfont-read.js"></script>
 <script src="js/app-base.js"></script>
@@ -466,6 +492,7 @@
 <script src="js/routines.js"></script>
 <script src="js/piano.js"></script>
 <script src="js/scale.js"></script>
+<script src="js/ear-ui.js"></script>
 <script src="js/soundfont.js"></script>
 <script src="js/library-ui.js"></script>
 <script src="js/range-finder.js"></script>

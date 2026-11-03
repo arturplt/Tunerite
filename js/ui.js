@@ -18,10 +18,10 @@ const UI = {
   },
   refresh() {
     const S = Store.data, st = S.settings;
-    const mode = st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing', whistle = mode === 'whistle', view = st.prView === 'lib' ? 'lib' : 'ex';
+    const mode = st.trainMode === 'ear' ? 'ear' : st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing', whistle = mode === 'whistle', view = st.prView === 'lib' ? 'lib' : 'ex';
     $('#defaultRangeBanner').hidden = whistle ? !!S.rangeWhistle : !!S.range; $('#drbTxt').textContent = whistle ? 'Using a default whistle range.' : 'Using a default range.'; $('#btnFindRange2').textContent = whistle ? 'Find my whistle range' : 'Find my range';
     $('#trSingI').textContent = whistle ? '😗' : '🎤'; $('#trSingT').textContent = whistle ? 'Whistling' : 'Singing'; $('#trSingD').textContent = whistle ? 'The app listens to your whistle (400 Hz and up) and shows how close each note is.' : 'The app listens to your voice and shows how close each note is.';
-    $('#trEx').hidden = view !== 'ex'; $('#trLib').hidden = view !== 'lib'; $('#trSing').hidden = mode === 'piano'; $('#trPiano').hidden = mode !== 'piano';
+    $('#trEx').hidden = view !== 'ex' || mode === 'ear'; $('#trLib').hidden = view !== 'lib' || mode === 'ear'; $('#trSing').hidden = mode === 'piano' || mode === 'ear'; $('#trPiano').hidden = mode !== 'piano'; $('#trEar').hidden = mode !== 'ear'; $('#prView').hidden = mode === 'ear'; if (mode === 'ear') Ear.renderMap();
     $$('#trMode button').forEach(b => b.classList.toggle('on', b.dataset.m === mode)); $$('#prView button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
     Lib.f.kind = mode === 'piano' ? 'piano' : 'sing';
     const names = Midi.inputNames(), pin = $('#pxInput');
@@ -68,7 +68,7 @@ const UI = {
     $('#gateMark').style.left = clamp((st.gateDb + 80) / 80 * 100, 0, 100) + '%';
     // progress
     const H = S.history;
-    const streak = computeStreak(H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [])); $('#pStreak').textContent = streak + ' day' + (streak === 1 ? '' : 's');
+    const streak = computeStreak(H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || [])); $('#pStreak').textContent = streak + ' day' + (streak === 1 ? '' : 's');
     $('#pCount').textContent = H.length; $('#pRoutines').textContent = (S.routines || []).length;
     $('#pRange').textContent = (S.range ? noteName(S.range.lo) + '–' + noteName(S.range.hi) : 'not set') + (S.rangeWhistle ? ' · whistle ' + noteName(S.rangeWhistle.lo) + '–' + noteName(S.rangeWhistle.hi) : '');
     if (S.rangeLog.length > 1) {
@@ -81,6 +81,7 @@ const UI = {
       d.innerHTML = '<span class="best"></span><div class="t"></div><div class="muted small"></div>'; d.children[0].textContent = cnt[id] + ' of last ' + log.length; d.children[1].textContent = ISSUES[id][0]; d.children[2].textContent = ISSUES[id][1]; iss.appendChild(d);
     });
     if (!iss.children.length) iss.innerHTML = '<p class="muted">' + (log.length < 3 ? 'Do a few exercises and the coach will start spotting habits.' : 'Nothing recurring. Nice.') + '</p>';
+    { const P = Ear.prog(), el = S.earLog || []; $('#pEar').textContent = EAR.LEVELS.filter(l => P[l.id] && P[l.id].stars >= 1).length + ' / ' + EAR.LEVELS.length; $('#pEarStars').textContent = EAR.LEVELS.reduce((a, l) => a + (P[l.id] ? P[l.id].stars : 0), 0) + ' / ' + EAR.LEVELS.length * 3; $('#pEarPct').textContent = el.length ? Math.round(100 * el.reduce((a, e) => a + e.ok, 0) / Math.max(1, el.reduce((a, e) => a + e.n, 0))) + '%' : '–'; }
     const pl = S.pianoLog || []; $('#pPiano').textContent = pl.length;
     $('#pPianoPct').textContent = pl.length ? Math.round(100 * pl.reduce((a, p) => a + p.firstTry, 0) / Math.max(1, pl.reduce((a, p) => a + p.steps, 0))) + '%' : '–';
     const pb = $('#pPianoBest'); pb.textContent = '';
