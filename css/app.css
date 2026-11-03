@@ -913,3 +913,9 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 #o-spec .dispgrp .envp svg{width:18px;height:18px}
 #specFullCv{--gn:3}
 #specFullCv::after{content:"";position:absolute;inset:0 0 var(--kh,0px) 0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+
+/* Humanize, Sustain and Flanger sit level with the knobs; Bypass, Panic and Reset match the knob caps */
+#pnLow .mixrow>.tgcell{align-self:flex-start;height:calc(86px*var(--k));display:flex;flex-direction:column;align-items:center;gap:0}
+#pnLow .mixrow>.tgcell>.pntgl.sq{margin-top:calc(17px*var(--k))}
+#pnLow .mixrow>.tgcell>b{margin-top:auto}
+.synknobarea .bigjack{width:calc(65px*var(--k));height:calc(65px*var(--k))}
