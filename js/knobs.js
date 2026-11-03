@@ -115,7 +115,7 @@ const Knobs = {
     });
     /* arpeggiator: stored in settings.arp, played by Arp */
     const ac = () => Arp.cfg(), asv = (k, v) => { const s = st(); s.arp = Object.assign({}, ac(), { [k]: v }); Store.save(); };
-    const A = [{ k: 'rate', n: 'Rate', d: 0.5, bi: false, tip: 'How fast the notes come, from 2 to 16 a second', dv: v => (2 * Math.pow(8, v)).toFixed(1) + '/s' },
+    const A = [{ k: 'rate', n: 'Rate', d: 1 / 7, bi: false, steps: 7, tip: 'How fast the notes come, as a note length like the Echo time. Echo follows the Echo time exactly, so every echo repeat lands on an arpeggio step', dv: v => Arp.RATES[Math.round(v * 7)][0] },
       { k: 'pat', n: 'Pattern', d: 0, bi: false, steps: 3, tip: 'The order of the notes: up, down, up and down, or random', dv: v => Arp.PATN[Math.round(v * 3)] },
       { k: 'gate', n: 'Gate', d: 0.5, bi: false, tip: 'How long each note rings before the next one', dv: v => Math.round((0.1 + 0.9 * v) * 100) + '%' },
       { k: 'oct', n: 'Range', d: 0, bi: false, steps: 2, tip: 'How many octaves the arpeggio climbs through', dv: v => (Math.round(v * 2) + 1) + ' oct' }];

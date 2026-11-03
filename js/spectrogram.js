@@ -266,7 +266,7 @@ const Piano = {
     if (held.length) { const pl = Scale.expand(held).slice().sort((x, y) => x - y), dk = describeKeys(pl); parts.push((pl.length > held.length ? 'Playing: ' : 'Pressed: ') + pl.map(noteName).join(' ') + (pl.length >= 2 ? ' (' + dk.name + (pl.length === 2 ? ', ' + dk.detail : '') + ')' : '')); }      // with a chord mode on, the chord that sounds
     if (chordOn) { const dk = describeKeys(heardNotes); parts.push('Hearing: ' + heardNotes.map(noteName).join(' ') + ' (' + dk.name + (heardNotes.length === 2 ? ', ' + dk.detail : '') + ')'); }
     else if (heard != null) parts.push('Hearing: ' + noteName(heard) + (Tuner.f ? ' ' + Tuner.f.toFixed(1) + ' Hz' : ''));
-    if (typeof Arp !== 'undefined' && Arp.on) parts.push('Arp: ' + Arp.PATN[Arp.cfg().pat] + ' \u00b7 ' + (2 * Math.pow(8, Arp.cfg().rate)).toFixed(1) + '/s');
+    if (typeof Arp !== 'undefined' && Arp.on) parts.push('Arp: ' + Arp.PATN[Arp.cfg().pat] + ' \u00b7 ' + Arp.rateName() + (Arp.cfg().rate >= 1 ? ' (' + Seq.ECHO_NAMES[Math.round(Knobs.val('etime') * 5)] + ')' : ''));
     const txt = parts.join('\n') || (Store.data.settings.inst === 'piano' ? 'Play a key' : '\u00a0'), info = $('#pianoInfo');
     if (info.dataset.t !== txt) { info.dataset.t = txt; info.textContent = ''; txt.split('\n').forEach(l => { const r = document.createElement('span'); r.textContent = l; info.appendChild(r); }); }       // one line each for what is pressed and what is heard
   }

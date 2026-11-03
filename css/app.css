@@ -1127,3 +1127,29 @@ button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
 .synlcd .lcd small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
 .synlcd .lcd b{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2)}
 .lcdrows .lcdhead{position:sticky;top:0;z-index:1;margin:0;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);background:#2a1a0a;color:#c98a3a;text-align:left;border-bottom:1px solid #000;letter-spacing:calc(var(--dp,1px)*2)}
+
+/* Notes in the lists (empty-list messages, "more results") and section headings: 24dp pixel text, baselines on the 3dp mesh */
+.lcdnote{padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*36);letter-spacing:calc(var(--dp,1px)*3);overflow-wrap:anywhere}
+.lcdrows .lcdhead{padding:calc(var(--dp,1px)*3) calc(var(--dp,1px)*12);line-height:calc(var(--dp,1px)*36)}
+
+/* The family and type tags on the right of each list row: 16dp, brighter, on the same baseline as the name */
+.lcdrow i{margin-top:calc(var(--dp,1px)*9);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#b8802a}
+.lcdrow.on i{color:#5a3b0a}
+
+/* Tab labels (Spectrum, Banks, Instruments, Presets): 24dp pixel text with a 3dp mesh. Each tab is a whole number of 3dp steps wide and its text starts on a step. On narrower screens the 16dp tabs stay. */
+@media (min-width:1101px){
+  .syntabs{--gn:3;height:calc(var(--dp,1px)*54)}
+  .syntabs button{flex:none;height:100%;box-sizing:border-box;justify-content:flex-start;align-items:flex-start;padding:calc(var(--dp,1px)*9) 0 0 calc(var(--dp,1px)*12);font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*30);letter-spacing:0;white-space:nowrap;overflow:hidden}
+  .syntabs button{gap:0}.syntabs i{margin:calc(var(--dp,1px)*15) calc(var(--dp,1px)*12) 0 0}
+  .syntabs button:nth-child(1){width:round(down,25%,calc(var(--dp,1px)*3))}.syntabs button:nth-child(2){width:round(down,18%,calc(var(--dp,1px)*3))}.syntabs button:nth-child(3){width:round(down,33%,calc(var(--dp,1px)*3))}.syntabs button:nth-child(4){flex:1;width:auto}
+}
+
+/* Piano tab: less padding around the whole panel */
+#s-piano.screen{padding:0.25rem}
+.synth.synthmain{margin:0.25rem 0;padding:0.9rem 0.75rem 0.6rem}
+.synthmain .synhead{margin-bottom:0.6rem}
+@media (max-width:760px){#s-piano.screen{padding:0.15rem}.synth.synthmain{padding:0.8rem 0.4rem 0.5rem}}
+/* the two knob rows are separated by the break item alone, so the gap between them equals the gap between panels */
+.synknobarea:not(.synplay){row-gap:0;column-gap:0.75rem}
+.synknobarea:not(.synplay) .lowbreak{height:0.75rem}
+.synthmain .synhead{margin-bottom:0.75rem}.synknobarea:not(.synplay){margin-bottom:0.75rem}

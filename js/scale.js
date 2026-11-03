@@ -3,7 +3,7 @@
 const Scale = {
   SCALES: [['off', 'Off'], ['major', 'Major'], ['minor', 'Minor'], ['pentmaj', 'Pent maj'], ['pentmin', 'Pent min'], ['blues', 'Blues min'], ['bluesmaj', 'Blues maj'], ['dorian', 'Dorian'], ['mixo', 'Mixolydian'], ['harm', 'Harm. minor']],
   /* chord modes: the scale degrees stacked on the key you press (0 is the key itself) */
-  CHORDS: [['off', 'Single'], ['triad', 'Triads', [0, 2, 4]], ['7th', '7ths', [0, 2, 4, 6]], ['9th', '9ths', [0, 2, 4, 6, 8]], ['sus2', 'Sus 2', [0, 1, 4]], ['sus4', 'Sus 4', [0, 3, 4]], ['power', 'Power', [0, 4]]],
+  CHORDS: [['off', 'Single'], ['triad', 'Triads', [0, 2, 4]], ['sus2', 'Sus 2', [0, 1, 4]], ['sus4', 'Sus 4', [0, 3, 4]], ['7sus4', '7sus4', [0, 3, 4, 6]], ['sus24', 'Sus 2+4', [0, 1, 3, 4]], ['dim', 'Dim', null, [0, 3, 6]], ['dim7', 'Dim 7', null, [0, 3, 6, 9]], ['hdim', 'Half-dim', null, [0, 3, 6, 10]], ['7th', '7ths', [0, 2, 4, 6]], ['9th', '9ths', [0, 2, 4, 6, 8]], ['power', 'Power', [0, 4]]],
   cfg() { const s = Store.data.settings; if (!s.pk) s.pk = { key: 0, scale: 'off', lock: true, chord: 'off' }; return s.pk; },
   /* Only the Piano tab and the on-screen piano use it, never Practice or Compose recording. */
   here() { return (typeof UI !== 'undefined' && UI.screen === 'piano') || (typeof Keys !== 'undefined' && Keys.on); },
@@ -14,8 +14,9 @@ const Scale = {
   blocked(m) { return this.locked && !this.has(m); },
   /* The notes a key plays: itself alone, or the chord stacked on its scale degree. */
   chordFor(m) {
-    const c = this.cfg(), mode = this.CHORDS.find(x => x[0] === c.chord); if (!this.here() || !mode || !mode[2]) return [m];
-    const p = this.pcs(); if (!p || !p.has(((m % 12) + 12) % 12)) return mode[0] === 'power' ? [m, m + 7] : mode[0] === 'sus2' ? [m, m + 2, m + 7] : mode[0] === 'sus4' ? [m, m + 5, m + 7] : [m, m + 4, m + 7].concat(mode[0] === '7th' || mode[0] === '9th' ? [m + 10] : []);      // a key outside the scale gets a plain chord of the same kind
+    const c = this.cfg(), mode = this.CHORDS.find(x => x[0] === c.chord); if (!this.here() || !mode || (!mode[2] && !mode[3])) return [m];
+    if (mode[3]) return mode[3].map(i => m + i).filter(x => x <= 127);      // diminished chords are fixed shapes: the same intervals above any key
+    const p = this.pcs(); if (!p || !p.has(((m % 12) + 12) % 12)) return { power: [m, m + 7], sus2: [m, m + 2, m + 7], sus4: [m, m + 5, m + 7], '7sus4': [m, m + 5, m + 7, m + 10], sus24: [m, m + 2, m + 5, m + 7], '7th': [m, m + 4, m + 7, m + 10], '9th': [m, m + 4, m + 7, m + 10, m + 14] }[mode[0]] || [m, m + 4, m + 7];      // a key outside the scale gets a plain chord of the same kind
     const deg = []; for (let x = m; x <= m + 40; x++) if (p.has(((x % 12) + 12) % 12)) deg.push(x);
     return mode[2].map(i => deg[i]).filter(x => x != null && x <= 127);
   },
@@ -23,7 +24,7 @@ const Scale = {
   expand(list) { if (this.cfg().chord === 'off' || !this.here()) return list; const out = new Set(); list.forEach(m => this.chordFor(m).forEach(x => out.add(x))); return [...out]; },
   /* The name of a chord from its notes: C, Dm, Bdim, G7, Fmaj7 and so on. */
   nameOf(notes) {
-    if (!notes.length) return ''; const r = notes[0], iv = notes.map(n => n - r).join(','), q = { '0,4,7': '', '0,3,7': 'min', '0,3,6': 'dim', '0,4,8': 'aug', '0,4,7,11': 'maj7', '0,3,7,10': 'min7', '0,4,7,10': '7', '0,3,6,10': 'min7b5', '0,3,6,9': 'dim7', '0,3,7,11': 'minMaj7', '0,2,7': 'sus2', '0,5,7': 'sus4', '0,7': '5' }[iv];
+    if (!notes.length) return ''; const r = notes[0], iv = notes.map(n => n - r).join(','), q = { '0,4,7': '', '0,3,7': 'min', '0,3,6': 'dim', '0,4,8': 'aug', '0,4,7,11': 'maj7', '0,3,7,10': 'min7', '0,4,7,10': '7', '0,3,6,10': 'min7b5', '0,3,6,9': 'dim7', '0,3,7,11': 'minMaj7', '0,2,7': 'sus2', '0,5,7': 'sus4', '0,5,7,10': '7sus4', '0,2,5,7': 'sus2+4', '0,7': '5' }[iv];
     return NOTE_NAMES[((r % 12) + 12) % 12] + (q != null ? q : '');
   },
   /* The chord of each degree of the scale, for the readout under the controls. */

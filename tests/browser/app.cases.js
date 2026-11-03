@@ -405,7 +405,9 @@ T.test('piano scale and chords: off-scale keys are locked, a key plays the chord
     st.pk = { key: 0, scale: 'off', lock: true, chord: 'off' }; T.eq(play(61).join(), '61', 'no scale: every key plays');
     st.pk = { key: 0, scale: 'major', lock: true, chord: 'off' }; T.eq(play(61).length, 0, 'C major: C sharp is locked'); T.eq(play(62).join(), '62', 'D plays alone with chords off'); st.pk.lock = false; T.eq(play(61).join(), '61', 'unlocked, a greyed key still plays');
     st.pk = { key: 0, scale: 'major', lock: true, chord: 'triad' }; T.eq(play(60).join(), '60,64,67', 'C gives C major'); T.eq(play(62).join(), '62,65,69', 'D gives D minor'); T.eq(play(71).join(), '71,74,77', 'B gives B diminished'); T.eq(Scale.nameOf([71, 74, 77]), 'Bdim', 'and names it');
-    st.pk.chord = '7th'; T.eq(play(67).join(), '67,71,74,77', 'G gives G7'); st.pk = { key: 9, scale: 'minor', lock: true, chord: 'triad' }; T.eq(play(69).join(), '69,72,76', 'A minor: A gives A minor'); T.eq(play(64).join(), '64,67,71', 'E gives E minor in A natural minor');
+    st.pk.chord = 'sus2'; T.eq(play(60).join(), '60,62,67', 'sus 2 on C is C D G'); st.pk.chord = 'sus4'; T.eq(play(60).join(), '60,65,67', 'sus 4 on C is C F G'); st.pk.chord = '7sus4'; T.eq(play(67).join(), '67,72,74,77', '7sus4 on G is G C D F'); T.eq(Scale.nameOf([67, 72, 74, 77]), 'G7sus4'); st.pk.chord = 'sus24'; T.eq(play(60).join(), '60,62,65,67', 'sus 2+4 on C is C D F G'); st.pk.lock = false; T.eq(play(61).join(), '61,63,66,68', 'a grey key still gets the same kind of chord');
+    st.pk.chord = 'dim'; T.eq(play(60).join(), '60,63,66', 'diminished on C is C E-flat G-flat'); T.eq(Scale.nameOf([60, 63, 66]), 'Cdim'); st.pk.chord = 'dim7'; T.eq(play(62).join(), '62,65,68,71', 'diminished 7th on D'); st.pk.chord = 'hdim'; T.eq(play(71).join(), '71,74,77,81', 'half-diminished on B'); T.eq(Scale.nameOf([71, 74, 77, 81]), 'Bmin7b5');
+    st.pk.lock = true; st.pk.chord = '7th'; T.eq(play(67).join(), '67,71,74,77', 'G gives G7'); st.pk = { key: 9, scale: 'minor', lock: true, chord: 'triad' }; T.eq(play(69).join(), '69,72,76', 'A minor: A gives A minor'); T.eq(play(64).join(), '64,67,71', 'E gives E minor in A natural minor');
     st.pk = { key: 0, scale: 'major', lock: true, chord: 'off' }; T.ok(Midi.msg([0x90, 61, 90], true) === undefined && !Midi.down.has(61), 'a MIDI key outside the locked scale is ignored');
     UI.show('train'); T.ok(!Scale.blocked(61), 'the lock only applies in the Piano tab');
   } finally { Engine._playNote = orig; st.pk = JSON.parse(keep); Midi.panic && Midi.panic(); UI.show('piano'); }
@@ -459,4 +461,26 @@ T.test('piano Instruments tab: the built-in sound lists every voice, and the Ban
     Synth.show('banks'); const b = $$('#spBanks .lcdrow')[0]; T.ok(/^Built-in/i.test(b.firstChild.textContent) && b.classList.contains('on'), 'Banks: Built-in is listed and active'); T.eq(b.lastChild.textContent, Object.keys(TIMBRES).length + ' voices', 'with its number of voices');
     Synth.show('patch'); const rows = $$('#spPatches .lcdrow'); T.eq(rows.length, Object.keys(TIMBRES).length, 'Instruments: every built-in voice is listed'); rows[3].click(); T.eq(st.timbre, Object.keys(TIMBRES)[3], 'picking one plays the piano with it');
   } finally { st.timbre = keep; Synth.show('spec'); }
+});
+
+T.test('arpeggio with a chord mode: a held key arpeggiates its chord, one note per step', async () => {
+  await audio(); UI.show('piano'); const st = Store.data.settings, keep = JSON.stringify({ pk: st.pk, arp: st.arp }), played = [], orig = Engine.playNote;
+  Engine.playNote = function (m, w, d, o) { if (o && o.arp) played.push(m); return orig.call(Engine, m, w, d, o); };
+  try {
+    st.pk = { key: 0, scale: 'major', lock: true, chord: 'triad' }; st.arp = { on: true, rate: 1 / 7, pat: 0, gate: 0.5, oct: 0 }; Arp.clear();
+    const h = Engine.playNote(62, Engine.ctx.currentTime + 0.01, 30, { live: true, sustain: true, gain: 0.2 }); T.ok(h && h.release, 'the arpeggiator takes the key'); T.eq(Arp.order().join(), '62,65,69', 'D in C major: the arpeggio runs D F A');
+    st.arp.pat = 1; T.eq(Arp.order().join(), '69,65,62', 'down order'); st.arp.pat = 0; st.arp.oct = 1; T.eq(Arp.order().join(), '62,65,69,74,77,81', 'a second octave repeats the chord higher'); st.arp.oct = 0;
+    played.length = 0; await T.wait(700); T.ok(played.length >= 3, 'it plays steps: ' + played.join()); T.ok(played.every(m => [62, 65, 69].includes(m)), 'every step is one note of the chord, never the whole chord at once: ' + played.join());
+    h.release(); st.pk.chord = 'off'; Arp.clear(); const h2 = Engine.playNote(62, Engine.ctx.currentTime + 0.01, 30, { live: true, sustain: true, gain: 0.2 }); T.eq(Arp.order().join(), '62', 'chords off: the key alone'); h2.release();
+  } finally { Engine.playNote = orig; Arp.clear(); const k = JSON.parse(keep); st.pk = k.pk; st.arp = k.arp; }
+});
+
+T.test('arpeggio rate: note lengths like the echo time, and Echo follows the echo time', async () => {
+  const st = Store.data.settings, keep = JSON.stringify({ arp: st.arp, fxK: st.fxK }); try {
+    st.arp = { on: true, rate: 1 / 7, pat: 0, gate: 0.5, oct: 0 }; T.near(Arp.stepSec(), 0.15, 1e-9, '1/16 is a sixteenth of a bar at 100 bpm, 0.15 s'); T.eq(Arp.rateName(), '1/16');
+    st.arp.rate = 3 / 7; T.eq(Arp.rateName(), '1/8.'); T.near(Arp.stepSec(), 0.45, 1e-9); st.arp.rate = 1; T.eq(Arp.rateName(), 'Echo');
+    st.fxK = { etime: 0 }; T.near(Arp.stepSec(), Seq.ECHO_BEATS[0] * 0.6, 1e-9, 'Echo: 1/16 echo time'); st.fxK = { etime: 0.6 }; T.near(Arp.stepSec(), Seq.ECHO_BEATS[3] * 0.6, 1e-9, 'moving the Echo time moves the arpeggio');
+    st.arp.rate = 2 / 7; st.fxK = { etime: 0.4 }; T.near(Arp.stepSec(), 0.3, 1e-9, 'with the same 1/8 on both knobs, the arpeggio and the echo step together'); T.near(Seq.ECHO_BEATS[Math.round(0.4 * 5)] * 0.6, 0.45, 1e-9, 'the default echo time is dotted 1/8');
+    st.arp.rate = 3 / 7; T.near(Arp.stepSec(), Seq.ECHO_BEATS[Math.round(0.4 * 5)] * 0.6, 1e-9, 'dotted 1/8 on both: the same time');
+  } finally { const k = JSON.parse(keep); st.arp = k.arp; st.fxK = k.fxK; }
 });
