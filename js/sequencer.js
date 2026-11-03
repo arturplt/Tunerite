@@ -111,6 +111,8 @@ const Seq = {
     { k: 'tone', n: 'Tone', d: 0.5, tip: 'Dark on the left, bright on the right' }, { k: 'midgain', n: 'Mid', d: 0.5, tip: 'Boost or cut one band of the middle (set where with Mid freq)' },
     { k: 'midfreq', n: 'Mid freq', d: 0.5, sub: 'midgain', bi: false, tip: 'Which frequency the Mid knob works on, 200 Hz to 5 kHz' },
     { k: 'lowcut', n: 'Low cut', d: 0, tip: 'High-pass filter: removes rumble and low body' }, { k: 'highcut', n: 'High cut', d: 0, tip: 'Low-pass filter: removes brightness' },
+    { k: 'fcut', n: 'Cutoff', d: 1, tip: 'Resonant low-pass filter: closes the sound from bright to dull' }, { k: 'freso', n: 'Reso', d: 0.25, sub: 'fcut', bi: false, tip: 'Resonance: a whistling peak at the cutoff, from smooth to squelchy' },
+    { k: 'fsweep', n: 'Sweep', d: 0, tip: 'An automatic wah: a slow wave opens and closes the filter' }, { k: 'fswrate', n: 'Sweep rate', d: 0.4, sub: 'fsweep', bi: false, tip: 'How fast the filter sweeps, from a slow swell to a fast wobble' },
     { k: 'gate', n: 'Gate', d: 0, tip: 'Noise gate: silences the track between notes or phrases, so hiss and room noise disappear' },
     { k: 'comp', n: 'Compress', d: 0, tip: 'Compressor: evens out loud and quiet notes (threshold and ratio together, with make-up gain)' },
     { k: 'attack', n: 'Attack', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor grabs a loud note' }, { k: 'release', n: 'Release', d: 0.5, sub: 'comp', bi: false, tip: 'How fast the compressor lets go afterwards' },
@@ -124,7 +126,7 @@ const Seq = {
     if (!this.live || this.live.ctx !== c) { this.live = { ctx: c, tail: c.createGain(), fx: Store.data.settings.liveFx || {} }; this.wireFx(this.live); }
     return this.live.tail;
   },
-  liveFx() { if (this.live) { this.live.fx = Store.data.settings.liveFx || {}; this.wireFx(this.live); } },
+  liveFx() { if (this.live && this.live.ctx === Engine.ctx) { this.live.fx = Store.data.settings.liveFx || {}; this.wireFx(this.live); } },
   fxVal(t, k) { const v = t.fx && t.fx[k]; return v != null ? v : this.FX.find(f => f.k === k).d; },
   isBi(f) { return f.bi != null ? f.bi : f.d > 0; },
   fxSig(t) { return this.FX.map(f => f.sub ? 0 : (this.isBi(f) ? Math.abs(this.fxVal(t, f.k) - f.d) > 0.02 : this.fxVal(t, f.k) > 0.01) ? 1 : 0).join(''); },
@@ -150,6 +152,10 @@ const Seq = {
     }
     if (on('lowcut')) { const hp = bq('highpass'); chain(hp); ups.push(() => { hp.frequency.value = 40 * Math.pow(50, V('lowcut')); }); }
     if (on('highcut')) { const lp = bq('lowpass'); chain(lp); ups.push(() => { lp.frequency.value = 16000 * Math.pow(250 / 16000, V('highcut')); }); }
+    if (on('fcut') || on('fsweep')) {      // the sweep wave moves the filter's detune, down from the cutoff only, so an open filter closes and reopens
+      const lp = bq('lowpass'), mu = g(), lfo = mk(c.createOscillator()), dep = g(); lfo.connect(dep); dep.connect(lp.detune); lfo.start(); chain(lp); chain(mu);
+      ups.push(() => { const q = 0.7 + V('freso') * 17, sw = V('fsweep') * 3000; lp.frequency.value = 80 * Math.pow(250, V('fcut')); lp.Q.value = q; lp.detune.value = -sw; dep.gain.value = sw; lfo.frequency.value = 0.15 * Math.pow(60, V('fswrate')); mu.gain.value = Math.pow(10, -(q - 0.7) * 0.45 / 20); });
+    }
     if (on('tone')) {
       const lo = bq('lowshelf'), hi = bq('highshelf'); lo.frequency.value = 250; hi.frequency.value = 3000; chain(lo); chain(hi);
       ups.push(() => { lo.gain.value = 3 - 6 * V('tone'); hi.gain.value = (V('tone') - 0.5) * 14; });

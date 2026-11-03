@@ -371,3 +371,21 @@ T.test('synth panel: a preset keeps the sound and the knobs, and is an instrumen
   Presets.remove(p.id); T.eq(Seq.alias('up:' + p.id), 'auto', 'a deleted preset falls back to auto');
   Store.data.presets = list; Object.assign(st, keep); Knobs.sync();
 });
+
+T.test('new effects: filter, unison, glide, pitch bend, reverb types, ping-pong echo', async () => {
+  await audio(); const st = Store.data.settings, keep = JSON.stringify({ u: st.fxUni, g: st.fxGlide, p: st.fxPing, k: st.fxK, l: st.liveFx });
+  const calls = [], orig = Engine._playNote.bind(Engine); Engine._playNote = (m, w, d, op) => { calls.push({ det: op.detune, gfrom: op.gfrom }); return orig(m, w, d, op); };
+  const play = m => { calls.length = 0; return Engine.playNote(m, Engine.ctx.currentTime + 0.01, 1, { live: true, sustain: true, gain: 0.25 }); };
+  try {
+    st.fxUni = 0; play(60).release(); T.eq(calls.length, 1, 'unison off plays one voice');
+    st.fxUni = 0.4; let h = play(60); T.eq(calls.length, 3, 'unison adds two detuned copies'); T.ok(calls.some(c => c.det < 0) && calls.some(c => c.det > 0), 'one flat, one sharp'); h.release();
+    st.fxUni = 1; h = play(60); T.eq(calls.length, 5, 'full unison plays five voices'); h.release(); st.fxUni = 0;
+    st.fxGlide = 0.5; Engine.lastLive = null; play(60).release(); h = play(67); T.eq(calls[0].gfrom, 60, 'glide starts from the last note'); h.release(); st.fxGlide = 0;
+    Engine.setBend(0.5); await T.wait(300); T.near(Engine.bend.offset.value, 100, 1, 'a half bend is one semitone'); Engine.setBend(0);
+    st.fxK = { reverb: 0.8, rvtype: 2 / 3, rvsize: 0.25 }; Engine.setFx(); T.eq(Engine.rvKind, 'plate1', 'type and size choose the space'); st.fxK = { reverb: 0.8, rvtype: 1, rvsize: 0.5 }; Engine.setFx(); T.ok(Engine.shim.on, 'shimmer feeds the octave copy');
+    st.fxK = { reverb: 0.8 }; Engine.setFx(); T.eq(Engine.rvKind, 'hall', 'untouched, the amount alone picks room or hall'); T.ok(!Engine.shim.on, 'and shimmer is disconnected');
+    st.fxK = { echo: 0.8 }; st.fxPing = true; Engine.setFx(); await T.wait(400); T.ok(Engine.fx.dlWet2.gain.value > 0.3 && Engine.fx.dlFb.gain.value < 0.01, 'ping-pong sends repeats to the second side');
+    st.fxPing = false; Engine.setFx(); await T.wait(400); T.near(Engine.fx.dlWet2.gain.value, 0, 0.01, 'plain echo stays on one delay');
+    Seq.liveTail(); st.liveFx = { fcut: 0.3, freso: 0.8 }; Seq.liveFx(); const lp = (Seq.live.fxn || []).filter(n => n.type === 'lowpass'); T.eq(lp.length, 1, 'the resonant filter is in the chain'); T.near(lp[0].frequency.value, 80 * Math.pow(250, 0.3), 1, 'cutoff follows the knob');
+  } finally { Engine._playNote = orig; const k = JSON.parse(keep); Object.assign(st, { fxUni: k.u, fxGlide: k.g, fxPing: k.p, fxK: k.k, liveFx: k.l }); Engine.setFx(); Seq.liveFx(); }
+});

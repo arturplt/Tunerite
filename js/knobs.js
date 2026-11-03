@@ -15,6 +15,11 @@ const Knobs = {
     { k: 'drive', n: 'Drive', d: 0, tip: 'Overdrive: warm to crunchy' },
     { k: 'tone', n: 'Tone', d: 0.5, tip: 'Dark on the left, bright on the right' },
   ],
+  /* Reverb type and size live in the Piano tab's own row, not in the shared rack, but they are stored and read like the others. */
+  extra: [
+    { k: 'rvtype', n: 'Type', d: 0, bi: false, steps: 3, tip: 'The kind of space: room, hall, plate (bright and metallic) or shimmer (a tail that sings an octave higher)', dv: v => ['Room', 'Hall', 'Plate', 'Shimmer'][Math.round(v * 3)] },
+    { k: 'rvsize', n: 'Size', d: 0.5, bi: false, steps: 4, tip: 'How long the reverb tail rings, from tiny to huge', dv: v => ['Tiny', 'Small', 'Medium', 'Large', 'Huge'][Math.round(v * 4)] }
+  ],
   GROUPS: [['SPACE', ['reverb', 'echo', 'etime', 'efb', 'wide']], ['MODULATION', ['chorus', 'trem', 'vib', 'phase']], ['TONE', ['drive', 'tone']]],
   /* Knobs in labelled sections, like the blocks of a synth panel. */
   mountGroups(host) {
@@ -23,7 +28,7 @@ const Knobs = {
   },
   /* The Piano tab's effects as one panel: a bypass button on top, then the Space, Modulation, Tone and Display sections, split by printed lines. */
   mountRack(host) {
-    const MODS = [['space', 'SPACE', ['reverb', 'echo', 'etime', 'efb', 'wide']], ['mod', 'MODULATION', ['chorus', 'trem', 'vib', 'phase']], ['tone', 'TONE', ['drive', 'tone']]];
+    const MODS = [['mod', 'MODULATION', ['chorus', 'trem', 'vib', 'phase', 'wide']], ['tone', 'TONE', ['drive', 'tone']]];
     host.innerHTML = '<div class="synbyp"><div class="bypcell"><button class="bigjack" id="synBypass" aria-pressed="false" aria-label="Bypass all effects" title="Bypass: hear the sound without effects. Your knobs stay where they are. Press again to turn the effects back on."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button><b>Bypass</b></div><div class="bypcell"><button class="bigjack panic" id="synPanic" aria-label="Panic" title="Panic: let go of every key and stop the sustain pedal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.5"/></svg></button><b>Panic</b></div><div class="bypcell"><button class="bigjack red" id="synReset" aria-label="Reset all effects" title="Reset: put every effect back to zero"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg></button><b>Reset</b></div></div>' +
       MODS.map(m => `<div class="synsec synmod mod-${m[0]}"><span class="synlab">${m[1]}</span><div class="knobs"></div><i class="jack in" data-j="${m[0]}-in"></i><i class="jack out" data-j="${m[0]}-out"></i></div>`).join('');
     host.querySelectorAll('.synmod .knobs').forEach((el, i) => this.mount(el, this.list.filter(f => MODS[i][2].includes(f.k)), k => this.val(k), (k, v) => this.set(k, v)));
@@ -58,7 +63,12 @@ const Knobs = {
     host.innerHTML = `<span class="lowbreak"></span><div class="synsec lowsec lowpitch"><span class="synlab">PITCH</span><div id="lowPitchKnobs" class="knobs"></div></div>
       <div class="synsec lowsec lowdyn"><span class="synlab">DYNAMICS</span><div id="lowDynKnobs" class="knobs"></div></div>
       <div class="synsec lowsec lowfilt"><span class="synlab">FILTERS</span><div id="lowFiltKnobs" class="knobs"></div></div>
-      <div class="synsec lowsec lowmix"><div class="mixrow"><div id="mx1" class="knobs"></div>${tgc('tgHuman', 'Humanize', 'Tiny timing and volume changes, only for notes you play yourself')}${tgc('tgSus', 'Sustain', 'Hold the sustain pedal')}${tgc('tgFlange', 'Flanger', 'A sweeping flanger instead of the phaser')}<div id="mx2" class="knobs"></div></div></div>`;
+      <div class="synsec lowsec lowflt"><span class="synlab">FILTER</span><div id="lowFltKnobs" class="knobs"></div></div>`;
+    $('#pnRev').innerHTML = '<div class="synsec lowsec lowrev"><span class="synlab">REVERB</span><div id="lowRevKnobs" class="knobs"></div></div>';
+    $('#pnVoice').innerHTML = '<div class="synsec lowsec lowvox"><span class="synlab">VOICE</span><div id="lowVoxKnobs" class="knobs"></div></div>';
+    $('#pnEcho').innerHTML = '<div class="synsec lowsec lowecho"><span class="synlab">ECHO</span><div id="lowEchoKnobs" class="knobs"></div></div>';
+    this.mount($('#lowEchoKnobs'), this.list.filter(f => ['echo', 'etime', 'efb'].includes(f.k)), k => this.val(k), (k, v) => this.set(k, v));
+    $('#pnPlay').innerHTML = `<div class="synsec lowsec lowmix"><div class="mixrow"><div id="mx1" class="knobs"></div>${tgc('tgHuman', 'Humanize', 'Tiny timing and volume changes, only for notes you play yourself')}${tgc('tgSus', 'Sustain', 'Hold the sustain pedal')}${tgc('tgFlange', 'Flanger', 'A sweeping flanger instead of the phaser')}<div id="mx2" class="knobs"></div>${tgc('tgPing', 'Ping-pong', 'The echo repeats bounce from the left speaker to the right')}</div></div>`;
     /* envelope knobs: Attack, Decay, Sustain, Release, stored as 0 to 1 */
     const E = [{ k: 'a', n: 'Attack', d: this.ENV0.a, tip: 'How fast the note swells in', dv: v => this.fmtT(0.003 * Math.pow(2 / 0.003, v)) }, { k: 'd', n: 'Decay', d: this.ENV0.d, tip: 'How long it takes to settle to the sustain level', dv: v => this.fmtT(0.02 * Math.pow(150, v)) },
       { k: 's', n: 'Sustain', d: this.ENV0.s, tip: 'The level it holds while the key is down' }, { k: 'r', n: 'Release', d: this.ENV0.r, tip: 'How long the sound rings after you let go', dv: v => this.fmtT(0.03 * Math.pow(100, v)) }];
@@ -90,6 +100,14 @@ const Knobs = {
     const LV = (k) => { const L = st().liveFx || {}; return L[k] != null ? L[k] : Seq.FX.find(f => f.k === k).d; };
     const mountLive = (id, keys) => this.mount($(id), keys.map(k => Seq.FX.find(f => f.k === k)), LV, (k, v) => { st().liveFx = Object.assign({}, st().liveFx, { [k]: v }); Store.save(); Seq.liveFx(); });
     mountLive('#lowDynKnobs', ['gate', 'comp', 'deess']); mountLive('#lowFiltKnobs', ['lowcut', 'highcut', 'midgain', 'midfreq']); mountLive('#mx2', ['lofi', 'apan', 'apanrate']);
+    mountLive('#lowFltKnobs', ['fcut', 'freso', 'fsweep', 'fswrate']);
+    this.mount($('#lowRevKnobs'), this.list.filter(f => f.k === 'reverb').concat(this.extra), k => this.val(k), (k, v) => this.set(k, v));
+    const VX = [{ k: 'uni', n: 'Unison', d: 0, tip: 'Stacks two or four slightly detuned copies of each note across the stereo field: thick and wide' }, { k: 'glide', n: 'Glide', d: 0, tip: 'Slides from the last note you played to the next one' },
+      { k: 'bend', n: 'Bend', d: 0.5, bi: true, tip: 'Pitch wheel, two semitones each way. It springs back to the middle when you let go. A MIDI keyboard\'s wheel works too' }];
+    this.bendV = 0.5; this.mount($('#lowVoxKnobs'), VX, k => k === 'uni' ? st().fxUni || 0 : k === 'glide' ? st().fxGlide || 0 : this.bendV, (k, v) => {
+      if (k === 'bend') { this.bendV = v; Engine.setBend((v - 0.5) * 2); } else { st()[k === 'uni' ? 'fxUni' : 'fxGlide'] = v; clearTimeout(this.st); this.st = setTimeout(() => Store.save(), 300); }
+    });
+    { const bk = $('#lowVoxKnobs .knob[data-k="bend"]'), bf = VX[2], back = () => { this.bendV = 0.5; Engine.setBend(0); this.paintEl(bk, 0.5, bf); }; ['pointerup', 'pointercancel', 'keyup', 'blur'].forEach(ev => bk.addEventListener(ev, back)); this.bendBack = back; }
     const P = [{ k: 'tr', n: 'Transpose', d: 0.5, bi: true, steps: 24, tip: 'Shifts the notes you play up or down by semitones', dv: v => { const t = Math.round(v * 24 - 12); return (t > 0 ? '+' : '') + t + ' st'; } },
       { k: 'ft', n: 'Fine tune', d: 0.5, bi: true, tip: 'Shifts the notes you play by cents (a hundredth of a semitone)', dv: v => { const t = Math.round(v * 100 - 50); return (t > 0 ? '+' : '') + t + ' ct'; } }];
     this.mount($('#lowPitchKnobs'), P, k => k === 'tr' ? ((st().transpose || 0) + 12) / 24 : ((st().fineTune || 0) + 50) / 100, (k, v) => {
@@ -107,13 +125,14 @@ const Knobs = {
     const tg = (id, get, put) => { const b = $(id); b.onclick = () => { put(!get()); this.paintLow(); Store.save(); }; };
     tg('#tgHuman', () => !!st().fxHuman, v => { st().fxHuman = v; });
     tg('#tgSus', () => !!VKeys.pedal, v => VKeys.setPedal(v));
+    tg('#tgPing', () => !!st().fxPing, v => { st().fxPing = v; Engine.setFx(); });
     tg('#tgFlange', () => st().fxPhase === 'flanger', v => { st().fxPhase = v ? 'flanger' : 'off'; Engine.setFx(); this.sync(); });
     this.envWire(); this.paintLow(); this.envDraw();
   },
   /* the switches and the on/off look of the envelope section */
   paintLow() {
     const st = Store.data.settings, set = (id, on) => { const b = $(id); if (b) b.setAttribute('aria-pressed', !!on); };
-    set('#tgHuman', st.fxHuman); set('#arpOn', st.arp && st.arp.on); set('#tgSus', VKeys.pedal); set('#tgFlange', st.fxPhase === 'flanger'); set('#envOn', st.envOn);
+    set('#tgHuman', st.fxHuman); set('#arpOn', st.arp && st.arp.on); set('#tgSus', VKeys.pedal); set('#tgFlange', st.fxPhase === 'flanger'); set('#tgPing', st.fxPing); set('#envOn', st.envOn);
     const lw = $('#pnEnv'); if (lw) lw.classList.toggle('envoff', !st.envOn);
   },
   /* the envelope picture: four draggable squares (attack peak, end of decay, start of release, end) on an LCD grid */
@@ -182,7 +201,7 @@ const Knobs = {
   base(k) {
     const s = Store.data.settings, lv = { off: 0, light: 1, medium: 2, deep: 3 };
     return { reverb: { off: 0, room: 0.3, hall: 0.75 }[s.reverb] || 0, echo: { short: 0.75, medium: 0.75, long: 0.75 }[s.fxDelay] || 0, chorus: s.chorus ? 1 : 0, trem: [0, 0.25, 0.58, 1][lv[s.fxTrem] || 0],
-      vib: [0, 0.24, 0.5, 1][lv[s.fxVib] || 0], phase: s.fxPhase === 'phaser' ? 1 : 0, wide: s.fxWide ? 0.75 : 0, drive: { warm: 0.5, crunch: 1 }[s.fxDrive] || 0, tone: { dark: 0, warm: 0.25, neutral: 0.5, bright: 1 }[s.fxTone], etime: 0.4, efb: 0.4 }[k];
+      vib: [0, 0.24, 0.5, 1][lv[s.fxVib] || 0], phase: s.fxPhase === 'phaser' ? 1 : 0, wide: s.fxWide ? 0.75 : 0, drive: { warm: 0.5, crunch: 1 }[s.fxDrive] || 0, tone: { dark: 0, warm: 0.25, neutral: 0.5, bright: 1 }[s.fxTone], etime: 0.4, efb: 0.4, rvtype: 0, rvsize: 0.5 }[k];
   },
   val(k) { const K = Store.data.settings.fxK || {}; return K[k] != null ? K[k] : this.base(k); },
   init() {
@@ -210,7 +229,7 @@ const Knobs = {
     return h;
   },
   set(k, v, quiet) {
-    const s = Store.data.settings, sf = this.list.find(x => x.k === k); if (sf && sf.steps) v = Math.round(clamp(v, 0, 1) * sf.steps) / sf.steps;      // a stepped control only takes its notches
+    const s = Store.data.settings, sf = this.list.concat(this.extra).find(x => x.k === k); if (sf && sf.steps) v = Math.round(clamp(v, 0, 1) * sf.steps) / sf.steps;      // a stepped control only takes its notches
     s.fxK = Object.assign({}, s.fxK, { [k]: clamp(Math.round(v * 1000) / 1000, 0, 1) });      // a new object each time: DEFAULTS.fxK is shared
     this.paint(k); Engine.setFx(); if (!quiet) { clearTimeout(this.st); this.st = setTimeout(() => Store.save(), 300); }
   },
@@ -229,7 +248,7 @@ const Knobs = {
       if (d != null) { e.preventDefault(); e.stopPropagation(); put(k, get() + d); } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); e.stopPropagation(); put(k, e.key === 'Home' ? 0 : 1); }
     });
   },
-  paint(k) { $$(`#fxKnobs .knob[data-k="${k}"], #pnKnobs .knob[data-k="${k}"], #kyKnobs .knob[data-k="${k}"], #pnLow .knob[data-k="${k}"], #pnEnv .knob[data-k="${k}"]`).forEach(el => this.paintEl(el, this.val(k), this.list.find(x => x.k === k))); },
+  paint(k) { $$(`#fxKnobs .knob[data-k="${k}"], #pnKnobs .knob[data-k="${k}"], #kyKnobs .knob[data-k="${k}"], #pnLow .knob[data-k="${k}"], #pnEnv .knob[data-k="${k}"]`).forEach(el => this.paintEl(el, this.val(k), this.list.concat(this.extra).find(x => x.k === k))); },
   /* Any set of knobs: host gets one per entry of `list`; get(k) reads an amount and put(k, v) stores one. Used by the Compose tracks, which have their own amounts. */
   mount(host, list, get, put) {
     const notch = f => f.steps && f.steps <= 8;
@@ -239,6 +258,7 @@ const Knobs = {
       const f = list.find(x => x.k === el.dataset.k), paint = () => this.paintEl(el, get(f.k), f);
       this.wire(el, () => get(f.k), (kk, v) => { put(f.k, clamp(Math.round(v * 100) / 100, 0, 1)); paint(); }, f.d, f.steps); paint();
     });
+    this.repaints = (this.repaints || []).filter(r => r.host.isConnected); this.repaints.push({ host, paint: () => host.querySelectorAll('.knob').forEach(el => { const f = list.find(x => x.k === el.dataset.k); if (f) this.paintEl(el, get(f.k), f); }) });
   },
   paintEl(el, v, f) {
     const a = this.A0 + (this.A1 - this.A0) * v, mid = f.bi != null ? f.bi : f.d > 0;
@@ -255,8 +275,8 @@ const Knobs = {
   sync() { this.list.forEach(f => this.paint(f.k)); },
   /* Every knob to its resting position, and the dropdowns on the Piano screen go with them. */
   reset() {
-    const s = Store.data.settings; Object.assign(s, { reverb: 'off', chorus: false, fxTrem: 'off', fxVib: 'off', fxDelay: 'off', fxWide: false, fxTone: 'neutral', fxPhase: 'off', fxDrive: 'off' }); s.fxK = {};
+    const s = Store.data.settings; Object.assign(s, { reverb: 'off', chorus: false, fxTrem: 'off', fxVib: 'off', fxDelay: 'off', fxWide: false, fxTone: 'neutral', fxPhase: 'off', fxDrive: 'off' }); s.fxK = {}; Object.assign(s, { fxUni: 0, fxGlide: 0, fxPing: false, liveFx: {} });
     $$('.fxRv').forEach(x => x.value = 'off'); $$('.fxCh').forEach(x => x.checked = false); $$('[data-fx]').forEach(el => { const v = s[el.dataset.fx]; if (v === undefined) return; if (el.type === 'checkbox') el.checked = !!v; else el.value = v; });
-    Store.save(); Engine.applySettings(); Engine.setFx(); this.sync();
+    Store.save(); Engine.applySettings(); Engine.setFx(); if (window.Seq) Seq.liveFx(); this.sync(); (this.repaints || []).forEach(r => { if (r.host.isConnected) r.paint(); }); this.paintLow();
   },
 };

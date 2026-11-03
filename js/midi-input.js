@@ -79,6 +79,7 @@ const Midi = {
     const st = d[0] & 0xf0, n = d[1], lm = $('#midiLast'); if (lm) lm.textContent = 'Last received: ' + this.describe(d);
     if (st === 0x90 && d[2] > 0) { this.down.set(n, d[2]); this.at.set(n, performance.now()); this.held.delete(n); if (!virtual) this.sound(n, d[2]); if (this.onNote) this.onNote(n, d[2]); }
     else if (st === 0x80 || st === 0x90) { this.down.delete(n); this.at.delete(n); if (this.pedal) this.held.add(n); else this.stopVoice(n); }
+    else if (st === 0xe0) { const x = (((d[2] << 7) | d[1]) - 8192) / 8192; Engine.setBend(x); if (window.Knobs && Knobs.bendV != null) { Knobs.bendV = 0.5 + x / 2; const bk = document.querySelector('#lowVoxKnobs .knob[data-k="bend"]'); if (bk) Knobs.paintEl(bk, Knobs.bendV, { bi: true, d: 0.5, k: 'bend', n: 'Bend' }); } }      // the pitch wheel
     else if (st === 0xb0 && n === 64) {                                    // sustain pedal
       this.pedal = d[2] >= 64;
       if (!this.pedal) { this.held.forEach(k => this.stopVoice(k)); this.held.clear(); }

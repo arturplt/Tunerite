@@ -77,7 +77,7 @@
       </div>
       <div class="synknobarea"><div id="pnKnobs" class="synsecs"></div><div id="pnLow" class="synlow"></div></div>
       <div class="syngrid"><svg class="syncables" aria-hidden="true"></svg>
-        <div class="synscreen"><div class="synglass">
+        <div class="synleft"><div class="synscreen"><div class="synglass">
           <div class="syntabs" role="tablist"><button data-t="spec" class="on" role="tab"><i></i>Spectrum</button><button data-t="banks" role="tab"><i></i>Banks</button><button data-t="patch" role="tab"><i></i>Instruments</button><button data-t="user" role="tab"><i></i>Presets</button></div>
           <div class="synpane" data-p="spec"><span id="specPhCv"></span><canvas id="specCv" style="height:100%;display:block"></canvas><canvas id="specBloom" aria-hidden="true"></canvas><canvas id="specTags" aria-hidden="true"></canvas></div>
           <div class="synpane lcdlist" data-p="banks" hidden><div id="spBanks" class="lcdrows"></div><div class="synspecbar"><button class="synbtn" id="spAdd">＋ File</button><button class="synbtn" id="spDir">📁 Folder</button><button class="synbtn" id="spBuiltin">Built-in</button></div></div>
@@ -86,7 +86,8 @@
         <div class="synkeys"><canvas id="pianoCv" style="height:5.8rem;display:block"></canvas></div>
           <div class="synspecbar"><span id="specPhCtl"></span><div id="specCtl"><div class="seg" id="specRange" hidden><button data-r="voice" class="on">Voice</button><button data-r="piano">Piano</button><button data-r="max">Max mic</button><button data-r="whistle">Whistle</button></div></div><p class="lcdlab" id="specNote" hidden></p></div>
         </div><i class="jack screenjack" data-j="graph"></i></div>
-        <div class="synside"><div class="lcd synnow" aria-live="polite"><small>NOW</small><b id="pianoInfo">&nbsp;</b></div><div id="pnArp"></div><div id="pnEnv"></div><div id="pnDisplay"></div></div>
+        <div id="pnPlay" class="synknobarea synplay"></div></div>
+        <div class="synside"><div id="pnRev" class="synknobarea synplay"></div><div id="pnVoice" class="synknobarea synplay"></div><div id="pnEcho" class="synknobarea synplay"></div><div class="lcd synnow" aria-live="polite"><small>NOW</small><b id="pianoInfo">&nbsp;</b></div><div id="pnArp"></div><div id="pnEnv"></div><div id="pnDisplay"></div></div>
       </div>
     </div>
   </section>

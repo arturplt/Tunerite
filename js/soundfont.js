@@ -60,9 +60,9 @@ const SF = {
     const a4f = st.a4 / 440, parts = [];
     vs.forEach(v => {
       const buf = bufs.get(v.si), S = sf.samples[v.si]; if (!buf) return;
-      const src = c.createBufferSource(); src.buffer = buf; if (o.live && st.fineTune) src.detune.value = st.fineTune; if (Engine.fx && Engine.vibOn()) Engine.fx.vibDepth.connect(src.detune); if (o.bend) o.bend.connect(src.detune);
+      const src = c.createBufferSource(); src.buffer = buf; if ((o.live && st.fineTune) || o.detune) src.detune.value = (o.live && st.fineTune || 0) + (o.detune || 0); if (Engine.fx && Engine.vibOn()) Engine.fx.vibDepth.connect(src.detune); if (o.bend) o.bend.connect(src.detune);
       const rate = m => Math.pow(2, ((m - v.root) * v.scale / 100 + v.coarse + v.fine / 100) / 12) * a4f;
-      src.playbackRate.setValueAtTime(rate(midi), when);
+      if (o.gfrom != null && o.midi2 == null) { src.playbackRate.setValueAtTime(rate(o.gfrom), when); src.playbackRate.exponentialRampToValueAtTime(rate(midi), when + o.gt); } else src.playbackRate.setValueAtTime(rate(midi), when);
       if (o.midi2 != null) src.playbackRate.exponentialRampToValueAtTime(rate(o.midi2), when + dur);       // glides bend the sample
       if (v.loop) {
         const rel = S.compressed ? 0 : S.start, r = S.rate || buf.sampleRate, ls = (S.loopStart + v.loopStartOff - rel) / r, le = (S.loopEnd + v.loopEndOff - rel) / r;
