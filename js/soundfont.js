@@ -197,6 +197,7 @@ const SFUI = {
 /* ---- SoundFont manager inside the Composer: stored fonts, an instrument browser with preview, and the pick for the selected track.
    Every track keeps its own font and instrument ('sf:<file>|<preset>'), so several fonts can sound in one song. ---- */
 const SFMgr = {
+  BI: '\u0001builtin',      // the built-in sound, listed as a font of its own
   font: '', pick: -1,      // the font being browsed (a stored file name) and the highlighted instrument in it
   open() { return !$('#sfPop').hidden; },
   init() {
@@ -211,12 +212,16 @@ const SFMgr = {
   refreshSoon() { const t = Date.now(), tick = () => { if (!this.open()) return; this.refresh(); if (Date.now() - t < 20000 && !(SF.sf && SF.ready)) setTimeout(tick, 800); }; setTimeout(tick, 400); },
   track() { return typeof Seq !== 'undefined' && Seq.tracks.find(t => t.ti === Ed.ti); },
   /* Which font and instrument the track plays now: { name, i } or null. */
-  current(t) { if (!t) return null; const ti = Seq.alias(t.inst), m = /^sf:(.*)\|(\d+)$/.exec(ti); if (m) return { name: m[1], i: +m[2] }; return /^sf:\d+$/.test(t.inst) && Store.data.settings.sfName ? { name: Store.data.settings.sfName, i: +t.inst.slice(3) } : null; },
+  current(t) { if (!t) return null; const ti = Seq.alias(t.inst), m = /^sf:(.*)\|(\d+)$/.exec(ti); if (m) return { name: m[1], i: +m[2] }; if (ti === 'kit') return { name: this.BI, i: 'kit' }; if (/^syn:/.test(ti)) return { name: this.BI, i: ti.slice(4) }; return /^sf:\d+$/.test(t.inst) && Store.data.settings.sfName ? { name: Store.data.settings.sfName, i: +t.inst.slice(3) } : null; },
   async refresh(first) {
     const t = this.track(), cur = this.current(t), def = Store.data.settings.sfName, box = $('#sfpFonts'); $('#sfpTrack').textContent = t ? 'Track: ' + t.name : 'No track selected';
     let names = []; try { names = ((await SFStore.keys()) || []).sort((a, b) => a.localeCompare(b)); } catch (e) {}
-    if (first || !names.includes(this.font)) this.font = cur && names.includes(cur.name) ? cur.name : names.includes(def) ? def : names[0] || '';
-    box.textContent = ''; if (!names.length) box.innerHTML = '<div class="sfpRow"><span class="muted">No SoundFonts stored yet. Add a .sf2 or .sf3 file.</span></div>';
+    if (first || (this.font !== this.BI && !names.includes(this.font))) this.font = cur && (cur.name === this.BI || names.includes(cur.name)) ? cur.name : names.includes(def) && Store.data.settings.timbre === 'sf' ? def : this.BI;
+    box.textContent = '';
+    { const r = document.createElement('div'); r.className = 'sfpRow' + (this.font === this.BI ? ' on' : ''); r.title = 'Browse the built-in instruments'; const sp = document.createElement('span'); sp.textContent = 'Built-in';
+      const star = document.createElement('button'); star.className = 'sqb' + (Store.data.settings.timbre !== 'sf' ? ' on' : ''); star.textContent = '★'; star.title = 'Default for the piano, exercises and tracks left on Auto';
+      r.append(sp, star); r.onclick = () => { this.font = this.BI; this.pick = cur && cur.name === this.BI ? cur.i : -1; this.refresh(); };
+      star.onclick = async e => { e.stopPropagation(); await SFUI.pick(''); if (Seq.loaded) Seq.prepare(); this.refresh(); }; box.appendChild(r); }
     names.forEach(n => {
       const r = document.createElement('div'); r.className = 'sfpRow' + (n === this.font ? ' on' : ''); r.title = 'Browse this SoundFont';
       const s = document.createElement('span'); s.textContent = n.replace(/\.sf[23]$/i, '');
@@ -228,12 +233,21 @@ const SFMgr = {
       box.appendChild(r);
     });
     this.pick = cur && cur.name === this.font ? cur.i : -1;
+    if (this.font === this.BI) { this.rec = null; $('#sfpMsg').textContent = ''; return this.rows(); }
     this.rec = this.font ? SF.fontOf(this.font) : null;
     if (this.font && !this.rec) { $('#sfpMsg').textContent = 'Reading…'; try { this.rec = await SF.fontLoad(this.font); } catch (e) { this.rec = null; } $('#sfpMsg').textContent = this.rec ? '' : 'Could not read that SoundFont.'; }
     this.rows();
   },
   rows() {
     const list = $('#sfpList'), q = $('#sfpFind').value.trim().toLowerCase(), F = this.rec; list.textContent = '';
+    if (this.font === this.BI) {      // every built-in voice, grouped by family, and the drum kit
+      const all = Object.keys(TIMBRES).map(k => [k, TIMBRES[k].label, TIMBRES[k].fam]).concat([['kit', 'Drum kit', 'Drums']]);
+      all.filter(x => !q || x[1].toLowerCase().includes(q) || x[2].toLowerCase().includes(q)).forEach(x => {
+        const r = document.createElement('div'); r.className = 'sfpRow' + (x[0] === this.pick ? ' on' : ''); r.setAttribute('role', 'option'); r.innerHTML = '<span></span><i></i>'; r.firstChild.textContent = x[1]; r.lastChild.textContent = x[2];
+        r.onclick = () => { this.pick = x[0]; list.querySelectorAll('.on').forEach(e => e.classList.remove('on')); r.classList.add('on'); this.preview(x[0], x[0] === 'kit'); }; r.ondblclick = () => this.use(x[0]); list.appendChild(r);
+      });
+      const on = list.querySelector('.on'); if (on) on.scrollIntoView({ block: 'nearest' }); return;
+    }
     if (!F || !F.sf) { list.innerHTML = '<div class="sfpRow"><span class="muted">Pick a SoundFont above to browse its instruments.</span></div>'; return; }
     F.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).filter(x => !q || x.p.name.toLowerCase().includes(q)).forEach(x => {
       const r = document.createElement('div'); r.className = 'sfpRow' + (x.i === this.pick ? ' on' : ''); r.setAttribute('role', 'option');
@@ -243,6 +257,11 @@ const SFMgr = {
     });
   },
   async preview(i, drums) {
+    if (this.font === this.BI) {      // a built-in voice needs no loading
+      try { await Engine.start(); } catch (e) { /* the browser may need a tap first */ } if (!Engine.ctx) return; const t0 = Engine.ctx.currentTime + 0.05;
+      if (i === 'kit') { [36, 38, 42, 38].forEach((m, k) => Engine.drum(m, t0 + k * 0.25, 100)); return; }
+      [60, 64, 67, 72].forEach((m, k) => Engine.playNote(m, t0 + k * 0.22, 0.9, { synth: i, vel: 96, gain: 0.25, seq: true })); return;
+    }
     const F = this.rec; if (!Engine.ctx || !F) return; const msg = $('#sfpMsg'); msg.textContent = 'Preparing…';
     try { await SF.build(i, null, F); } catch (e) { msg.textContent = 'Could not load that instrument.'; return; }
     msg.textContent = ''; const t0 = Engine.ctx.currentTime + 0.05, o = { preset: i, font: F === SF ? undefined : F, seq: true };
@@ -251,7 +270,8 @@ const SFMgr = {
   },
   async use(i) {
     const t = this.track(); if (!t) return toast('Select a track first.', 1800);
-    if (i == null) t.inst = 'auto'; else if (i < 0 || !this.font) return toast('Pick an instrument first.', 1800); else t.inst = 'sf:' + this.font + '|' + i;
-    Seq.save(); Seq.render(); await Seq.prepare(); this.refresh(); toast(i == null ? 'Sound from the file.' : t.name + ': ' + this.rec.sf.presets[i].name, 1800);
+    if (i == null) t.inst = 'auto'; else if (this.font === this.BI) { if (!i || i < 0) return toast('Pick an instrument first.', 1800); t.inst = i === 'kit' ? 'kit' : 'syn:' + i; }
+    else if (i < 0 || !this.font) return toast('Pick an instrument first.', 1800); else t.inst = 'sf:' + this.font + '|' + i;
+    Seq.save(); Seq.render(); await Seq.prepare(); this.refresh(); toast(i == null ? 'Sound from the file.' : t.name + ': ' + (this.font === this.BI ? (i === 'kit' ? 'Drum kit' : TIMBRES[i].label) : this.rec.sf.presets[i].name), 1800);
   }
 };

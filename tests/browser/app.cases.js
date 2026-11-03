@@ -442,3 +442,21 @@ T.test('ear training: the Ear mode lists the course, a drill scores, and passing
     Ear.open('u7l1'); T.ok(!$('#o-ear').classList.contains('on') || Ear.lv.id !== 'u7l1', 'a locked level does not open');
   } finally { Ear.close(); st.trainMode = keep.m; Store.data.ear = JSON.parse(keep.e || 'null') || undefined; Store.data.earLog = JSON.parse(keep.l || 'null') || undefined; UI.show('tuner'); }
 });
+
+T.test('SoundFonts popup: Built-in is a font of its own with every built-in instrument', async () => {
+  await audio(); scene(); Ed.ti = 0; $('#sfPop').hidden = false; await SFMgr.refresh(true);
+  try {
+    T.ok($$('#sfpFonts .sfpRow')[0].textContent.startsWith('Built-in'), 'Built-in is the first font'); T.eq(SFMgr.font, SFMgr.BI, 'and it is the one browsed when no SoundFont is in use');
+    const rows = $$('#sfpList .sfpRow').map(r => r.firstChild.textContent); T.eq(rows.length, Object.keys(TIMBRES).length + 1, 'every built-in instrument and the drum kit are listed'); T.ok(rows.includes('Drum kit'));
+    const k = Object.keys(TIMBRES)[3], row = $$('#sfpList .sfpRow')[3]; row.click(); T.eq(SFMgr.pick, k, 'clicking one highlights it'); await SFMgr.use(SFMgr.pick); T.eq(Seq.tracks[0].inst, 'syn:' + k, 'Use for this track plays the track with it');
+    T.eq(SFMgr.current(Seq.tracks[0]).i, k, 'and it is shown as the track\'s sound'); await SFMgr.use('kit'); T.eq(Seq.tracks[0].inst, 'kit', 'the drum kit works too'); await SFMgr.use(null); T.eq(Seq.tracks[0].inst, 'auto', 'Auto goes back to the file');
+  } finally { $('#sfPop').hidden = true; }
+});
+
+T.test('piano Instruments tab: the built-in sound lists every voice, and the Banks tab names it', async () => {
+  await audio(); UI.show('piano'); const st = Store.data.settings, keep = st.timbre; st.timbre = 'soft';
+  try {
+    Synth.show('banks'); const b = $$('#spBanks .lcdrow')[0]; T.ok(/^Built-in/i.test(b.firstChild.textContent) && b.classList.contains('on'), 'Banks: Built-in is listed and active'); T.eq(b.lastChild.textContent, Object.keys(TIMBRES).length + ' voices', 'with its number of voices');
+    Synth.show('patch'); const rows = $$('#spPatches .lcdrow'); T.eq(rows.length, Object.keys(TIMBRES).length, 'Instruments: every built-in voice is listed'); rows[3].click(); T.eq(st.timbre, Object.keys(TIMBRES)[3], 'picking one plays the piano with it');
+  } finally { st.timbre = keep; Synth.show('spec'); }
+});

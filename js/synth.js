@@ -38,7 +38,6 @@ const Synth = {
     $('#spFind').oninput = e => { this.find = e.target.value.trim().toLowerCase(); this.patches(); };
     $('#spAdd').onclick = () => $('#sfFile').click(); $('#spDir').onclick = () => $('#sfDir').click();
     ['sfFile', 'sfDir'].forEach(id => $('#' + id).addEventListener('change', () => setTimeout(() => SFUI.list(), 1500)));
-    $('#spBuiltin').onclick = () => SFUI.pick('');
     this.refresh();
   },
   show(t) { this.tab = t; $$('.syntabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); $$('.synpane').forEach(p => p.hidden = p.dataset.p !== t); this.refresh(); },
@@ -57,24 +56,24 @@ const Synth = {
   row(list, text, tag, on, click) { const r = document.createElement('div'); r.className = 'lcdrow' + (on ? ' on' : ''); r.setAttribute('role', 'option'); r.innerHTML = '<span></span><i></i>'; r.firstChild.textContent = text; r.lastChild.textContent = tag || ''; r.onclick = click; list.appendChild(r); return r; },
   banks() {
     const box = $('#spBanks'), s = Store.data.settings, on = !!SF.sf && s.timbre === 'sf'; box.textContent = '';
-    this.row(box, 'Built-in sound', 'GM', !on, () => SFUI.pick(''));
+    this.row(box, 'Built-in', Object.keys(TIMBRES).length + ' voices', !on, () => SFUI.pick(''));
     (SFUI.names || []).forEach(n => this.row(box, n.replace(/\.sf[23]$/i, ''), 'SF2', on && n === s.sfName, async () => { await SFUI.pick(n); }));
     if (!(SFUI.names || []).length) { const d = document.createElement('div'); d.className = 'lcdnote'; d.textContent = 'No SoundFonts stored yet. Add a file or a whole folder below.'; box.appendChild(d); }
   },
   patches() {
     const box = $('#spPatches'); box.textContent = ''; if (this.tab !== 'patch') return;
-    if (!SF.sf || Store.data.settings.timbre !== 'sf') {          // the built-in sound: its own voices, grouped by family
-      const cur = Store.data.settings.timbre; let fam = '';
-      Object.keys(TIMBRES).filter(k => !this.find || TIMBRES[k].label.toLowerCase().includes(this.find) || TIMBRES[k].fam.toLowerCase().includes(this.find)).forEach(k => {
-        this.row(box, TIMBRES[k].label, TIMBRES[k].fam, k === cur || (cur === 'sf' && k === 'soft'), () => { const el = $('#setTimbre'); el.value = k; el.dispatchEvent(new Event('change')); this.refresh(); });
-      });
-      const on = box.querySelector('.on'); if (on) on.scrollIntoView({ block: 'nearest' });
-      return;
+    const cur = Store.data.settings.timbre, sfOn = !!SF.sf && cur === 'sf', head = t => { const d = document.createElement('div'); d.className = 'lcdnote lcdhead'; d.textContent = t; box.appendChild(d); };
+    if (sfOn) {          // the loaded SoundFont first, then the built-in sound: picking a built-in voice switches back to it
+      const L = SF.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).filter(x => !this.find || x.p.name.toLowerCase().includes(this.find));
+      head('SoundFont · ' + SF.name.replace(/\.sf[23]$/i, ''));
+      L.slice(0, 300).forEach(x => this.row(box, x.p.name, x.p.bank === 128 ? 'DRUMS' : x.p.bank ? 'B' + x.p.bank : String(x.p.program + 1).padStart(3, '0'), x.i === SF.preset, () => { SFUI.prepare(x.i).then(() => this.refresh()); }));
+      if (L.length > 300) { const d = document.createElement('div'); d.className = 'lcdnote'; d.textContent = (L.length - 300) + ' more: type in the search box to narrow it down.'; box.appendChild(d); }
+      head('Built-in');
     }
-    const L = SF.sf.presets.map((p, i) => ({ p, i })).sort((a, b) => a.p.bank - b.p.bank || a.p.program - b.p.program).filter(x => !this.find || x.p.name.toLowerCase().includes(this.find));
-    L.slice(0, 300).forEach(x => this.row(box, x.p.name, x.p.bank === 128 ? 'DRUMS' : x.p.bank ? 'B' + x.p.bank : String(x.p.program + 1).padStart(3, '0'), x.i === SF.preset, () => { SFUI.prepare(x.i).then(() => this.refresh()); }));
-    if (L.length > 300) { const d = document.createElement('div'); d.className = 'lcdnote'; d.textContent = (L.length - 300) + ' more: type in the search box to narrow it down.'; box.appendChild(d); }
-    const cur = box.querySelector('.on'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+    Object.keys(TIMBRES).filter(k => !this.find || TIMBRES[k].label.toLowerCase().includes(this.find) || TIMBRES[k].fam.toLowerCase().includes(this.find)).forEach(k => {      // the built-in sound: its own voices, grouped by family
+      this.row(box, TIMBRES[k].label, TIMBRES[k].fam, !sfOn && (k === cur), () => { const el = $('#setTimbre'); el.value = k; el.dispatchEvent(new Event('change')); this.refresh(); });
+    });
+    const on = box.querySelector('.on'); if (on) on.scrollIntoView({ block: 'nearest' });
   },
   presets() {
     const box = $('#spPresets'), L = Presets.list(), cur = Store.data.settings.presetId; box.textContent = '';
