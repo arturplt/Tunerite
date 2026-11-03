@@ -367,7 +367,7 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 .synlcdrow{display:flex;flex-wrap:wrap;gap:0.5rem 0.75rem;margin-bottom:0.5rem}
 .synlcd{flex:1 1 14rem;min-width:0;display:flex;align-items:stretch;gap:0.4rem}
 .lcd{flex:1;min-width:0;padding:0.3rem 0.65rem;border-radius:6px;border:1px solid #000;display:flex;flex-direction:column;justify-content:center;
-  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),linear-gradient(180deg,#1d1408,#2a1c0a);box-shadow:inset 0 2px 6px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.1)}
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),linear-gradient(180deg,#1d1408,#2a1c0a);box-shadow:inset 0 2px 6px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.1)}
 .lcd small{font:600 0.6rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.2em;color:#a8731f;opacity:.8}
 .lcd b{font:700 1.05rem ui-monospace,Menlo,Consolas,monospace;color:#ffc766;text-shadow:0 0 6px rgba(255,170,50,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.03em}
 .synsecs{display:flex;flex-wrap:wrap;gap:0.5rem;flex:1;min-width:0}
@@ -404,7 +404,7 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 p.lcdlab{padding:0 0.6rem 0.5rem}
 .lcdlist{background:linear-gradient(180deg,#140e06,#1c1308);height:21rem;display:flex;flex-direction:column}
 .lcdlist .synspecbar{flex-direction:row;flex-wrap:wrap;border-top:1px solid #3a2a10}
-.lcdrows{flex:1;overflow-y:auto;min-height:0;padding:0.25rem 0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
+.lcdrows{flex:1;overflow-y:auto;min-height:0;padding:0.25rem 0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .lcdrow{display:flex;align-items:center;gap:0.6rem;padding:0.3rem 0.8rem;cursor:pointer;font:600 0.92rem ui-monospace,Menlo,Consolas,monospace;color:#d99a3a;text-align:left;min-height:2rem}
 .lcdrow span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lcdrow i{font-style:normal;font-size:0.7rem;letter-spacing:.12em;color:#8a5f1c;text-transform:uppercase;flex:none}
 .lcdrow:hover{background:rgba(255,179,71,.1)}.lcdrow.on{background:#ffb347;color:#1d1408;text-shadow:none}.lcdrow.on i{color:#5a3b0a}
@@ -506,19 +506,19 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 #pnKnobs .mod-disp{display:flex;align-items:center;gap:0.5rem}
 #pnKnobs .mod-disp .knobs{flex:none}
 .lcdpx{position:relative;flex:1;min-width:0;align-self:center;padding:0.4rem 0.5rem;border-radius:5px;border:1px solid #000;background:#1a120a;overflow:hidden;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
-.lcdpx::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
+.lcdpx::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .lcdpx small{display:block;font:700 0.5rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.22em;color:#6b4513;margin-bottom:0.2rem}
 .lcdpx b{display:flex;flex-direction:column;font:700 0.82rem/1.2 ui-monospace,Menlo,Consolas,"Courier New",monospace;letter-spacing:.1em;text-transform:uppercase;color:#ffb347;text-shadow:0 0 5px rgba(255,160,50,.65);white-space:nowrap}
 
 /* Preset, SoundFont and patch screens: the same low-resolution pixel LCD as the resolution readout */
 .synlcd .lcd{position:relative;overflow:hidden;background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
-.synlcd .lcd::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
+.synlcd .lcd::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .synlcd .lcd small{font:700 0.5rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.22em;color:#6b4513;opacity:1}
 .synlcd .lcd b{font:700 0.92rem ui-monospace,Menlo,Consolas,"Courier New",monospace;letter-spacing:.1em;text-transform:uppercase;color:#ffb347;text-shadow:0 0 5px rgba(255,160,50,.65)}
 
 /* Screen tabs: flat menu strip along the top of the LCD, not buttons. The active page is lit with a bar under it. */
 .syntabs{position:relative;gap:0;padding:0;background:#120c05;border-bottom:1px solid #000}
-.syntabs::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
+.syntabs::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .syntabs button{border:0;border-right:1px solid #000;border-radius:0;background:none;box-shadow:none;color:#8a6a2e;padding:0.6rem 0.25rem;font:700 0.68rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.16em;text-transform:uppercase}
 .syntabs button:last-child{border-right:0}
 .syntabs button:hover{background:#1a1208;color:#e9dcc0;box-shadow:none}
@@ -528,8 +528,8 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 /* Lists (banks, patches, presets) and the spectrogram in the same pixel LCD style as the other screens */
 .lcdlist,.synpane[data-p="spec"]{position:relative}
 .lcdlist{background:#1a120a}
-.lcdlist::after,.synpane[data-p="spec"]::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
-.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),radial-gradient(120% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.35))}
+.lcdlist::after,.synpane[data-p="spec"]::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),radial-gradient(120% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.35))}
 .lcdrows{background:none}
 .lcdrow{text-transform:uppercase;letter-spacing:.08em;color:#ffb347;text-shadow:0 0 5px rgba(255,160,50,.5)}
 .lcdrow i{color:#8a5f1c;text-shadow:none}
@@ -538,12 +538,12 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .lcdfind{text-transform:uppercase;letter-spacing:.08em;background:#0f0904;border-color:#3a2810;border-radius:2px}
 
 /* The big LCD areas use plain scanlines: a full grid over a large area beats against the screen's pixels and shows as squares */
-.lcdlist::after,.syntabs::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
-.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),radial-gradient(120% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.3))}
+.lcdlist::after,.syntabs::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),radial-gradient(120% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.3))}
 
 /* Vertical lines too, on the same one-device-pixel grid as the scanlines */
-.lcdlist::after,.syntabs::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
-.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),radial-gradient(120% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.3))}
+.lcdlist::after,.syntabs::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),radial-gradient(120% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.3))}
 
 /* CRT: chromatic aberration. Text gets a red fringe on the left and a blue one on the right; the spectrogram splits its colour channels by a pixel and a half (desktop only, where it is cheap enough). */
 .synlcd .lcd b,.lcdpx b,.lcdrow,.syntabs button,.lcdnote,.lcdfind{text-shadow:-0.06em 0 rgba(255,50,50,.6),0.06em 0 rgba(60,170,255,.55),0 0 6px rgba(255,160,50,.5)}
@@ -613,7 +613,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 @media (prefers-reduced-motion:reduce){.sqb,.synbtn{transition:none}}
 
 /* Spectrogram edge darkening: very faint */
-.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),radial-gradient(130% 110% at 50% 50%,transparent 72%,rgba(0,0,0,.12))}
+.synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),radial-gradient(130% 110% at 50% 50%,transparent 72%,rgba(0,0,0,.12))}
 
 /* Arrow buttons exactly as in the hardware preview: 54 by 42 caps, 6px corners, a small green triangle, 6px side wall */
 .synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN){--lift:6px;width:54px;height:42px;border-radius:6px;box-shadow:0 var(--lift) 0 var(--sd,#121315),0 calc(var(--lift) + 5px) 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
@@ -626,7 +626,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 /* "Now" screen: what is pressed and what is heard, as its own small LCD above the effects */
 .synside{display:flex;flex-direction:column;gap:0.75rem;min-width:0}
 .lcd.synnow{position:relative;overflow:hidden;min-height:5.6rem;padding:0.5rem 0.7rem;gap:0.4rem;justify-content:flex-start;background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
-.synnow::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
+.synnow::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .synnow small{font-size:calc(var(--dp,1px)*10);letter-spacing:calc(var(--dp,1px)*2);color:#6b4513}
 .synnow b{display:flex;flex-direction:column;gap:0.3rem;white-space:normal;overflow:visible;overflow-wrap:anywhere;text-overflow:clip;font-size:calc(var(--dp,1px)*16);line-height:1.3;min-height:0;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
 
@@ -669,7 +669,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .kydev .synth.kysynth{background:none;box-shadow:none;border:0;padding:0;margin:0}
 .kytop{display:grid;grid-template-columns:auto 1fr auto;gap:0.9rem;align-items:center}
 .lcd.kyscr{position:relative;overflow:hidden;background:#1a120a;border-radius:5px;border:1px solid #000;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);padding:0.5rem 0.8rem}
-.kyscr::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
+.kyscr::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .kyscr b,.kyscr span,.kyscr small,.kyhelp{font-family:"Silkscreen",ui-monospace,Menlo,Consolas,monospace;font-weight:400;text-transform:uppercase;letter-spacing:calc(var(--dp,1px)*2);color:#ffb347;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
 .kynow{min-height:4.6rem;gap:0.3rem;justify-content:flex-start}
 .kynow small{font-size:calc(var(--dp,1px)*10);color:#6b4513;text-shadow:none}
@@ -705,7 +705,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .lowsec{display:flex;flex-direction:column;gap:0.5rem;padding:1.4rem 0.8rem 0.9rem;border-radius:10px;background:#202124;border:1px solid rgba(255,255,255,.06);box-shadow:6px 7px 14px rgba(0,0,0,.6),-4px -4px 10px rgba(255,255,255,.03)}
 .lowsec .synlab{top:0.5rem;left:0.8rem;padding:0;background:none}
 .envbox{position:relative;overflow:hidden;background:#1a120a;border:1px solid #000;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
-.envbox::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*3))}
+.envbox::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 #envCv{display:block;width:100%;height:9.5rem;cursor:crosshair;touch-action:none}
 .envoff .envbox{opacity:.75}
 .lcd.envread{flex-direction:row;justify-content:space-between;gap:0.6rem;padding:0.4rem 0.7rem;position:relative;overflow:hidden;background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
@@ -819,3 +819,87 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .dispgrp .envp svg{display:block}
 .synbtn.envp.dp i{display:block;width:10px;height:10px;border-radius:2px;background:var(--sw);box-shadow:0 0 6px var(--sw)}
 .synbtn.envp.dp[aria-pressed="false"] i{opacity:.55;box-shadow:none}
+
+/* Noise filter switch in the Display heading; its lamp blinks while it listens */
+#pnDisplay .mod-disp{position:relative}
+#pnDisplay .noisebtn{position:absolute;top:0.4rem;right:0.7rem;z-index:2}
+.noisebtn.learn .kylamp{animation:noiseblink .5s steps(2) infinite}
+@keyframes noiseblink{50%{opacity:.15}}
+@media (prefers-reduced-motion:reduce){.noisebtn.learn .kylamp{animation:none}}
+
+/* The note chips get the screen treatment too: under the same scanline grid, with the colour split and a soft glow (desktop only, like the spectrogram) */
+#specTags{z-index:1}
+@media (hover:hover) and (pointer:fine){#specTags,#specFullTags{filter:url(#crt) drop-shadow(0 0 4px rgba(255,170,60,.55))}}
+
+
+/* ---- Text on the grid. Silkscreen draws on an 8-pixel em, so a font pixel is size/8 screen pixels (dp). 24dp text has 3dp pixels, one per grid cell; 16dp text has 2dp pixels, so those screens use a 2dp grid (--gn:2); 8dp labels have 1dp pixels and fit either.
+   A baseline sits at line-height/2 + 0.375 x size below the line top, so with whole-step paddings and these line heights every baseline lands on a grid line. ---- */
+.synlcd .lcd,.lcdlist,.kynow,.kyhelp{--gn:3}
+.lcdpx,.synnow,.syntabs,.kyrange{--gn:2}
+
+/* header LCDs: an 8dp label over a 24dp value */
+.synlcd .lcd{height:calc(var(--dp,1px)*60);padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12) 0;gap:0;justify-content:flex-start}
+.synlcd .lcd small{display:block;margin:0;font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*12);height:calc(var(--dp,1px)*12);letter-spacing:var(--dp,1px)}
+.synlcd .lcd b{display:block;margin:0;font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*30);height:calc(var(--dp,1px)*30);letter-spacing:calc(var(--dp,1px)*3)}
+
+/* lists: rows 36dp high, name baseline 27dp down, tag on the same baseline */
+.lcdrows{padding:0}
+.lcdrow{height:calc(var(--dp,1px)*36);min-height:0;padding:0 calc(var(--dp,1px)*12);align-items:flex-start;gap:calc(var(--dp,1px)*12)}
+.lcdrow span{margin-top:calc(var(--dp,1px)*3);line-height:calc(var(--dp,1px)*30);letter-spacing:calc(var(--dp,1px)*3)}
+.lcdrow i{margin-top:calc(var(--dp,1px)*18);font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*12);letter-spacing:var(--dp,1px)}
+.lcdrow .mini{margin-top:calc(var(--dp,1px)*3)}
+.lcdnote{padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*12);letter-spacing:var(--dp,1px)}
+.lcdfind{height:calc(var(--dp,1px)*42);margin:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);padding:0 calc(var(--dp,1px)*9);border:0;box-shadow:inset 0 0 0 1px #3a2810;letter-spacing:calc(var(--dp,1px)*3);line-height:normal}
+
+/* tab strip: 16dp text on the 2dp grid */
+.syntabs{height:calc(var(--dp,1px)*40)}
+.syntabs button{height:100%;padding:calc(var(--dp,1px)*10) calc(var(--dp,1px)*14);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*20);letter-spacing:calc(var(--dp,1px)*2);display:flex;align-items:flex-start;justify-content:center}
+
+/* resolution readout and the NOW screen */
+.lcdpx{padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*8)}
+.lcdpx small{display:block;margin:0;font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*10);letter-spacing:var(--dp,1px)}
+.lcdpx b{gap:0;font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*20);letter-spacing:calc(var(--dp,1px)*2)}
+.lcdpx b span{display:block;line-height:calc(var(--dp,1px)*20)}
+.lcd.synnow{padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);gap:0;min-height:calc(var(--dp,1px)*86)}
+.synnow small{display:block;margin:0;font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*10);letter-spacing:var(--dp,1px)}
+.synnow b{gap:0;font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*20);letter-spacing:calc(var(--dp,1px)*2)}
+.synnow b span{display:block;line-height:calc(var(--dp,1px)*20)}
+
+/* full-screen keyboard screens */
+.lcd.kyscr.kynow{padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);gap:0;min-height:calc(var(--dp,1px)*96)}
+.kynow small{display:block;margin:0;font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*12);letter-spacing:var(--dp,1px)}
+.kynow b{font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*30);min-height:calc(var(--dp,1px)*30);letter-spacing:calc(var(--dp,1px)*3)}
+.kynow span{display:block;font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*30);min-height:calc(var(--dp,1px)*30);letter-spacing:calc(var(--dp,1px)*3)}
+.lcd.kyscr.kyrange{display:block;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);height:calc(var(--dp,1px)*34)}
+.kyrange b{display:block;line-height:calc(var(--dp,1px)*20);letter-spacing:calc(var(--dp,1px)*2)}
+.lcd.kyscr.kyhelp{display:block;padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*12);letter-spacing:var(--dp,1px)}
+/* rows snap to the top of the list, so they always sit on the grid however the list is scrolled */
+.lcdrows{scroll-snap-type:y mandatory}
+.lcdrow{scroll-snap-align:start}
+.syntabs i{flex:none;width:calc(var(--dp,1px)*6);height:calc(var(--dp,1px)*6);margin:calc(var(--dp,1px)*8) calc(var(--dp,1px)*8) 0 0;align-self:flex-start}
+.lcdfind{box-sizing:border-box;min-height:0;width:calc(100% - var(--dp,1px)*24)}
+
+/* The ADSR readout is a screen like the others: the same mesh over it, 24dp values with 8dp letters, and whole-step padding and line heights so every baseline sits on a grid line (each row is 36dp, its baseline 24dp down) */
+.lcd.envread{--gn:3;padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);gap:0 calc(var(--dp,1px)*15)}
+.envread::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+.envread span{display:block;height:calc(var(--dp,1px)*36);font-size:calc(var(--dp,1px)*8);line-height:calc(var(--dp,1px)*30);letter-spacing:var(--dp,1px);white-space:nowrap}
+.envread b{font-weight:400;font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*30);letter-spacing:calc(var(--dp,1px)*3);margin-left:calc(var(--dp,1px)*6);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
+.lcd.envread{align-content:start;align-items:start;grid-auto-rows:calc(var(--dp,1px)*36);justify-content:stretch}
+#pnEnv .lcd.envread{padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);gap:0 calc(var(--dp,1px)*15)}
+
+/* Bypass, Panic and Reset: no inner circle, a bigger icon */
+.bigjack.red::before,.bigjack.panic::before{display:none}
+.bigjack svg{width:56%;height:56%}
+.bigjack[aria-pressed=true]{color:#ff7a2a}.bigjack[aria-pressed=true] svg{filter:drop-shadow(0 0 5px rgba(255,122,42,.8))}
+
+/* Bigger knobs in the Piano tab's knob area; Bypass, Panic and Reset follow */
+.synknobarea .synsec .knob svg,.mixrow .knob svg{width:calc(70px*var(--k));height:calc(70px*var(--k))}
+.synknobarea .synsec .knob,.mixrow .knob{min-width:calc(70px*var(--k))}
+.synknobarea .bigjack{width:calc(70px*var(--k));height:calc(70px*var(--k))}
+.synknobarea .bypcell{width:calc(74px*var(--k))}
+
+/* Full-screen keyboard: same knob size as the Piano tab, and the reset button matches the knobs */
+.kysynth .synsec .knob svg{width:calc(70px*var(--k));height:calc(70px*var(--k))}
+.kysynth .synsec .knob{min-width:calc(70px*var(--k))}
+.kyfx .synbtn.ico.red{width:calc(70px*var(--k));height:calc(70px*var(--k));flex:none;border-radius:50%}
+.kyfx .synbtn.ico.red svg{width:56%;height:56%}

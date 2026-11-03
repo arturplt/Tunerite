@@ -184,20 +184,21 @@ const Spec = {
     const cv = $('#specTags'); if (!cv) return;
     const { g, w, h } = fitCanvas(cv); g.clearRect(0, 0, w, h);
     if (this.full || !tags.length || !w || ['scope', 'chroma'].includes(Store.data.settings.specView)) return;
-    const u = 1 / (window.devicePixelRatio || 1), sn = v => Math.round(v / u) * u, f = n => n * u, k = w / srcW, chH = f(18), padX = f(6), gap = f(2);
-    g.font = f(16) + 'px Silkscreen, ui-monospace, monospace'; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+    /* 24dp type has 3dp font pixels, so every chip edge, text row and arrow step sits on the 3dp grid that is drawn over this pane (both start at its top left corner) */
+    const u = 1 / (window.devicePixelRatio || 1), q = 3 * u, sq = v => Math.round(v / q) * q, k = w / srcW, chH = 9 * q, padX = 2 * q, gap = q;
+    g.font = 24 * u + 'px Silkscreen, ui-monospace, monospace'; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
     const rows = [-1e9, -1e9, -1e9];
     tags.forEach(tg => {
-      const cx = tg.cx * k, tw = Math.ceil(g.measureText(tg.t).width) + 2 * padX;
+      const cx = tg.cx * k, tw = Math.ceil(g.measureText(tg.t).width / q) * q + 2 * padX;
       let row = rows.findIndex(e => e <= cx - tw / 2); if (row < 0) row = rows.indexOf(Math.min.apply(null, rows));
-      const x0 = sn(clamp(cx - tw / 2, 0, w - tw)), y0 = sn(h - f(8) - chH - row * (chH + gap)); rows[row] = x0 + tw + gap;
-      g.fillStyle = '#120c05'; g.fillRect(x0 - f(2), y0 - f(2), tw + f(4), chH + f(4));        // dark pixel outline
+      const x0 = sq(clamp(cx - tw / 2, 0, w - tw)), y0 = sq(h - 3 * q - chH - row * (chH + gap)); rows[row] = x0 + tw + gap;
+      g.fillStyle = '#120c05'; g.fillRect(x0 - 2 * u, y0 - 2 * u, tw + 4 * u, chH + 4 * u);        // dark pixel outline
       g.fillStyle = tg.c; g.fillRect(x0, y0, tw, chH);
-      g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(x0, y0, tw, f(2));
-      g.fillStyle = '#1d1408'; g.fillText(tg.t, sn(x0 + padX), sn(y0 + f(14)));
-      const ax = sn(cx);
-      g.fillStyle = '#120c05'; g.fillRect(ax - f(4), y0 + chH + f(2), f(8), f(2)); g.fillRect(ax - f(2), y0 + chH + f(4), f(4), f(2));
-      g.fillStyle = tg.c; g.fillRect(ax - f(4), y0 + chH, f(8), f(2)); g.fillRect(ax - f(2), y0 + chH + f(2), f(4), f(2));
+      g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(x0, y0, tw, q);
+      g.fillStyle = '#1d1408'; g.fillText(tg.t, x0 + padX, y0 + 7 * q);        // capitals are 5 font pixels tall: rows 2 to 6 of the chip's 9
+      const ax = sq(cx);
+      g.fillStyle = '#120c05'; g.fillRect(ax - 2 * q, y0 + chH + 2 * u, 4 * q, q); g.fillRect(ax - q, y0 + chH + q + 2 * u, 2 * q, q);
+      g.fillStyle = tg.c; g.fillRect(ax - 2 * q, y0 + chH, 4 * q, q); g.fillRect(ax - q, y0 + chH + q, 2 * q, q);
     });
   },
   /* Bloom: a small blurred copy of the picture glows over it, so bright lines bleed light like a CRT. Display only, so the history underneath stays clean. Desktop only. */

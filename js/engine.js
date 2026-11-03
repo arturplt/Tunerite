@@ -91,11 +91,12 @@ const Engine = {
     const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
     await this.ctx.audioWorklet.addModule(url);
     const mic = this.mic = this.ctx.createMediaStreamSource(this.stream);
-    this.analyser = this.ctx.createAnalyser(); this.analyser.fftSize = 16384; this.analyser.smoothingTimeConstant = 0.3; mic.connect(this.analyser);
-    this.specAn = this.ctx.createAnalyser(); this.specAn.smoothingTimeConstant = 0.3; mic.connect(this.specAn);     // the spectrogram has its own analyser, so its detail setting never disturbs chord and source detection
+    this.buildNoise(); mic.connect(this.nIn);
+    this.analyser = this.ctx.createAnalyser(); this.analyser.fftSize = 16384; this.analyser.smoothingTimeConstant = 0.3; this.nOut.connect(this.analyser);
+    this.specAn = this.ctx.createAnalyser(); this.specAn.smoothingTimeConstant = 0.3; this.nOut.connect(this.specAn);     // the spectrogram has its own analyser, so its detail setting never disturbs chord and source detection
     const node = new AudioWorkletNode(this.ctx, 'pitch-proc', { numberOfOutputs: 1, outputChannelCount: [1] });
     const mute = this.ctx.createGain(); mute.gain.value = 0;      // keeps the node pulled by the graph without playing the mic
-    mic.connect(node); node.connect(mute); mute.connect(this.ctx.destination);
+    this.nOut.connect(node); node.connect(mute); mute.connect(this.ctx.destination);
     this.buildFx();
     this.tracker = new PitchTracker();
     this.applySettings();
@@ -110,6 +111,15 @@ const Engine = {
     document.addEventListener('visibilitychange', () => { if (!document.hidden && this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); });
     this.ready = true;
   },
+  /* The room's steady tones (fans, hums) are cut by narrow notch filters between the microphone and everything that listens to it. */
+  buildNoise() {
+    const c = this.ctx, S = Store.data.settings; if (!c) return;
+    if (!this.nIn) { this.nIn = c.createGain(); this.nOut = c.createGain(); }
+    try { this.nIn.disconnect(); } catch (e) { /* nothing connected yet */ } (this.nNodes || []).forEach(n => { try { n.disconnect(); } catch (e) { /* already gone */ } });
+    const hz = S.noiseOn ? (S.noise || []).slice(0, 10) : []; let cur = this.nIn;
+    this.nNodes = []; hz.forEach(t => { for (let i = 0; i < 2; i++) { const b = c.createBiquadFilter(); b.type = 'notch'; b.frequency.value = t.hz; b.Q.value = clamp(t.hz / (t.bw || 8), 3, 40); cur.connect(b); cur = b; this.nNodes.push(b); } });      // two stages about 8 Hz wide: deep enough to vanish on the spectrogram, narrow enough to leave the music alone
+    cur.connect(this.nOut);
+  },
   async getStream(id) {
     const base = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 };
     try { return await navigator.mediaDevices.getUserMedia({ audio: id ? Object.assign({ deviceId: { exact: id } }, base) : base }); }
@@ -119,7 +129,7 @@ const Engine = {
   async setMic(id) {
     if (!this.ready) return;
     const st = await this.getStream(id); this.stream.getTracks().forEach(t => t.stop()); this.mic.disconnect();
-    this.stream = st; this.mic = this.ctx.createMediaStreamSource(st); this.mic.connect(this.analyser); this.mic.connect(this.specAn); this.mic.connect(this.node);
+    this.stream = st; this.mic = this.ctx.createMediaStreamSource(st); this.mic.connect(this.nIn);
     this.listMics();
   },
   async listMics() {

@@ -17,10 +17,10 @@ const Vox = {
     node.port.onmessage = e => { if (!this.live) return; this.chunks.push(e.data); this.feed(e.data.d); };
     this.node = node; this.ctx = c;
   },
-  begin() { this.chunks = []; this.pcm = new Float32Array(1 << 18); this.pn = 0; this.lv = null; this.live = true; this.node.port.postMessage(true); Engine.mic.connect(this.node); },
+  begin() { this.chunks = []; this.pcm = new Float32Array(1 << 18); this.pn = 0; this.lv = null; this.live = true; this.node.port.postMessage(true); (Engine.nOut || Engine.mic).connect(this.node); },
   /* Ends the capture. `from` is the audio time of the first sample to keep; returns { data, sr } or null. */
   finish(from) {
-    this.live = false; if (this.node) { this.node.port.postMessage(false); try { Engine.mic.disconnect(this.node); } catch (e) { /* the mic was swapped */ } }
+    this.live = false; if (this.node) { this.node.port.postMessage(false); try { (Engine.nOut || Engine.mic).disconnect(this.node); } catch (e) { /* the mic was swapped */ } }
     const ch = this.chunks; this.chunks = []; if (!ch.length) return null;
     const sr = Engine.ctx.sampleRate, skip = Math.round((from - ch[0].t) * sr), total = ch.reduce((a, c) => a + c.d.length, 0), all = new Float32Array(total);
     let o = 0; ch.forEach(c => { all.set(c.d, o); o += c.d.length; });
