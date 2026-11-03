@@ -919,3 +919,78 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 #pnLow .mixrow>.tgcell>.pntgl.sq{margin-top:calc(17px*var(--k))}
 #pnLow .mixrow>.tgcell>b{margin-top:auto}
 .synknobarea .bigjack{width:calc(65px*var(--k));height:calc(65px*var(--k))}
+
+/* ---- Tuner tab: the same hardware panel as the Piano tab ---- */
+#s-tuner{--gn:3}
+#s-tuner .ppplate{border:1px solid #0a0a0c;border-radius:12px;padding:1.4rem 1.25rem 1.2rem;gap:0.9rem;background:
+  radial-gradient(circle at 12px 12px,#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) 12px,#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),
+  radial-gradient(circle at 12px calc(100% - 12px),#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,rgba(0,0,0,.05) 1px 3px),linear-gradient(180deg,#2b2c31,#1a1b1f 40%,#141518);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -2px 6px rgba(0,0,0,.6),0 6px 18px rgba(0,0,0,.5)}
+#s-tuner .ppdial rect[fill="#9a948a"]{fill:#232427;stroke:#3a3b40}
+#s-tuner .ppdial rect[fill="#141210"]{fill:#0a0a0c}
+#s-tuner .ppdial{filter:drop-shadow(4px 5px 6px rgba(0,0,0,.7)) drop-shadow(-2px -2px 4px rgba(255,255,255,.04))}
+
+/* LCD screens: dark amber glass, pixel font, mesh on top */
+#s-tuner .pplcd,#s-tuner .ppmsg,#s-tuner .ppoct{position:relative;overflow:hidden;background:#1a120a;border:1px solid #000;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
+#s-tuner .pplcd::after,#s-tuner .ppmsg::after,#s-tuner .ppoct::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+#s-tuner .pplcd{padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12)}
+#s-tuner .pplcd small{font:400 calc(var(--dp,1px)*8) "Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);color:#9a6a2a}
+#s-tuner .ppdigits{font-family:"Silkscreen",ui-monospace,monospace;color:#ffb347}
+#s-tuner .ppdigits .ghost{opacity:.09}
+#s-tuner .ppdigits .val{text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 10px rgba(255,170,60,.55)}
+#s-tuner .ppmsg{margin:0;padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);font:400 calc(var(--dp,1px)*16)/calc(var(--dp,1px)*24) "Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-transform:uppercase;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4);--gn:2}
+
+/* Octave strip: seven little LCD cells, the active one lit */
+#s-tuner .ppwell{background:#202124;border-radius:12px;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035)}
+#s-tuner .ppoct{color:#6b4a22;transition:none}
+#s-tuner .ppoct b{font:400 calc(var(--dp,1px)*24) "Silkscreen",ui-monospace,monospace;color:#8a5a22}
+#s-tuner .ppn i{font:400 calc(var(--dp,1px)*8) "Silkscreen",ui-monospace,monospace;color:#6b4a22;letter-spacing:0}
+#s-tuner .ppoct.on{background:#ffb347;border-color:#000;box-shadow:inset 0 2px 5px rgba(0,0,0,.35),0 0 14px rgba(255,170,60,.6)}
+#s-tuner .ppoct.on b{color:#2a1604}#s-tuner .ppoct.on .ppn i{color:#6b3d0a}
+#s-tuner .ppoct .ppn i.cur{background:#2a1604;color:#ffb347;box-shadow:none}
+
+/* Lamps: round LEDs sunk into the panel */
+#s-tuner .pplamps>div{font:400 calc(var(--dp,1px)*16) "Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);color:#8f9096}
+#s-tuner .pplamp{background:#2a1a16;box-shadow:inset 0 2px 4px #000,0 0 0 2px #2c2d31,0 0 0 3px #000}
+#s-tuner .pplamp.big{background:#18261a}
+
+/* Buttons: the hardware caps of the Piano tab, the chosen one latched and lit */
+#s-tuner .ppbtns{gap:0.9rem;padding-bottom:6px}
+#s-tuner .ppbtns button{--lift:6px;--sd:#121315;min-height:46px;border:1px solid #050506;border-radius:7px;background:linear-gradient(180deg,#3a3b40,#2a2b2f);color:#8f9096;font:400 calc(var(--dp,1px)*16) "Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase;box-shadow:0 var(--lift) 0 var(--sd),0 calc(var(--lift) + 5px) 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08);transition:transform .05s linear,box-shadow .05s linear,color .1s}
+#s-tuner .ppbtns.two button{font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2)}
+#s-tuner .ppbtns button:hover{background:linear-gradient(180deg,#44454b,#303135);color:#cfc8b8}
+#s-tuner .ppbtns button:active,#s-tuner .seg.ppbtns button.on{transform:translateY(4px);box-shadow:0 2px 0 var(--sd),0 4px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+#s-tuner .ppbtns button:active{transform:translateY(var(--lift));box-shadow:0 0 0 var(--sd),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+#s-tuner .seg.ppbtns button.on{background:linear-gradient(180deg,#34353a,#26272b);color:#ffb347;text-shadow:0 0 7px rgba(255,150,40,.8)}
+#s-tuner .ppbtns .led{background:#3a2a10;box-shadow:inset 0 1px 1px #000}
+#s-tuner .ppbtns button.on .led{background:#ffb347;box-shadow:0 0 8px #ffb347}
+
+/* Chromatic strip: twelve cells, the heard note lit; the sharps are darker like black keys */
+#s-tuner .ppocts{grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+#s-tuner .ppoct{height:calc(var(--dp,1px)*48);gap:0}
+#s-tuner .ppoct b{font-size:calc(var(--dp,1px)*16);letter-spacing:0}
+#s-tuner .ppoct.sh{background:#0e0905}
+#s-tuner .ppoct.sh b{color:#6b4a22}
+#s-tuner .ppoct.on.sh{background:#ffb347}#s-tuner .ppoct.on.sh b{color:#2a1604}
+@media(max-width:560px){#s-tuner .ppocts{gap:2px}#s-tuner .ppoct b{font-size:calc(var(--dp,1px)*8)}#s-tuner .ppwell{padding:8px 6px}}
+
+/* Flat, In tune and Sharp lamps light up (this beats the sunk-LED rule above) */
+#s-tuner .pplamp.red.on{background:#ff5a36;box-shadow:inset 0 1px 2px rgba(255,255,255,.35),0 0 0 2px #2c2d31,0 0 0 3px #000,0 0 14px #ff5a36,0 0 30px rgba(255,90,54,.6)}
+#s-tuner .pplamp.grn.on{background:#7ee05a;box-shadow:inset 0 1px 2px rgba(255,255,255,.35),0 0 0 2px #2c2d31,0 0 0 3px #000,0 0 16px #7ee05a,0 0 36px rgba(126,224,90,.6)}
+
+/* Readout labels: 16dp pixel text, brighter, baseline on the 2dp mesh */
+#s-tuner .pplcd{--gn:2;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12) calc(var(--dp,1px)*6)}
+#s-tuner .pplcd small{display:block;height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+
+/* Chromatic cells: 16dp text on the 2dp mesh, baseline and left edge on grid lines */
+#s-tuner .ppoct{--gn:2;height:calc(var(--dp,1px)*48);padding:calc(var(--dp,1px)*6) 0 0;justify-content:flex-start;box-sizing:border-box}
+#s-tuner .ppoct b{display:block;height:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16)}
+@media(min-width:561px){#s-tuner .ppocts{grid-template-columns:repeat(12,calc(var(--dp,1px)*44));justify-content:space-between;gap:0}}
+#s-tuner .ppoct{border-width:var(--dp,1px)}
+#s-tuner .ppoct b{text-align:left;padding-left:calc(var(--dp,1px)*16)}
+#s-tuner .ppoct.sh b{padding-left:calc(var(--dp,1px)*8)}
+@media(min-width:561px){#s-tuner .ppocts{grid-template-columns:repeat(12,calc(var(--dp,1px)*46))}}
+@media(max-width:560px){#s-tuner .ppoct b{text-align:center;padding-left:0}}
+#s-tuner .ppoct b{align-self:stretch;box-sizing:border-box}
+#s-tuner .ppoct{padding-top:calc(var(--dp,1px)*10)}
+#s-tuner .ppoct.sh b.f{padding-left:calc(var(--dp,1px)*10)}

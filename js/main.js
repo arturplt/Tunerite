@@ -57,7 +57,7 @@ function bind() {
   { const cv = $('#seqCv'); cv.onpointerdown = e => Seq.ovDown(e); cv.onpointermove = e => Seq.ovMove(e); cv.onpointerup = () => Seq.ovUp(); cv.onpointercancel = () => { Seq.ovDrag = null; Seq.ovMode = null; Seq.ovReg = null; }; }
   $('#sqSeek').oninput = e => { Seq.drag = true; $('#sqTime').textContent = Seq.fmt(+e.target.value) + ' / ' + Seq.fmt(Seq.length); }; $('#sqSeek').onchange = e => { Seq.drag = false; Seq.seek(+e.target.value); };
   Ed.init(); Knobs.init(); Synth.init(); Vox.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
-  for (let o = 1; o <= 7; o++) { const d = document.createElement('div'); d.className = 'ppoct'; d.innerHTML = '<b>' + o + '</b><div class="ppn">' + [...'CDEFGAB'].map(l => '<i>' + l + '</i>').join('') + '</div>'; $('#ppOcts').appendChild(d); }
+  ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(nm => { const d = document.createElement('div'); d.className = 'ppoct' + (nm.length > 1 ? ' sh' : ''); d.innerHTML = '<b' + (nm === 'F#' ? ' class="f"' : '') + '>' + nm + '</b>'; $('#ppOcts').appendChild(d); });       // chromatic strip: the note being heard lights
   $('#instHintBtn').onclick = () => { if (Tuner.hint.want) setInst(Tuner.hint.want); $('#instHint').hidden = true; };
   $('#instHintNo').onclick = () => { Tuner.hint.dismissed[Tuner.hint.want] = true; $('#instHint').hidden = true; };
   $('#specFull').onclick = () => Keys.open(); $('#specClose').onclick = () => Spec.closeFull();

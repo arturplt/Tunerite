@@ -60,8 +60,8 @@ const Tuner = {
       const dk = describeKeys(src); n.textContent = dk.name; sz(dk.name);
       c.textContent = '+00'; msg.textContent = dk.detail + ' \u00b7 ' + (ks.length ? 'Keys pressed' : 'Heard through the microphone'); hz.textContent = '\u2013\u2013';
     } else { n.textContent = '\u2013'; sz(''); c.textContent = '+00'; hz.textContent = '\u2013\u2013'; msg.textContent = Store.data.settings.inst === 'piano' ? 'Play a note' : Store.data.settings.inst === 'whistle' ? 'Whistle a note' : 'Sing a note'; }
-    const DEG = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6], deg = voiced ? DEG[((Math.round(this.midi) % 12) + 12) % 12] : -1, sharp = voiced && [1, 3, 6, 8, 10].includes(((Math.round(this.midi) % 12) + 12) % 12);
-    [...$('#ppOcts').children].forEach((d, i) => { d.classList.toggle('on', i + 1 === oct); [...d.querySelectorAll('.ppn i')].forEach((l, j) => { const cur = i + 1 === oct && j === deg; l.classList.toggle('cur', cur); l.classList.toggle('sh', cur && sharp); }); });
+    const pc = voiced ? ((Math.round(this.midi) % 12) + 12) % 12 : -1;
+    [...$('#ppOcts').children].forEach((d, i) => d.classList.toggle('on', i === pc));
     $('#ppFlat').classList.toggle('on', zone === 'flat'); $('#ppTune').classList.toggle('on', zone === 'tune'); $('#ppSharp').classList.toggle('on', zone === 'sharp');
   }
 };

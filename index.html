@@ -40,21 +40,18 @@
 </g>
 <text x="92" y="292" font-family="Georgia, serif" font-size="40" fill="#241f1a" text-anchor="middle">♭</text>
 <text x="508" y="292" font-family="Georgia, serif" font-size="40" fill="#241f1a" text-anchor="middle">♯</text>
-<text x="300" y="282" font-family="Oswald, sans-serif" font-size="26" letter-spacing="10" fill="#241f1a" text-anchor="middle">CENTS</text>
-<text x="300" y="306" font-family="Oswald, sans-serif" font-size="11" letter-spacing="4" fill="#5a4c36" text-anchor="middle">A4 = 440 HZ · ±50 SCALE</text>
 <g transform="translate(5 8)" opacity="0.3" filter="url(#ppSoft)"><g id="ppShadow"><line x1="300" y1="400" x2="300" y2="118" stroke="#000" stroke-width="3"/></g></g>
 <g id="ppNeedle"><line x1="300" y1="430" x2="300" y2="150" stroke="#1a1714" stroke-width="2.8" stroke-linecap="round"/><line x1="300" y1="150" x2="300" y2="118" stroke="#c0321c" stroke-width="2.2" stroke-linecap="round"/></g>
 <path d="M218 382 Q218 368 232 368 L368 368 Q382 368 382 382 L382 440 L218 440 Z" fill="#2b2620"/>
 <path d="M218 382 Q218 368 232 368 L368 368 Q382 368 382 382" fill="none" stroke="#5a5248" stroke-width="2"/>
 <circle cx="300" cy="400" r="13" fill="#9a948a" stroke="#c9c2b6" stroke-width="2"/>
-<text x="300" y="424" font-family="Oswald, sans-serif" font-size="10" letter-spacing="4" fill="#b8a888" text-anchor="middle">PP-440</text>
 </g>
 <rect x="30" y="60" width="540" height="370" rx="12" fill="none" stroke="#0b0a09" stroke-width="3"/>
 </svg>
   <div class="ppreadouts">
-    <div class="pplcd"><small>NOTE</small><div class="ppdigits" style="font-size:78px;line-height:1"><span class="ghost" id="ppNoteGhost">888</span><span class="val" id="tunerNote">–</span></div></div>
-    <div class="pplcd"><small>CENTS</small><div class="ppdigits" style="font-size:50px;line-height:1.4"><span class="ghost">+88</span><span class="val" id="tunerCents">+00</span></div></div>
-    <div class="pplcd"><small>FREQ · HZ</small><div class="ppdigits" style="font-size:40px;line-height:1.75"><span class="ghost">888.8</span><span class="val" id="tunerHz">––</span></div></div>
+    <div class="pplcd"><small>NOTE</small><div class="ppdigits" style="font-size:72px;line-height:1"><span class="ghost" id="ppNoteGhost">888</span><span class="val" id="tunerNote">–</span></div></div>
+    <div class="pplcd"><small>CENTS</small><div class="ppdigits" style="font-size:48px;line-height:1.5"><span class="ghost">+88</span><span class="val" id="tunerCents">+00</span></div></div>
+    <div class="pplcd"><small>FREQ · HZ</small><div class="ppdigits" style="font-size:40px;line-height:1.8"><span class="ghost">888.8</span><span class="val" id="tunerHz">––</span></div></div>
   </div>
   <p class="ppmsg" id="tunerMsg">Sing a note</p>
   <div class="ppwell ppoctrow"><div class="ppocts" id="ppOcts"></div></div>
@@ -64,7 +61,7 @@
     <div><span>SHARP ▶</span><span class="pplamp red" id="ppSharp"></span></div>
   </div>
   <div class="seg ppbtns" id="instSeg"><button data-i="voice"><span class="led"></span>VOICE</button><button data-i="piano"><span class="led"></span>PIANO</button><button data-i="whistle"><span class="led"></span>WHISTLE</button></div>
-  <div class="ppbtns two"><button class="btn" id="tuRangeSing">🎤 Singing range</button><button class="btn" id="tuRangeWhistle">😗 Whistle range</button></div>
+  <div class="ppbtns two"><button class="btn" id="tuRangeSing">Singing range</button><button class="btn" id="tuRangeWhistle">Whistle range</button></div>
   <div class="banner" id="instHint" hidden><span id="instHintTxt"></span> <button class="btn" id="instHintBtn" style="min-height:2.25rem;padding:4px 0.75rem">Switch</button> <button class="btn" id="instHintNo" style="min-height:2.25rem;padding:4px 0.75rem">✕</button></div>
   </div></div>
   </section>
