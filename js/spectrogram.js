@@ -106,7 +106,7 @@ const Spec = {
     }
     const view = Store.data.settings.specView || 'water', voiced = performance.now() - Tuner.lastVoiced < 350 && Tuner.midi != null;
     if (this.lastView !== view) { this.lastView = view; g.fillStyle = '#0d0b09'; g.fillRect(0, 0, w, h); this.pk = null; this.hold = null; }      // a new view starts on a clean screen
-    if (view !== 'water') this.alt(view, g, w, h, dpr, sh, D, an, dbAt, idx, lo, hi, a4, binHz); else {
+    this.curO = O; if (view !== 'water') this.alt(view, g, w, h, dpr, sh, D, an, dbAt, idx, lo, hi, a4, binHz); else {
     const rh = Math.max(1, Math.round(2 * dpr)), area = H - sh, { f0, f1 } = this.cols, row = g.createImageData(W, rh), px8 = row.data;
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
     g.drawImage(cv, 0, rh, W, area - rh, 0, 0, W, area - rh);        // history moves up, away from the keyboard
@@ -130,6 +130,22 @@ const Spec = {
     this.drawSound(h, sh / dpr);
     this.bloom(cv);
   },
+  /* Scope sync: find the note's period by autocorrelation, then trigger on the rising zero crossing after the deepest trough and end exactly a whole number of cycles later (both at sub-sample positions), so the picture does not drift. Returns [start, length] in samples; unpitched sound falls back to a plain 2048-sample window. */
+  scopeLock(T, N, sr) {
+    const fb = [N - 2049, 2048], L = 2048, e = N - 1, base = e - L - 1500; if (base < 1) return fb;
+    const lmin = Math.max(12, Math.floor(sr / 3000)), lmax = Math.min(1500, Math.floor(sr / 40)); let e0 = 0; for (let i = 0; i < L; i++) e0 += T[e - i] * T[e - i]; if (e0 < 1e-6) return fb;
+    const r = new Float32Array(lmax + 2); let best = 0;
+    for (let k = lmin; k <= lmax; k++) { let sx = 0, sy = 0; for (let i = 0; i < L; i += 2) { const a = T[e - i], b = T[e - i - k]; sx += a * b; sy += b * b; } r[k] = sx / Math.sqrt(e0 / 2 * sy + 1e-12); if (r[k] > best) best = r[k]; }
+    if (best < 0.5) return fb;
+    let P = 0; for (let k = lmin + 1; k < lmax; k++) if (r[k] >= 0.9 * best && r[k] >= r[k - 1] && r[k] >= r[k + 1]) { const d = r[k - 1] - 2 * r[k] + r[k + 1]; P = k + (d ? 0.5 * (r[k - 1] - r[k + 1]) / d : 0); break; }
+    if (!P) return fb;
+    const rise = (from, to) => { for (let i = Math.max(1, Math.ceil(from)); i < to; i++) if (T[i - 1] < 0 && T[i] >= 0) return i - 1 + (-T[i - 1]) / (T[i] - T[i - 1]); return -1; };
+    const K = Math.max(1, Math.min(8, Math.round(700 / P))), start = e - (K + 2) * P - 2; if (start < 1) return fb;
+    let mi = Math.floor(start), mv = 1; for (let i = Math.floor(start); i < start + P; i++) if (T[i] < mv) { mv = T[i]; mi = i; }
+    const t0 = rise(mi, mi + P + 2); if (t0 < 0) return fb;
+    const t1 = rise(t0 + K * P - P * 0.4, t0 + K * P + P * 0.4); if (t1 < 0 || t1 + 2 > e) return fb;
+    return [t0, t1 - t0];
+  },
   /* Three more ways to see the sound: the live spectrum (a curve over the same piano columns), a scope of the waveform, and a chroma wheel of the twelve note names. */
   alt(view, g, w, h, dpr, sh, D, an, dbAt, idx, lo, hi, a4, binHz) {
     const ah = h - sh / dpr, acc = this.palAcc(), u = 1 / dpr, f = n => n * u, { f0, f1 } = this.cols;
@@ -143,23 +159,38 @@ const Spec = {
       g.beginPath(); g.moveTo(0, ah); for (let i = 0; i <= n; i++) g.lineTo(i / n * w, ah - lv(i) * ah * 0.94); g.lineTo(w, ah); g.closePath();
       const gr = g.createLinearGradient(0, 0, 0, ah); gr.addColorStop(0, acc + '88'); gr.addColorStop(1, acc + '08'); g.fillStyle = gr; g.fill();
       g.lineWidth = 2; g.lineJoin = 'round'; g.strokeStyle = acc; g.shadowColor = acc; g.shadowBlur = 6; g.beginPath(); for (let i = 0; i <= n; i++) { const x = i / n * w, y = ah - lv(i) * ah * 0.94; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.shadowBlur = 0;
+      const O = this.curO; if (O) {                                           // the app's own sound, blue, on the same fixed scale as the waterfall
+        const lo2 = i => { const X = Math.min(f0.length - 1, Math.floor(i / n * (w - 1) * dpr)); return clamp((dbAt(O, f0[X], f1[X]) + 100) / 55, 0, 1); }, B = '#3aa0ff';
+        g.beginPath(); g.moveTo(0, ah); for (let i = 0; i <= n; i++) g.lineTo(i / n * w, ah - lo2(i) * ah * 0.94); g.lineTo(w, ah); g.closePath();
+        const gb = g.createLinearGradient(0, 0, 0, ah); gb.addColorStop(0, B + '88'); gb.addColorStop(1, B + '08'); g.fillStyle = gb; g.fill();
+        g.lineWidth = 2; g.lineJoin = 'round'; g.strokeStyle = B; g.shadowColor = B; g.shadowBlur = 6; g.beginPath(); for (let i = 0; i <= n; i++) { const x = i / n * w, y = ah - lo2(i) * ah * 0.94; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.shadowBlur = 0;
+      }
       g.fillStyle = '#fff4d6'; for (let i = 0; i <= n; i++) { this.hold[i] = Math.max(lv(i), this.hold[i] - 0.006); if (this.hold[i] > 0.04) g.fillRect(i / n * w - 1, ah - this.hold[i] * ah * 0.94 - 2, 2, 2); }      // peaks fall slowly
     } else if (view === 'scope') {
-      const N = an.fftSize, T = this.td && this.td.length === N ? this.td : (this.td = new Float32Array(N)); an.getFloatTimeDomainData(T);
-      const span = Math.min(N - 1, 2048); let s0 = N - span - 1, i0 = s0; for (let i = N - span - 1; i > N - span * 2 && i > 1; i--) if (T[i - 1] < 0 && T[i] >= 0) { i0 = i; break; }      // trigger on a rising zero crossing
-      let pk = 0; for (let i = 0; i < span; i++) pk = Math.max(pk, Math.abs(T[Math.min(N - 1, i0 + i)]));
-      this.sg = Math.max(pk, (this.sg || 0) * 0.97, 0.02); const sc = ah * 0.42 / this.sg;
-      g.lineWidth = 2; g.lineJoin = 'round'; g.strokeStyle = acc; g.shadowColor = acc; g.shadowBlur = 8; g.beginPath(); for (let x = 0; x < w; x++) { const v = T[Math.min(N - 1, i0 + Math.floor(x / w * span))] || 0, y = ah / 2 - v * sc; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.shadowBlur = 0;
+      const N = an.fftSize, sr = an.context ? an.context.sampleRate : 48000, oa = Store.data.settings.specSynth !== false && Engine.outAn;
+      const trace = (src, key, col) => {                                  // each source is locked to its own pitch; the app's own sound is blue, like in the spectrogram
+        const T = this[key] && this[key].length === N ? this[key] : (this[key] = new Float32Array(N)); src.getFloatTimeDomainData(T);
+        const [t0, span] = this.scopeLock(T, N, sr), at = p => { const i = Math.floor(p), fr = p - i; return (T[i] || 0) * (1 - fr) + (T[Math.min(N - 1, i + 1)] || 0) * fr; };
+        let pk = 0; for (let x = 0; x < w; x += 2) pk = Math.max(pk, Math.abs(at(t0 + x / w * span)));
+        return { at, t0, span, pk, col };
+      };
+      const trs = [trace(an, 'td', acc)]; if (oa) { if (oa.fftSize !== N) oa.fftSize = N; trs.push(trace(oa, 'tdO', '#3aa0ff')); }
+      this.sg = Math.max(...trs.map(t => t.pk), (this.sg || 0) * 0.97, 0.02); const sc = ah * 0.42 / this.sg;
+      for (const t of trs.reverse()) { g.lineWidth = 2; g.lineJoin = 'round'; g.strokeStyle = t.col; g.shadowColor = t.col; g.shadowBlur = 8; g.beginPath(); for (let x = 0; x < w; x++) { const y = ah / 2 - t.at(t.t0 + x / w * t.span) * sc; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+      g.shadowBlur = 0;
       g.strokeStyle = 'rgba(255,255,255,0.12)'; g.beginPath(); g.moveTo(0, ah / 2 + 0.5); g.lineTo(w, ah / 2 + 0.5); g.stroke();
     } else if (view === 'chroma') {
-      const P = new Float32Array(12); for (let m = lo; m <= hi; m++) { const fa = midiToFreq(m - 0.5, a4) / binHz, fb = midiToFreq(m + 0.5, a4) / binHz; if (fb >= D.length) break; P[((m % 12) + 12) % 12] += Math.pow(10, dbAt(D, fa, fb) / 10); }
-      let mx = 0; for (let i = 0; i < 12; i++) mx = Math.max(mx, P[i]); this.cm = Math.max(mx, (this.cm || 0) * 0.985, 1e-9);
-      if (!this.chr) this.chr = new Float32Array(12); const bw = w / 12, names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']; let big = 0, bi = 0;
-      for (let i = 0; i < 12; i++) { const t = Math.pow(P[i] / this.cm, 0.5); this.chr[i] += (t - this.chr[i]) * (t > this.chr[i] ? 0.5 : 0.12); if (this.chr[i] > big) { big = this.chr[i]; bi = i; } }
+      const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'], bw = w / 12;
+      const fold = A => { const P = new Float32Array(12); for (let m = lo; m <= hi; m++) { const fa = midiToFreq(m - 0.5, a4) / binHz, fb = midiToFreq(m + 0.5, a4) / binHz; if (fb >= A.length) break; P[((m % 12) + 12) % 12] += Math.pow(10, dbAt(A, fa, fb) / 10); } return P; };
+      const level = (P, key, ck) => { let mx = 0; for (let i = 0; i < 12; i++) mx = Math.max(mx, P[i]); this[ck] = Math.max(mx, (this[ck] || 0) * 0.985, 1e-9); const c = this[key] || (this[key] = new Float32Array(12)); for (let i = 0; i < 12; i++) { const t = Math.pow(P[i] / this[ck], 0.5); c[i] += (t - c[i]) * (t > c[i] ? 0.5 : 0.12); } return c; };
+      const chr = level(fold(D), 'chr', 'cm'), O = this.curO, own = O ? level(fold(O), 'chrO', 'cmO') : null; let big = 0, bi = 0;
+      for (let i = 0; i < 12; i++) { if (chr[i] > big) { big = chr[i]; bi = i; } }
       g.font = f(16) + 'px Silkscreen, ui-monospace, monospace'; g.textAlign = 'center';
+      const bar = (v, x, ww, c0, c1) => { const bh = Math.max(f(3), v * (ah - 34)), gr = g.createLinearGradient(0, ah - 22 - bh, 0, ah - 22); gr.addColorStop(0, c0); gr.addColorStop(1, c1); g.fillStyle = gr; g.fillRect(x, ah - 22 - bh, ww, bh); };
       for (let i = 0; i < 12; i++) {
-        const bh = Math.max(f(3), this.chr[i] * (ah - 34)), x = i * bw + bw * 0.14, ww = bw * 0.72, hot = i === bi && big > 0.25;
-        const gr = g.createLinearGradient(0, ah - 22 - bh, 0, ah - 22); gr.addColorStop(0, hot ? '#fff4d6' : acc); gr.addColorStop(1, acc + '40'); g.fillStyle = gr; g.fillRect(x, ah - 22 - bh, ww, bh);
+        const x = i * bw + bw * 0.14, ww = bw * 0.72, hot = i === bi && big > 0.25;
+        if (own) bar(own[i], x, ww, '#8fd0ff', '#3aa0ff40');                                  // the app's own sound: blue, wide, behind
+        bar(chr[i], own ? x + ww * 0.25 : x, own ? ww * 0.5 : ww, hot ? '#fff4d6' : acc, acc + '40');
         g.fillStyle = hot ? '#fff4d6' : '#8a6a3a'; g.fillText(names[i], i * bw + bw / 2, ah - 6);
       }
       g.textAlign = 'start';
