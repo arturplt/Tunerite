@@ -299,39 +299,62 @@
 
   <!-- SETTINGS -->
   <section id="s-settings" class="screen">
-    <h1>Settings</h1>
-    <div class="setting"><span>Interface size<br><small class="muted">Text and buttons</small></span><select id="setUi"><option value="normal">Normal</option><option value="large">Large</option><option value="xl">Extra large</option><option value="xxl">Huge</option></select></div>
-    <div class="setting"><span>Full screen<br><small class="muted" id="fsHint">Hides the address bar</small></span><button class="btn" id="btnFs">⛶ Full screen</button></div>
-    <div class="setting"><span>Difficulty</span><select id="setDiff"><option value="easy">Easy ±50¢</option><option value="medium">Medium ±25¢</option><option value="hard">Hard ±10¢</option></select></div>
-    <div class="setting" style="display:block;padding:0.625rem 0"><span>Tempo <b id="tempoVal">100%</b><br><small class="muted">Speed of the exercises. Slow down to learn, speed up to challenge yourself.</small></span><input type="range" id="setTempo" min="50" max="150" step="5" style="width:100%"></div>
-    <div class="setting"><span>Hear the exercise first</span><input type="checkbox" id="setHear"></div>
-    <div class="setting"><span>Wait for the right note<br><small class="muted">Pauses at each note until you sing it</small></span><input type="checkbox" id="setWait"></div>
-    <div class="setting"><span>Time to find each note</span><select id="setFind"><option value="0.3">Quick (0.3 s)</option><option value="1">Relaxed (1 s)</option><option value="2">Generous (2 s)</option></select></div>
-    <div class="setting"><span>Drone under exercises</span><input type="checkbox" id="setDrone"></div>
-    <div class="setting"><span>Lock chime and drift tick</span><input type="checkbox" id="setCues"></div>
-    <div class="setting"><span>Guide tone while singing</span><select id="setGuide"><option value="off">Off</option><option value="fade">Fades as you improve</option><option value="on">Always on</option></select></div>
-    <div class="setting"><span>Volume</span><input type="range" id="setVol" min="0.1" max="1" step="0.05"></div>
-    <div class="setting"><span>Reference sound<br><small class="muted">The tone you hear in exercises</small></span><select id="setTimbre"></select></div>
-    <div class="setting" style="display:block;padding:0.6rem 0" id="sfBox"><span>SoundFont<br><small class="muted" id="sfStatus">None loaded. A piano SoundFont (.sf2 or .sf3) makes exercise tones, the on-screen piano and the keyboard sound realistic.</small></span>
-      <div class="row" style="margin-top:0.5rem"><button class="btn" id="sfLoad">Load SoundFont…</button><button class="btn" id="sfLoadDir">Load folder…</button><button class="btn" id="sfTry" hidden>▶ Try it</button><button class="btn danger" id="sfRemove" hidden>Remove</button><input type="file" id="sfFile" accept=".sf2,.sf3" hidden><input type="file" id="sfDir" webkitdirectory multiple hidden></div>
-      <select id="sfPreset" hidden style="max-width:100%;width:100%;margin-top:0.5rem;font:inherit;min-height:2.75rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 0.5rem"></select></div>
-    <div class="setting"><input type="checkbox" id="specSynth"><span>Spectrogram: show the app's own sound in blue<br><small class="muted">Taken straight from the mixer, not through speaker and microphone</small></span></div>
-    <div class="setting"><input type="checkbox" id="specLine"><span>Spectrogram: show the note line the tuner locked on to</span></div>
-    <div class="setting"><span>Microphone</span><select id="setMic" style="max-width:55%"></select></div>
-    <div class="setting"><span>Play MIDI keyboard notes in the app<br><small class="muted">Turn off if your piano has its own speakers</small></span><input type="checkbox" id="setKb"></div>
-    <div class="setting"><span>Sound source<br><small class="muted">Piano: A0–C8. Whistle: 400 Hz–4.6 kHz</small></span><select id="setInst"><option value="voice">Voice</option><option value="piano">Piano</option><option value="whistle">Whistle</option></select></div>
-    <div class="setting"><span>Computer keyboard plays the piano<br><small class="muted">A W S E D F T G Y H U J K … on the Piano screen, the Tuner and in piano exercises</small></span><input type="checkbox" id="setKbPlay"></div>
-    <div class="setting"><span>Keyboard (USB MIDI)<br><small class="muted" id="midiStatus">Not connected</small><br><small class="muted" id="midiLast"></small></span><button class="btn" id="btnMidiConn" style="min-height:2.5rem;padding:4px 0.875rem">Connect</button></div>
-    <div class="setting"><span>Reference pitch A4 (Hz)</span><input type="number" id="setA4" min="415" max="466" step="1" style="width:5.625rem"></div>
-    <div class="setting" style="display:block;padding:0.625rem 0"><span>Mic sensitivity (gate)</span>
-      <input type="range" id="setGate" min="-60" max="-25" step="1" style="width:100%">
-      <div class="meter"><i id="lvl"></i><b id="gateMark"></b></div>
-      <p class="muted small">Sing normally: the green bar should pass the orange line when you sing and stay below it in silence.</p></div>
-    <div class="row" style="margin-top:1rem">
-      <button class="btn" id="btnFindRange">Find my range again</button>
-      <button class="btn" id="btnFindWhistle">Find my whistle range</button>
-      <button class="btn danger" id="btnWipe">Delete my data</button></div>
-    <p class="muted small" style="margin-top:1rem">Everything stays on this device. Audio is never uploaded. Headphones (wired is best) are recommended.</p>
+    <div class="setcase">
+      <div class="sethead">
+        <div class="slcd titlelcd"><small>Tunerite</small><b>Settings</b></div>
+        <div class="stp" data-for="pfSel"><button class="k3 step l" type="button" aria-label="Previous"><i></i></button><div class="slcd"><small>Profile</small><b></b></div><button class="k3 step r" type="button" aria-label="Next"><i></i></button></div><select id="pfSel" class="shimsel"></select>
+        <div class="setkeys"><button class="k3 txt" type="button" id="pfNew">New</button><button class="k3 txt" type="button" id="pfRename">Rename</button><button class="k3 txt" type="button" id="pfExport">Export</button><button class="k3 txt" type="button" id="pfImport">Import</button><button class="k3 txt red" type="button" id="pfDel">Delete</button></div>
+        <input type="file" id="pfFile" accept=".json,application/json" hidden>
+        <p class="stnote">Each profile keeps its own range, progress (scores, course stars) and settings. Recorded takes are shared.</p>
+      </div>
+      <div class="setgrid">
+        <section class="setpanel" aria-labelledby="sp-disp"><h2 class="splabel" id="sp-disp">Display</h2>
+          <div class="sgroup"><div class="stx"><b>Interface size</b><small>Text and buttons</small></div><div class="radio" id="setUi" data-ctl="keys"><button class="k3" type="button" data-v="normal"><span class="lamp"></span>Normal</button><button class="k3" type="button" data-v="large"><span class="lamp"></span>Large</button><button class="k3" type="button" data-v="xl"><span class="lamp"></span>Extra large</button><button class="k3" type="button" data-v="xxl"><span class="lamp"></span>Huge</button></div></div>
+          <hr class="sdiv">
+          <div class="srow"><div class="stx"><b>Full screen</b><small id="fsHint">Hides the address bar</small></div><button class="k3 txt" type="button" id="btnFs">⛶ Full screen</button></div>
+        </section>
+        <section class="setpanel" aria-labelledby="sp-prac"><h2 class="splabel" id="sp-prac">Practice</h2>
+          <div class="sgroup"><div class="stx"><b>Difficulty</b></div><div class="radio" id="setDiff" data-ctl="keys"><button class="k3" type="button" data-v="easy"><span class="lamp"></span>Easy ±50¢</button><button class="k3" type="button" data-v="medium"><span class="lamp"></span>Medium ±25¢</button><button class="k3" type="button" data-v="hard"><span class="lamp"></span>Hard ±10¢</button></div></div>
+          <div class="sgroup"><div class="sline"><div class="stx"><b>Tempo</b><small>Speed of the exercises. Slow down to learn, speed up to challenge yourself.</small></div><div class="slcd one"><b id="tempoVal">100%</b></div></div>
+            <div class="sl stfader lab" id="setTempo" data-ctl="fader" data-min="50" data-max="150" data-step="5" data-ticks="11" data-major="5" data-labels="50,100,150" aria-label="Tempo"></div></div>
+          <div class="sgroup"><div class="stx"><b>Time to find each note</b></div><div class="radio" id="setFind" data-ctl="keys"><button class="k3" type="button" data-v="0.3"><span class="lamp"></span>Quick 0.3 s</button><button class="k3" type="button" data-v="1"><span class="lamp"></span>Relaxed 1 s</button><button class="k3" type="button" data-v="2"><span class="lamp"></span>Generous 2 s</button></div></div>
+          <div class="srow"><div class="stx"><b>Hear the exercise first</b></div><div class="rockwrap"><button class="rocker" type="button" id="setHear" data-ctl="rocker" aria-label="Hear the exercise first"></button></div></div><div class="srow"><div class="stx"><b>Wait for the right note</b><small>Pauses at each note until you sing it</small></div><div class="rockwrap"><button class="rocker" type="button" id="setWait" data-ctl="rocker" aria-label="Wait for the right note"></button></div></div><div class="srow"><div class="stx"><b>Drone under exercises</b></div><div class="rockwrap"><button class="rocker" type="button" id="setDrone" data-ctl="rocker" aria-label="Drone under exercises"></button></div></div><div class="srow"><div class="stx"><b>Lock chime and drift tick</b></div><div class="rockwrap"><button class="rocker" type="button" id="setCues" data-ctl="rocker" aria-label="Lock chime and drift tick"></button></div></div>
+          <div class="sgroup"><div class="stx"><b>Guide tone while singing</b></div><div class="radio" id="setGuide" data-ctl="keys"><button class="k3" type="button" data-v="off"><span class="lamp"></span>Off</button><button class="k3" type="button" data-v="fade"><span class="lamp"></span>Fades</button><button class="k3" type="button" data-v="on"><span class="lamp"></span>Always on</button></div></div>
+        </section>
+        <section class="setpanel" aria-labelledby="sp-snd"><h2 class="splabel" id="sp-snd">Sound</h2>
+          <div class="sgroup"><div class="sline"><div class="stx"><b>Volume</b></div><div class="slcd one"><b id="volVal">80%</b></div></div>
+            <div class="sl stfader lab" id="setVol" data-ctl="fader" data-min="0.1" data-max="1" data-step="0.05" data-ticks="10" data-major="9" data-labels="10,100" aria-label="Volume"></div></div>
+          <hr class="sdiv">
+          <div class="sgroup"><div class="stx"><b>Reference sound</b><small>The tone you hear in exercises</small></div><div class="stp" data-for="setTimbre"><button class="k3 step l" type="button" aria-label="Previous"><i></i></button><div class="slcd"><small>Instrument</small><b></b></div><button class="k3 step r" type="button" aria-label="Next"><i></i></button></div><select id="setTimbre" class="shimsel"></select></div>
+          <hr class="sdiv">
+          <div class="sgroup" id="sfBox"><div class="stx"><b>SoundFont</b><small id="sfStatus">None loaded. A piano SoundFont (.sf2 or .sf3) makes exercise tones, the on-screen piano and the keyboard sound realistic.</small></div>
+            <div class="setkeys"><button class="k3 txt" type="button" id="sfLoad">Load SoundFont…</button><button class="k3 txt" type="button" id="sfLoadDir">Load folder…</button><button class="k3 txt" type="button" id="sfTry" hidden>▶ Try it</button><button class="k3 txt red" type="button" id="sfRemove" hidden>Remove</button></div>
+            <input type="file" id="sfFile" accept=".sf2,.sf3" hidden><input type="file" id="sfDir" webkitdirectory multiple hidden>
+            <div class="stp" data-for="sfPreset"><button class="k3 step l" type="button" aria-label="Previous"><i></i></button><div class="slcd"><small>Preset</small><b></b></div><button class="k3 step r" type="button" aria-label="Next"><i></i></button></div><select id="sfPreset" class="shimsel" hidden></select></div>
+        </section>
+        <section class="setpanel" aria-labelledby="sp-mic"><h2 class="splabel" id="sp-mic">Microphone</h2>
+          <div class="sgroup"><div class="stx"><b>Input</b></div><div class="stp" data-for="setMic"><button class="k3 step l" type="button" aria-label="Previous"><i></i></button><div class="slcd"><small>Microphone</small><b></b></div><button class="k3 step r" type="button" aria-label="Next"><i></i></button></div><select id="setMic" class="shimsel"></select></div>
+          <div class="sgroup"><div class="stx"><b>Sound source</b><small>Piano: A0–C8. Whistle: 400 Hz–4.6 kHz</small></div><div class="radio" id="setInst" data-ctl="keys"><button class="k3" type="button" data-v="voice"><span class="lamp"></span>Voice</button><button class="k3" type="button" data-v="piano"><span class="lamp"></span>Piano</button><button class="k3" type="button" data-v="whistle"><span class="lamp"></span>Whistle</button></div></div>
+          <hr class="sdiv">
+          <div class="sgroup"><div class="sline"><div class="stx"><b>Mic sensitivity (gate)</b><small>The cap sets how loud you must be before the app listens. The LEDs show what the microphone hears now.</small></div><output id="gateOut"></output></div>
+            <div class="lsl-foot"><div class="lsl" id="gateSl" role="slider" tabindex="0" aria-label="Mic sensitivity (gate)" aria-valuemin="-60" aria-valuemax="-10"></div></div>
+            <p class="stnote">Sing normally: the LEDs should light past the cap when you sing and stay dark below it in silence. The blue LED marks the threshold.</p></div>
+        </section>
+        <section class="setpanel" aria-labelledby="sp-spec"><h2 class="splabel" id="sp-spec">Spectrogram</h2>
+          <div class="srow"><div class="stx"><b>Show the app's own sound in blue</b><small>Taken straight from the mixer, not through speaker and microphone</small></div><div class="rockwrap"><button class="rocker" type="button" id="specSynth" data-ctl="rocker" aria-label="Show the app's own sound in blue"></button></div></div><div class="srow"><div class="stx"><b>Show the note line the tuner locked on to</b></div><div class="rockwrap"><button class="rocker" type="button" id="specLine" data-ctl="rocker" aria-label="Show the note line the tuner locked on to"></button></div></div>
+        </section>
+        <section class="setpanel" aria-labelledby="sp-kb"><h2 class="splabel" id="sp-kb">Keyboard</h2>
+          <div class="srow"><div class="stx"><b>Keyboard (USB MIDI)</b><small id="midiStatus">Not connected</small><small id="midiLast"></small></div><button class="k3 txt" type="button" id="btnMidiConn">Connect</button></div>
+          <div class="srow"><div class="stx"><b>Play MIDI keyboard notes in the app</b><small>Turn off if your piano has its own speakers</small></div><div class="rockwrap"><button class="rocker" type="button" id="setKb" data-ctl="rocker" aria-label="Play MIDI keyboard notes in the app"></button></div></div><div class="srow"><div class="stx"><b>Computer keyboard plays the piano</b><small>A W S E D F T G Y H U J K … on the Piano screen, the Tuner and in piano exercises</small></div><div class="rockwrap"><button class="rocker" type="button" id="setKbPlay" data-ctl="rocker" aria-label="Computer keyboard plays the piano"></button></div></div>
+          <hr class="sdiv">
+          <div class="sgroup"><div class="stx"><b>Reference pitch A4</b></div><div class="stp" data-for="setA4" data-unit="Hz"><button class="k3 step l" type="button" aria-label="Previous"><i></i></button><div class="slcd"><small>A4</small><b></b></div><button class="k3 step r" type="button" aria-label="Next"><i></i></button></div><input type="number" id="setA4" class="shimsel" min="415" max="466" step="1"></div>
+        </section>
+      </div>
+      <section class="setpanel setdata" aria-labelledby="sp-data"><h2 class="splabel" id="sp-data">Range and data</h2>
+        <div class="setkeys"><button class="k3 txt" type="button" id="btnFindRange">Find my range again</button><button class="k3 txt" type="button" id="btnFindWhistle">Find my whistle range</button><button class="k3 txt red" type="button" id="btnWipe">Delete my data</button></div>
+        <div class="slcd"><small>Everything stays on this device</small><b>Audio is never uploaded. Headphones (wired is best) are recommended.</b></div>
+      </section>
+    </div>
   </section>
 </main>
 
@@ -344,6 +367,13 @@
   <h1>Projects</h1>
   <div class="row" style="justify-content:center"><button class="btn primary" id="pjNew">＋ New song</button><button class="btn" id="pjImport">Import MIDI file…</button><button class="btn" id="pjClose">Close</button></div>
   <div id="pjList" style="width:min(36rem,100%);text-align:left"></div>
+</div>
+
+<div id="o-name" class="overlay" style="justify-content:center">
+  <h1 id="nmTitle">Name</h1>
+  <p class="muted" id="nmText"></p>
+  <input id="nmIn" class="lib-input" maxlength="30" autocomplete="off" style="width:min(24rem,100%);text-align:center">
+  <div class="row" style="justify-content:center"><button class="btn primary" id="nmOk">OK</button><button class="btn" id="nmCancel">Cancel</button></div>
 </div>
 
 <div id="o-savechk" class="overlay" style="justify-content:center">
@@ -505,6 +535,7 @@
 <script src="js/library-ui.js"></script>
 <script src="js/range-finder.js"></script>
 <script src="js/session.js"></script>
+<script src="js/settings-ui.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/steps.js"></script>
 <script src="js/meta.js"></script>

@@ -6,6 +6,7 @@ setDevicePixel(); window.addEventListener('resize', setDevicePixel);
 function bind() {
   $$('#nav button').forEach(b => b.onclick = () => UI.show(b.dataset.s));
   $$('#menuDiff button').forEach(b => b.onclick = () => { Store.data.settings.diff = b.dataset.d; Store.save(); UI.refresh(); });
+  SetUI.init();
   const set = (id, key, get) => $(id).onchange = $(id).oninput = e => { Store.data.settings[key] = get(e.target); Store.save(); Engine.applySettings(); if (key === 'gateDb') UI.refresh(); };
   set('#setDiff', 'diff', e => e.value); set('#setHear', 'hear', e => e.checked); set('#setDrone', 'drone', e => e.checked);
   set('#setCues', 'cues', e => e.checked); set('#setWait', 'wait', e => e.checked); set('#setFind', 'find', e => +e.value); set('#setGuide', 'guide', e => e.value); set('#setVol', 'vol', e => +e.value);
@@ -40,7 +41,7 @@ function bind() {
   $('#sqSave').onclick = () => Seq.exportMid(); $('#sqWav').onclick = () => Seq.exportWav(); $('#sqMp3').onclick = () => Seq.exportWav('mp3'); $('#sqLoad').onclick = () => Seq.projects(); $('#pjImport').onclick = () => { $('#o-proj').classList.remove('on'); $('#sqFile').click(); }; $('#pjNew').onclick = () => { $('#o-proj').classList.remove('on'); Ed.newSong(); }; $('#pjClose').onclick = () => $('#o-proj').classList.remove('on'); $('#sqFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) Seq.loadFile(f); };
   $('#sqPlay').onclick = () => { if (Rec.state !== 'idle') Rec.stop(); else Seq.toggle(); }; $('#sqStop').onclick = () => { if (Rec.state !== 'idle') Rec.stop(); else Seq.stop(); };      // during a take both end the take, as the space bar does $('#sqRew').onclick = () => Seq.seek(0);
   const fsOk = !!document.documentElement.requestFullscreen, standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
-  if (standalone) $('#btnFs').closest('.setting').hidden = true;
+  if (standalone) $('#btnFs').closest('.srow').hidden = true;
   else if (!fsOk) { $('#btnFs').hidden = true; $('#fsHint').textContent = 'This browser cannot hide its address bar. Use Share, then Add to Home Screen, and open Pitch Perfect from there.'; }
   $('#btnFs').onclick = async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); try { await screen.orientation.unlock(); } catch (e) {} } } catch (e) { toast('Full screen was refused by the browser.'); } };
   document.addEventListener('fullscreenchange', () => { $('#btnFs').textContent = document.fullscreenElement ? '⛶ Exit full screen' : '⛶ Full screen'; });
@@ -65,7 +66,7 @@ function bind() {
   $('#specSynth').onchange = e => { Store.data.settings.specSynth = e.target.checked; Store.save(); };
   $('#specLine').onchange = e => { Store.data.settings.specLine = e.target.checked; Store.save(); };
   $('#btnMidiConn').onclick = async () => { const ok = await Midi.connect(true); if (!ok) toast(Midi.lastMsg, 8000); };
-  set('#setA4', 'a4', e => clamp(+e.value || 440, 415, 466)); set('#setGate', 'gateDb', e => +e.value);
+  set('#setA4', 'a4', e => clamp(+e.value || 440, 415, 466)); Gate.init();
   VKeys.attach($('#pianoCv')); VKeys.attach($('#specCv')); VKeys.attach($('#pxCv')); VKeys.attach($('#kyCv'));
   document.addEventListener('keydown', e => VKeys.onKey(e, true)); document.addEventListener('keyup', e => VKeys.onKey(e, false));
   window.addEventListener('blur', () => VKeys.releaseAll());
@@ -165,6 +166,22 @@ function bind() {
   document.querySelectorAll('#specRange button').forEach(b => b.onclick = () => Spec.setMode(b.dataset.r));
   $('#rgNext').onclick = () => RangeFinder.next();
   $('#rgSkip').onclick = () => { RangeFinder.close(); };
+  /* the app's own name box, in place of the browser's prompt(); resolves to the text, or '' when cancelled */
+  const askName = (title, text, value) => new Promise(res => {
+    const o = $('#o-name'), inp = $('#nmIn'), done = v => { o.classList.remove('on'); inp.onkeydown = null; res(v); };
+    $('#nmTitle').textContent = title; $('#nmText').textContent = text; inp.value = value || ''; inp.onkeyup = e => e.stopPropagation(); o.classList.add('on');
+    $('#nmOk').onclick = () => done(inp.value.trim()); $('#nmCancel').onclick = () => done('');
+    inp.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') done(inp.value.trim()); else if (e.key === 'Escape') done(''); }; setTimeout(() => { inp.focus(); inp.select(); }, 50);
+  });
+  const pfFill = () => { const sel = $('#pfSel'); sel.textContent = ''; Profiles.meta.list.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o); }); sel.value = Profiles.meta.active; $('#pfDel').disabled = Profiles.meta.list.length < 2; };
+  pfFill();
+  $('#pfSel').onchange = e => Profiles.switchTo(e.target.value);
+  $('#pfNew').onclick = async () => { const n = await askName('New profile', 'It starts empty, with its own range, progress and settings.', ''); if (!n) return; const id = Profiles.add(n); if (id) Profiles.switchTo(id); };
+  $('#pfRename').onclick = async () => { const n = await askName('Rename profile', '', Profiles.cur().name); if (n) { Profiles.rename(n); pfFill(); } };
+  $('#pfDel').onclick = () => { if (confirm('Delete the profile "' + Profiles.cur().name + '" with its range, progress and settings?')) Profiles.remove(); };
+  $('#pfExport').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([Profiles.exportJson()], { type: 'application/json' })); a.download = 'tunerite-' + Profiles.cur().name.replace(/[^\w-]+/g, '_') + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+  $('#pfImport').onclick = () => $('#pfFile').click();
+  $('#pfFile').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const id = Profiles.importJson(await f.text()); if (id) Profiles.switchTo(id); else toast('That file is not a Tunerite profile.', 4000); };
   $('#btnWipe').onclick = async () => {
     if (!confirm('Delete your range, scores and recordings from this device?')) return;
     Store.wipe(); Store.data = { settings: Object.assign({}, DEFAULTS), range: null, rangeLog: [], history: [], passes: {} };
@@ -186,7 +203,7 @@ function bind() {
 }
 
 ['pointerdown', 'pointermove', 'keydown', 'wheel', 'input', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { UI.lastIn = performance.now(); }, { passive: true, capture: true }));
-Store.load();
+Profiles.load(); Store.load();
 applyUiSize();
 bind();
 Steps.init(); Meta.init(); Mark.init();

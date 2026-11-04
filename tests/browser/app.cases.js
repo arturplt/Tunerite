@@ -517,3 +517,30 @@ T.test('courses: the Course view lists the levels, a piano level scores and pass
     Course.sessionDone({ course: { kind: 'sing', id: COURSE.LEVELS.sing[1].id }, practice: true, result: { agg: { score: 99 } } }); T.ok(!Store.data.course.sing[COURSE.LEVELS.sing[1].id], 'a practice run is not saved'); T.ok($('#rCourse').hidden, 'and shows no course line');
   } finally { Engine.click = keep.click; PX.hear = keep.hear; PX.on && PX.close(); Store.data.course = JSON.parse(keep.c || 'null') || undefined; st.trainMode = keep.m; st.prView = keep.v; UI.show('tuner'); }
 });
+
+T.test('mic gate slider: the cap sets the gate, the LED bar shows the live level', async () => {
+  UI.show('settings'); const st = Store.data.settings, keep = st.gateDb, el = $('#gateSl'); await T.wait(50);
+  try {
+    st.gateDb = -42; UI.refresh(); T.eq($('#gateOut').textContent, '-42 dB', 'the readout shows the gate'); T.near(+el.style.getPropertyValue('--v'), (-42 + 60) / 50, 1e-3, 'the cap sits at -42 dB on a -60 to -10 track');
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); T.eq(st.gateDb, -41, 'the right arrow raises the gate one dB'); el.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true })); T.eq(st.gateDb, -10, 'End is the top of the range, the end of the track'); el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true })); T.eq(st.gateDb, -60, 'Home is the bottom');
+    Gate.set(-5); T.eq(st.gateDb, -10, 'the cap cannot go past the end of the track'); T.eq($$('#gateSl .leds s.th').length, 1, 'one LED marks the threshold'); T.eq($$('#gateSl .leds s')[19].classList.contains('th'), true, 'at the gate, here the last one');
+    const r = el.getBoundingClientRect(); el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 7, clientX: r.left + r.width / 2, clientY: r.top + 60 })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7 })); T.ok(Math.abs(st.gateDb - -35) <= 2, 'clicking the middle of the track sets about -35 dB: ' + st.gateDb); T.eq($$('#gateSl .leds s.th').length, 1); T.ok($$('#gateSl .leds s')[9].classList.contains('th') || $$('#gateSl .leds s')[10].classList.contains('th'), 'the marked LED follows the cap');
+    Gate.live(-90); T.eq($$('#gateSl .leds s.on').length, 0, 'silence lights nothing'); Gate.live(-34); T.eq($$('#gateSl .leds s.on').length, 10, 'a level of -34 dB lights 10 of 20'); Gate.live(-5); T.eq($$('#gateSl .leds s.on').length, 20, 'a loud level lights them all');
+  } finally { Gate.live(-90); st.gateDb = keep; Store.save(); UI.show('tuner'); }
+});
+
+T.test('settings: rockers, key groups, faders and steppers drive the same settings as before', async () => {
+  UI.show('settings'); const st = Store.data.settings, keep = JSON.stringify({ hear: st.hear, diff: st.diff, tempo: st.tempo, vol: st.vol, timbre: st.timbre, a4: st.a4, find: st.find, specLine: st.specLine }); await T.wait(50);
+  try {
+    st.hear = true; st.diff = 'medium'; st.tempo = 100; st.vol = 0.8; st.a4 = 440; st.find = 1; UI.refresh();
+    const r = $('#setHear'); T.eq(r.checked, true, 'a rocker shows the setting'); T.eq(r.getAttribute('aria-pressed'), 'true'); r.click(); T.eq(st.hear, false, 'clicking a rocker flips the setting'); T.eq(r.checked, false); r.click(); T.eq(st.hear, true);
+    st.specLine = true; UI.refresh(); $('#specLine').click(); T.eq(st.specLine, false, 'the Spectrogram rockers work too'); $('#specLine').click();
+    T.eq($('#setDiff').value, 'medium', 'a key group shows the setting'); T.eq($$('#setDiff button[aria-pressed="true"]').length, 1, 'one key is down'); $('#setDiff button[data-v="hard"]').click(); T.eq(st.diff, 'hard', 'a key sets it'); T.eq($('#setDiff').value, 'hard'); $('#setFind button[data-v="0.3"]').click(); T.eq(st.find, 0.3, 'numbers come through as numbers');
+    T.eq($('#setTempo').value, '100', 'a fader shows the tempo'); const f = $('#setTempo'); f.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); T.eq(st.tempo, 105, 'the arrow key moves it one step'); T.eq($('#tempoVal').textContent, '105%', 'and the screen shows it'); f.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true })); T.eq(st.tempo, 150); f.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true })); T.eq(st.tempo, 50);
+    const r2 = f.getBoundingClientRect(); f.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 9, clientX: r2.left + r2.width / 2, clientY: r2.top + 20 })); f.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 9 })); T.ok(Math.abs(st.tempo - 100) <= 10, 'clicking the middle of the track sets about 100%: ' + st.tempo);
+    $('#setVol').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true })); T.near(st.vol, 0.1, 1e-9, 'the volume fader goes down to 10%'); T.eq($('#volVal').textContent, '10%');
+    const t0 = st.timbre; $('.stp[data-for="setTimbre"] .r').click(); T.ok(st.timbre !== t0 && st.timbre !== 'sf', 'a stepper moves to the next instrument: ' + t0 + ' -> ' + st.timbre); T.eq($('.stp[data-for="setTimbre"] b').textContent.toLowerCase(), $('#setTimbre').options[$('#setTimbre').selectedIndex].textContent.toLowerCase(), 'its screen names it');
+    $('.stp[data-for="setA4"] .r').click(); T.eq(st.a4, 441, 'the A4 stepper adds a hertz'); T.eq($('.stp[data-for="setA4"] b').textContent, '441 Hz'); $('.stp[data-for="setA4"] .l').click();
+    T.ok($('.stp[data-for="pfSel"] b').textContent.length > 1, 'the profile screen names the profile: "' + $('.stp[data-for="pfSel"] b').textContent + '"');
+  } finally { const k = JSON.parse(keep); Object.assign(st, k); Store.save(); UI.refresh(); UI.show('tuner'); }
+});

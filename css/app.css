@@ -36,7 +36,7 @@ nav button.on{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
 #o-pex{border-top:0.4rem solid var(--piano)}#o-guide,#o-routine{border-top:0.4rem solid var(--accent)}
 .sfull-cv{flex:1;min-height:0;width:100%;height:auto!important;margin:0!important;border-radius:0!important}
 #o-spec .seg button{min-height:2.75rem}
-.lib-input{width:100%;font:inherit;min-height:3.25rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:0 0.875rem;margin:0.25rem 0 0.5rem}
+.lib-input{user-select:text;-webkit-user-select:text;width:100%;font:inherit;min-height:3.25rem;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:0 0.875rem;margin:0.25rem 0 0.5rem}
 .libcard{border-left:0.35rem solid var(--zc)}.lc-sing{--zc:var(--accent)}.lc-piano{--zc:var(--piano)}
 .libcard .lc-top{display:flex;align-items:center;gap:0.5rem}.libcard .lc-name{flex:1;font-size:1.05rem}.libcard .ico{font-size:1.4rem}
 .star{background:none;border:0;color:var(--warn);font-size:1.6rem;min-width:2.75rem;min-height:2.75rem;cursor:pointer}
@@ -1157,3 +1157,118 @@ button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
 /* ---- Courses (Sing, Whistle, Piano): the level map reuses the Ear course rows ---- */
 #trCourse{margin-top:1rem}
 #rCourse{margin:0.5rem 0;text-align:center}
+
+/* Settings: the same hardware sliders as Compose, a little bigger. A recessed groove, a lit amber part up to the thumb, and a metal fader cap with a ridge. */
+#s-settings input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:calc(34px*var(--k));margin:0;padding:0;cursor:pointer;width:100%}
+#s-settings input[type=range]:focus{outline:none}
+#s-settings input[type=range]::-webkit-slider-runnable-track{height:calc(9px*var(--k));border-radius:calc(5px*var(--k));background:linear-gradient(to right,#0c0c0e var(--a,0%),var(--accent) var(--a,0%),var(--accent) var(--b,0%),#0c0c0e var(--b,0%));box-shadow:inset 0 1px calc(3px*var(--k)) #000,0 0 0 1px #2a2a30,0 1px 0 rgba(255,255,255,.05)}
+#s-settings input[type=range]::-moz-range-track{height:calc(9px*var(--k));border-radius:calc(5px*var(--k));background:linear-gradient(to right,#0c0c0e var(--a,0%),var(--accent) var(--a,0%),var(--accent) var(--b,0%),#0c0c0e var(--b,0%));box-shadow:inset 0 1px calc(3px*var(--k)) #000,0 0 0 1px #2a2a30,0 1px 0 rgba(255,255,255,.05)}
+#s-settings input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:calc(20px*var(--k));height:calc(32px*var(--k));margin-top:calc(-11.5px*var(--k));border-radius:calc(4px*var(--k));border:1px solid #4a4a54;background:linear-gradient(90deg,transparent calc(8px*var(--k)),#5a5a64 calc(8px*var(--k)),#5a5a64 calc(11px*var(--k)),transparent calc(11px*var(--k))),linear-gradient(#f1f1f5,#b4b4bd);box-shadow:0 calc(3px*var(--k)) calc(6px*var(--k)) rgba(0,0,0,.6)}
+#s-settings input[type=range]::-moz-range-thumb{width:calc(18px*var(--k));height:calc(30px*var(--k));border-radius:calc(4px*var(--k));border:1px solid #4a4a54;background:linear-gradient(90deg,transparent calc(7px*var(--k)),#5a5a64 calc(7px*var(--k)),#5a5a64 calc(10px*var(--k)),transparent calc(10px*var(--k))),linear-gradient(#f1f1f5,#b4b4bd);box-shadow:0 calc(3px*var(--k)) calc(6px*var(--k)) rgba(0,0,0,.6)}
+#s-settings input[type=range]:active::-webkit-slider-thumb{background:linear-gradient(90deg,transparent calc(8px*var(--k)),#5a5a64 calc(8px*var(--k)),#5a5a64 calc(11px*var(--k)),transparent calc(11px*var(--k))),linear-gradient(#fff,#d0d0d8)}
+#s-settings input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--accent),0 calc(3px*var(--k)) calc(6px*var(--k)) rgba(0,0,0,.6)}
+
+/* Level slider with an LED bar (from the Hardware Buttons and Sliders sheet): the LEDs above the slot show the live level, the ribbed cap rides in the slot and sets the gate */
+.lsl-foot{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0.4rem 0 0.2rem}.lsl-foot output{font:500 0.75rem ui-monospace,Menlo,Consolas,monospace;color:#ffa23a;min-height:0.75rem}
+.lsl{--cw:30px;--ch:44px;--v:.5;position:relative;width:min(100%,22rem);height:96px;touch-action:none;cursor:pointer;outline:none;user-select:none;-webkit-user-select:none;margin:0 auto 22px}
+.lsl:focus-visible{outline:2px solid #ffa23a;outline-offset:6px;border-radius:6px}
+.lsl .slot{position:absolute;top:62%;height:9px;left:calc(var(--cw)/2 - 4px);right:calc(var(--cw)/2 - 4px);transform:translateY(-50%);background:#0d0e10;border-radius:5px;box-shadow:inset 0 2px 5px #000,0 1px 0 rgba(255,255,255,.08)}
+.lsl .cap{position:absolute;width:var(--cw);height:var(--ch);top:62%;left:calc((100% - var(--cw))*var(--v));margin-top:calc(var(--ch)/-2);border-radius:5px;background:linear-gradient(90deg,transparent calc(50% - 1.5px),#ffa23a calc(50% - 1.5px) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 2px,rgba(255,255,255,.05) 2px 3px,transparent 3px 7px),linear-gradient(180deg,#3a3b40,#2a2b2f);box-shadow:0 5px 0 #121315,0 10px 12px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.09);transition:box-shadow .06s,transform .06s}
+.lsl.drag .cap{transform:translateY(2px);box-shadow:0 2px 0 #121315,0 4px 7px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.07)}
+.lsl .leds{position:absolute;left:calc(var(--cw)/2 - 4px);right:calc(var(--cw)/2 - 4px);top:2px;display:flex;gap:3px;height:14px}
+.lsl .leds s{flex:1;background:#1b1b1e;border-radius:1px;box-shadow:inset 0 1px 1px #000;display:block}.lsl .leds s.on{background:var(--c);box-shadow:0 0 6px var(--c)}
+.lsl .tk{position:absolute;pointer-events:none;top:calc(62% + 14px);height:8px;width:1px;left:calc(var(--cw)/2 + (100% - var(--cw))*var(--t));background:#5b5d63}.lsl .tk.m{height:12px;background:#a4a6ac}
+.lsl .tl{position:absolute;top:calc(62% + 30px);transform:translateX(-50%);font:400 9px/1 "Silkscreen",ui-monospace,monospace;color:#7d7f86;pointer-events:none}
+.setting .lsl-foot{width:100%;box-sizing:border-box}.setting .lsl{width:min(100%,22rem);flex:none}
+/* the LED at the gate is tinted blue, dim when dark and bright when the level reaches it */
+.lsl .leds s.th{background:#16324f;box-shadow:inset 0 1px 1px #000,0 0 0 1px #2a5f9a}.lsl .leds s.th.on{background:#7ec3ff;box-shadow:0 0 8px #5ab0ff,0 0 0 1px #9bd2ff}
+
+/* ====== Settings: the same hardware panels, keys, rockers and faders as the other tabs ====== */
+#s-settings.screen{padding:0.4rem}
+.setcase{position:relative;border-radius:14px;border:1px solid #0a0a0c;padding:1.1rem 1rem 1.2rem;display:flex;flex-direction:column;gap:1rem;max-width:90rem;margin:0 auto;background:
+  radial-gradient(circle at 12px 12px,#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) 12px,#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),
+  radial-gradient(circle at 12px calc(100% - 12px),#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,rgba(0,0,0,.05) 1px 3px),linear-gradient(180deg,#2b2c31,#1a1b1f 40%,#141518);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -2px 6px rgba(0,0,0,.6),0 6px 18px rgba(0,0,0,.5)}
+.sethead{display:flex;flex-wrap:wrap;gap:0.5rem 1rem;align-items:center;padding:0.8rem 1rem 0.5rem;border-radius:12px;background:#202124;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035)}
+.sethead .stp{flex:1 1 20rem;max-width:30rem}.sethead .titlelcd{flex:1 1 14rem;max-width:18rem}.sethead .setkeys{margin-left:auto}
+.sethead .stnote{flex:1 1 100%}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,21rem),1fr));gap:1rem;align-items:start}
+.setpanel{position:relative;border-radius:12px;background:#202124;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035);padding:2.7rem 1.1rem 1.3rem;display:flex;flex-direction:column;gap:1.15rem;min-width:0}
+.splabel{position:absolute;top:0.9rem;left:1.1rem;margin:0;font-size:0.8rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:#a39d90}
+.stx b{display:block;font-weight:500;font-size:1rem;color:var(--text);line-height:1.25}.stx small{display:block;margin-top:0.15rem;font-size:0.85rem;line-height:1.35;color:var(--muted)}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:1rem}.srow[hidden]{display:none}
+.sline{display:flex;align-items:flex-end;justify-content:space-between;gap:0.8rem}
+.sgroup{display:flex;flex-direction:column;gap:0.65rem}
+.sdiv{height:1px;border:0;margin:0;background:linear-gradient(90deg,#3a3b40,transparent)}
+.stnote{margin:0;font-size:0.85rem;line-height:1.4;color:var(--muted)}
+.setkeys{display:flex;flex-wrap:wrap;gap:0.4rem 0.9rem;align-items:center}
+.shimsel{display:none!important}
+.stp:has(+ select[hidden]){display:none}
+/* LCD readouts */
+.slcd{position:relative;overflow:hidden;min-width:0;background:#1a120a;border:1px solid #000;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);--gn:2}
+.slcd::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+.slcd small,.slcd b{display:block;font:400 calc(var(--dp,1px)*16)/calc(var(--dp,1px)*24) "Silkscreen",ui-monospace,Menlo,monospace;letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase}
+.slcd small{color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+.slcd b{color:#ffb347;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
+.slcd.one{flex:none;width:6.5rem;text-align:right;padding-top:calc(var(--dp,1px)*9);padding-bottom:calc(var(--dp,1px)*9)}
+.setdata .slcd b{white-space:normal}
+/* hardware keys */
+#s-settings .k3{--lift:6px;--face-a:#3a3b40;--face-b:#2a2b2f;--side:#121315;position:relative;border:0;padding:0;margin:0 0 var(--lift);cursor:pointer;color:#d8d6cf;font:400 calc(var(--dp,1px)*16) "Silkscreen",ui-monospace,Menlo,monospace;letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase;background:linear-gradient(180deg,var(--face-a),var(--face-b));border-radius:8px;box-shadow:0 var(--lift) 0 var(--side),0 calc(var(--lift) + 5px) 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08);transition:transform .05s linear,box-shadow .05s linear;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#s-settings .k3:active{transform:translateY(var(--lift));box-shadow:0 0 0 var(--side),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+#s-settings .k3[aria-pressed="true"]:not(:active){transform:translateY(calc(var(--lift) - 2px));box-shadow:0 2px 0 var(--side),0 4px 7px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05);--face-a:#34353a;--face-b:#26272b}
+#s-settings .k3:disabled{opacity:.4;pointer-events:none}.k3[hidden]{display:none!important}
+#s-settings .k3.txt{min-height:3.1rem;padding:0 1.2rem;display:inline-flex;align-items:center;justify-content:center;gap:0.6rem}.k3.txt.red{color:#ff6a5e}
+#s-settings .lamp{display:block;width:26px;height:5px;border-radius:3px;background:#2b2118;box-shadow:inset 0 1px 1px #000}
+#s-settings .k3[aria-pressed="true"] .lamp,#s-settings .k3:active .lamp{background:#ffa23a;box-shadow:0 0 9px #ffa23a,0 0 2px #fff6 inset}
+#s-settings .radio{display:flex;gap:0.6rem;padding:0.6rem 0.6rem 0.85rem;background:#0d0e10;border-radius:12px;box-shadow:inset 0 3px 9px #000,0 1px 0 rgba(255,255,255,.07)}
+#s-settings .radio .k3{flex:1 1 0;min-width:0;min-height:3.4rem;margin-bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:9px 4px 8px;text-align:center;line-height:1.25}
+.stp{display:flex;align-items:center;gap:0.5rem}.stp .slcd{flex:1}
+#s-settings .k3.step{width:54px;height:42px;display:grid;place-items:center;border-radius:6px;flex:none;margin-bottom:0}
+#s-settings .step i{width:0;height:0;border-style:solid;display:block}
+#s-settings .step.l i{border-width:7px 11px 7px 0;border-color:transparent #4af26a transparent transparent;filter:drop-shadow(0 0 3px rgba(74,242,106,.6))}
+#s-settings .step.r i{border-width:7px 0 7px 11px;border-color:transparent transparent transparent #4af26a;filter:drop-shadow(0 0 3px rgba(74,242,106,.6))}
+#s-settings .step:active i{filter:drop-shadow(0 0 4px rgba(255,150,40,.9))}
+#s-settings .step.l:active i{border-right-color:#ffa23a}#s-settings .step.r:active i{border-left-color:#ffa23a}
+/* rocker: only the I lights */
+.rockwrap{perspective:260px;padding:7px;background:#0d0e10;border-radius:12px;box-shadow:inset 0 3px 9px #000,0 1px 0 rgba(255,255,255,.07);flex:none}
+#s-settings .rocker{display:block;width:40px;height:58px;border:0;padding:0;cursor:pointer;border-radius:7px;transform:rotateX(15deg);transform-origin:50% 50%;position:relative;color:#7d7f86;font:400 9px/1 "Silkscreen",ui-monospace,Menlo,monospace;background:linear-gradient(180deg,#44454a 0 48%,#17181a 48.4% 51%,#2a2b2f 51.4%);box-shadow:0 5px 8px rgba(0,0,0,.6);transition:transform .08s ease-out;-webkit-tap-highlight-color:transparent}
+#s-settings .rocker[aria-pressed="true"]{transform:rotateX(-15deg);background:linear-gradient(180deg,#2a2b2f 0 48.6%,#17181a 49% 51.6%,#44454a 52%)}
+#s-settings .rocker::before,#s-settings .rocker::after{position:absolute;left:0;right:0;text-align:center}
+#s-settings .rocker::before{content:"I";top:9px}#s-settings .rocker::after{content:"O";bottom:9px}
+#s-settings .rocker[aria-pressed="true"]::before{color:#ffc56b;text-shadow:0 0 4px #ffa23a,0 0 9px #ffa23a,0 0 16px rgba(255,162,58,.8)}
+/* faders */
+.sl{--cw:30px;--ch:44px;--v:.5;position:relative;touch-action:none;cursor:pointer;outline:none;user-select:none;-webkit-user-select:none;width:100%;height:60px}
+.sl.lab{margin-bottom:22px}.sl:focus-visible{outline:2px solid #ffa23a;outline-offset:6px;border-radius:6px}
+.sl .slot{position:absolute;background:#0d0e10;border-radius:5px;box-shadow:inset 0 2px 5px #000,0 1px 0 rgba(255,255,255,.08);top:50%;height:9px;left:calc(var(--cw)/2 - 4px);right:calc(var(--cw)/2 - 4px);transform:translateY(-50%)}
+.sl .fillbar{position:absolute;border-radius:5px;background:#ffa23a;box-shadow:0 0 8px rgba(255,160,50,.6);top:50%;height:5px;margin-top:-2.5px;left:calc(var(--cw)/2);width:calc((100% - var(--cw))*var(--v))}
+.sl .cap{position:absolute;width:var(--cw);height:var(--ch);border-radius:5px;top:50%;left:calc((100% - var(--cw))*var(--v));margin-top:calc(var(--ch)/-2);background:linear-gradient(90deg,transparent calc(50% - 1.5px),#ffa23a calc(50% - 1.5px) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 2px,rgba(255,255,255,.05) 2px 3px,transparent 3px 7px),linear-gradient(180deg,#3a3b40,#2a2b2f);box-shadow:0 5px 0 #121315,0 10px 12px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.09);transition:box-shadow .06s,transform .06s}
+.sl.drag .cap{transform:translateY(2px);box-shadow:0 2px 0 #121315,0 4px 7px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.07)}
+.sl .tk{position:absolute;pointer-events:none;top:0;bottom:0;width:1px;left:calc(var(--cw)/2 + (100% - var(--cw))*var(--t))}
+.sl .tk::before,.sl .tk::after{content:"";position:absolute;background:#5b5d63;left:0;width:1px;height:8px}.sl .tk::before{top:0}.sl .tk::after{bottom:0}
+.sl .tk.m::before,.sl .tk.m::after{background:#a4a6ac;height:13px}
+.sl .tl{position:absolute;bottom:-22px;left:calc(var(--cw)/2 + (100% - var(--cw))*var(--t));transform:translateX(-50%);font:400 9px/1 "Silkscreen",ui-monospace,monospace;color:#8b8d93;pointer-events:none}
+.sline output{font:500 0.8rem ui-monospace,Menlo,Consolas,monospace;color:#ffa23a}
+.setpanel .lsl-foot{margin:0.2rem 0 0}
+@media (max-width:560px){.setcase{padding:0.8rem 0.5rem 0.9rem}.setpanel{padding:2.6rem 0.8rem 1.1rem}.sethead .setkeys{margin-left:0}}
+/* panels flow down balanced columns instead of rows of unequal heights */
+.setgrid{display:block;columns:21rem;column-gap:1rem}
+.setgrid>.setpanel{break-inside:avoid;margin:0 0 1rem;display:flex}
+#s-settings .rocker::before,#s-settings .rocker::after{font-size:13px}
+.sline output{white-space:nowrap;flex:none;min-width:3.5rem;text-align:right}
+
+/* ---- Settings: lighter to paint. Each panel is its own paint island, the LED bar too, and the rocker's 3D tilt is on the button itself ---- */
+.setpanel{contain:layout paint}
+.lsl .leds{contain:paint}
+.rockwrap{perspective:none}
+#s-settings .rocker{transform:perspective(260px) rotateX(15deg)}
+#s-settings .rocker[aria-pressed="true"]{transform:perspective(260px) rotateX(-15deg)}
+
+/* ---- Scroll bars in the same hardware style: a dark groove and a ribbed cap ---- */
+::-webkit-scrollbar{width:16px;height:16px}
+::-webkit-scrollbar-track{background:#141518;box-shadow:inset 0 0 6px rgba(0,0,0,.9)}
+::-webkit-scrollbar-thumb{background:repeating-linear-gradient(0deg,rgba(0,0,0,.45) 0 2px,rgba(255,255,255,.05) 2px 3px,transparent 3px 7px),linear-gradient(90deg,#3a3b40,#2a2b2f);border:3px solid #141518;border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
+::-webkit-scrollbar-thumb:horizontal{background:repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 2px,rgba(255,255,255,.05) 2px 3px,transparent 3px 7px),linear-gradient(180deg,#3a3b40,#2a2b2f)}
+::-webkit-scrollbar-thumb:hover{background:repeating-linear-gradient(0deg,rgba(0,0,0,.45) 0 2px,rgba(255,255,255,.06) 2px 3px,transparent 3px 7px),linear-gradient(90deg,#4a4b51,#34353a)}
+::-webkit-scrollbar-thumb:active{background:repeating-linear-gradient(0deg,rgba(0,0,0,.45) 0 2px,rgba(255,255,255,.06) 2px 3px,transparent 3px 7px),linear-gradient(90deg,#ffb347,#e08a1a)}
+::-webkit-scrollbar-corner{background:#141518}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-color:#3a3b40 #141518}}

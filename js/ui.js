@@ -64,8 +64,8 @@ const UI = {
       if (!sel.hidden && sel.options.length !== MidiLib.units.length) { sel.textContent = ''; MidiLib.units.forEach((u, i) => sel.add(new Option(u.label, i))); }
     }
     $('#setDiff').value = st.diff; $('#setHear').checked = st.hear; $('#setWait').checked = st.wait; $('#setFind').value = String(st.find); $('#setDrone').checked = st.drone; $('#setCues').checked = st.cues;
-    $('#setGuide').value = st.guide; $('#setVol').value = st.vol; $('#setA4').value = st.a4; $('#setInst').value = st.inst; if (!SF.sf && st.timbre === 'sf') $('#setTimbre').value = 'soft'; $('#setKbPlay').checked = st.kbPlay !== false; $('#setUi').value = st.uiSize || 'large'; $('#setTempo').value = st.tempo || 100; $('#tempoVal').textContent = (st.tempo || 100) + '%'; $('#tmVal').textContent = (st.tempo || 100) + '%'; $('#setTimbre').value = st.timbre; $$('.fxRv').forEach(e => e.value = st.reverb || 'off'); $$('.fxCh').forEach(e => e.checked = !!st.chorus); $$('[data-fx]').forEach(el => { const v = st[el.dataset.fx]; if (el.type === 'checkbox') el.checked = !!v; else if (v != null) el.value = v; }); $('#setKb').checked = !!st.kbSound; $$('#instSeg button').forEach(b => b.classList.toggle('on', b.dataset.i === st.inst)); $('#specLine').checked = st.specLine !== false; $('#setGate').value = st.gateDb;
-    $('#gateMark').style.left = clamp((st.gateDb + 80) / 80 * 100, 0, 100) + '%';
+    $('#setGuide').value = st.guide; $('#setVol').value = st.vol; $('#setA4').value = st.a4; $('#setInst').value = st.inst; if (!SF.sf && st.timbre === 'sf') $('#setTimbre').value = 'soft'; $('#setKbPlay').checked = st.kbPlay !== false; $('#setUi').value = st.uiSize || 'large'; $('#setTempo').value = st.tempo || 100; $('#tempoVal').textContent = (st.tempo || 100) + '%'; $('#tmVal').textContent = (st.tempo || 100) + '%'; $('#setTimbre').value = st.timbre; $$('.fxRv').forEach(e => e.value = st.reverb || 'off'); $$('.fxCh').forEach(e => e.checked = !!st.chorus); $$('[data-fx]').forEach(el => { const v = st[el.dataset.fx]; if (el.type === 'checkbox') el.checked = !!v; else if (v != null) el.value = v; }); $('#setKb').checked = !!st.kbSound; $$('#instSeg button').forEach(b => b.classList.toggle('on', b.dataset.i === st.inst)); $('#specLine').checked = st.specLine !== false; Gate.paint(); $$('#s-settings input[type=range]').forEach(el => this.fillRange(el));
+    Gate.paint(); SetUI.sync();
     // progress
     const H = S.history;
     const streak = computeStreak(H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || [])); $('#pStreak').textContent = streak + ' day' + (streak === 1 ? '' : 's');
@@ -171,7 +171,35 @@ const UI = {
   enableReplay(take) { $('#rReplay').disabled = false; $('#rReplay').onclick = () => replay(take); },
   tickLevel() {
     const db = Engine.ready ? Engine.level : -90;
-    $('#lvl').style.width = clamp((db + 80) / 80 * 100, 0, 100) + '%';
+    Gate.live(db);
   }
 };
 
+
+/* The microphone gate as a level slider with an LED bar: the LEDs show the level the microphone hears now, the cap is the gate, and the LED at the cap is tinted blue so the threshold is easy to find. The track and the cap's travel are the same: -60 dB to -10 dB. */
+const Gate = {
+  LO: -60, HI: -10, MIN: -60, MAX: -10, LEDS: 20, db: -42,
+  frac(db) { return (db - this.LO) / (this.HI - this.LO); },
+  init() {
+    const el = $('#gateSl'); if (!el) return; let html = '<i class="slot"></i>';
+    for (let i = 0; i <= 5; i++) { const t = i / 5, db = this.LO + (this.HI - this.LO) * t; html += '<i class="tk' + (i % 2 === 0 ? ' m' : '') + '" style="--t:' + t + '"></i>' + '<span class="tl" style="left:calc(var(--cw) / 2 + (100% - var(--cw)) * ' + t + ')">' + db + '</span>'; }
+    html += '<div class="leds">'; for (let j = 0; j < this.LEDS; j++) { const t = j / (this.LEDS - 1), c = [[194, 255], [65, 162], [12, 58]].map(p => Math.round(p[0] + (p[1] - p[0]) * t)); html += '<s style="--c:rgb(' + c + ')"></s>'; } html += '</div><i class="cap"></i>';
+    el.innerHTML = html; this.leds = $$('.leds s', el); this.cap = $('.cap', el);
+    const fromPointer = e => { const r = el.getBoundingClientRect(), len = this.cap.offsetWidth, f = clamp((e.clientX - r.left - len / 2) / (r.width - len), 0, 1); this.set(this.LO + (this.HI - this.LO) * f); };
+    el.addEventListener('pointerdown', e => { try { el.setPointerCapture(e.pointerId); } catch (x) { /* a synthetic pointer */ } el.classList.add('drag'); el.focus(); fromPointer(e); e.preventDefault(); });
+    el.addEventListener('pointermove', e => { if (el.classList.contains('drag')) fromPointer(e); });
+    const end = () => el.classList.remove('drag'); el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+    el.addEventListener('keydown', e => { const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 5, PageDown: -5 }[e.key]; if (e.key === 'Home') this.set(this.MIN); else if (e.key === 'End') this.set(this.MAX); else if (d) this.set(this.db + d); else return; e.preventDefault(); });
+    this.paint();
+  },
+  set(db) { db = clamp(Math.round(db), this.MIN, this.MAX); const s = Store.data.settings; if (db === s.gateDb) return; s.gateDb = db; Store.save(); Engine.applySettings(); this.paint(); },
+  paint() {
+    const el = $('#gateSl'); if (!el) return; const db = clamp(Store.data.settings.gateDb, this.MIN, this.MAX); this.db = db;
+    el.style.setProperty('--v', this.frac(db).toFixed(4)); if (this.leds) { const at = Math.round(this.frac(db) * (this.LEDS - 1)); this.leds.forEach((l, k) => l.classList.toggle('th', k === at)); } el.setAttribute('aria-valuenow', db); el.setAttribute('aria-valuetext', db + ' dB'); const o = $('#gateOut'); if (o) o.textContent = db + ' dB';
+  },
+  /* the LED bar follows the microphone level, from the same dB reading the meter used */
+  live(db) {
+    if (!this.leds) return; const n = clamp(Math.floor((db - this.LO) / (this.HI - this.LO) * (this.LEDS - 1) + 1e-9) + 1, 0, this.LEDS);
+    if (n === this.lit) return; this.lit = n; this.leds.forEach((s, k) => s.classList.toggle('on', k < n));      // only when the number of lit LEDs changes, so an idle screen costs nothing
+  }
+};
