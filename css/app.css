@@ -245,8 +245,10 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 
 /* Effect knobs in Compose: a dark cap with an amber dot, and a ring of ticks that light up to the value. */
 .knobs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(8px*var(--k)) calc(4px*var(--k));padding:calc(8px*var(--k)) 0}
-.knob{display:flex;flex-direction:column;align-items:center;gap:calc(2px*var(--k));cursor:ns-resize;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:calc(8px*var(--k))}
+.knob{display:flex;flex-direction:column;align-items:center;gap:calc(2px*var(--k));cursor:default;touch-action:pan-y;user-select:none;-webkit-user-select:none;border-radius:calc(8px*var(--k))}
 .knob:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kwrap{position:relative;display:block;line-height:0;flex:none}
+.khit{position:absolute;left:17%;top:17%;right:17%;bottom:17%;border-radius:50%;touch-action:none;cursor:ns-resize}
 .knob svg{width:calc(58px*var(--k));height:calc(58px*var(--k));display:block;overflow:visible}
 .knob line{stroke:#2a2a2e;stroke-width:3;stroke-linecap:round}.knob line.on{stroke:var(--c,var(--accent));filter:drop-shadow(0 0 2px rgba(255,150,40,.6))}
 .knob .kb{fill:#17171a;stroke:#0a0a0c;stroke-width:1.5;filter:drop-shadow(0 3px 3px rgba(0,0,0,.7))}
@@ -285,7 +287,7 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 .pnknobs{grid-template-columns:repeat(auto-fit,minmax(4.5rem,1fr))}.pnknobs .knob svg{width:calc(52px*var(--k));height:calc(52px*var(--k))}
 
 /* ---- Synth look: brushed-metal panel with corner screws, amber LCD, knurled knobs with a lit ring ---- */
-.knob .kb{fill:#232326;stroke:none;filter:drop-shadow(4px 5px 5px rgba(0,0,0,.85)) drop-shadow(-3px -3px 4px rgba(255,255,255,.045))}
+.knob .kb{fill:var(--tn-well,#232326);stroke:none;filter:drop-shadow(4px 5px 5px rgba(0,0,0,.85)) drop-shadow(-3px -3px 4px rgba(255,255,255,.045))}
 .knob .kr{display:none}
 .knob:not(.rstknob) .kf{fill:none;stroke:none}
 .knob .kh{display:none}
@@ -293,7 +295,7 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 .knob.drag b{font-size:0}.knob.drag b::after{content:attr(data-v);font-size:calc(11px*var(--k));color:var(--accent);letter-spacing:.04em}
 .knob.drag{cursor:grabbing}
 .knob b{font-weight:700;letter-spacing:.14em;text-shadow:0 -1px 0 #000}
-.synth{position:relative;width:100%;box-sizing:border-box;margin:0.5rem 0;padding:1.1rem 1.25rem 1rem;border-radius:12px;border:1px solid #0a0a0c;text-align:left;
+.synth{position:relative;width:100%;box-sizing:border-box;margin:0.5rem 0;padding:1.1rem 1.25rem 1rem;border-radius:12px;border:1px solid var(--tn-edge,#0a0a0c);text-align:left;
   background:
     radial-gradient(circle at 12px 12px,#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) 12px,#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),
     radial-gradient(circle at 12px calc(100% - 12px),#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#8a8a94 0 1.5px,#4a4a52 2.5px,#1a1a1e 5px,transparent 5.5px),
@@ -301,18 +303,18 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -2px 6px rgba(0,0,0,.6),0 6px 18px rgba(0,0,0,.5)}
 .synhead{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.75rem}
 .synlogo{font-weight:800;letter-spacing:.32em;font-size:0.95rem;color:#d6d0c2;text-shadow:0 1px 0 #000,0 -1px 0 rgba(255,255,255,.12)}.synlogo i{font-style:normal;font-weight:600;color:var(--accent);margin-left:.7em;letter-spacing:.2em;font-size:.7rem;vertical-align:.1em}
-.synbtn{font:inherit;font-weight:700;font-size:0.8rem;letter-spacing:.06em;color:#cfc8b8;min-height:2.4rem;min-width:2.4rem;padding:0 0.7rem;border-radius:7px;border:1px solid #050506;cursor:pointer;
+.synbtn{font:inherit;font-weight:700;font-size:0.8rem;letter-spacing:.06em;color:var(--tn-printh,#cfc8b8);min-height:2.4rem;min-width:2.4rem;padding:0 0.7rem;border-radius:7px;border:1px solid var(--tn-edge,#050506);cursor:pointer;
   background:#2a2b30;box-shadow:3px 3px 6px rgba(0,0,0,.7),-2px -2px 5px rgba(255,255,255,.04)}
 .synbtn:hover{color:#fff;background:#303136}.synbtn:active{transform:translateY(1px);box-shadow:inset 2px 2px 5px rgba(0,0,0,.7),inset -1px -1px 3px rgba(255,255,255,.04);background:#25262a}
 .synlcdrow{display:flex;flex-wrap:wrap;gap:0.5rem 0.75rem;margin-bottom:0.5rem}
 .synlcd{flex:1 1 14rem;min-width:0;display:flex;align-items:stretch;gap:0.4rem}
 .lcd{flex:1;min-width:0;padding:0.3rem 0.65rem;border-radius:6px;border:1px solid #000;display:flex;flex-direction:column;justify-content:center;
-  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),linear-gradient(180deg,#1d1408,#2a1c0a);box-shadow:inset 0 2px 6px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.1)}
-.lcd small{font:600 0.6rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.2em;color:#a8731f;opacity:.8}
-.lcd b{font:700 1.05rem ui-monospace,Menlo,Consolas,monospace;color:#ffc766;text-shadow:0 0 6px rgba(255,170,50,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.03em}
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),linear-gradient(180deg,var(--tn-lcd,#1d1408),#2a1c0a);box-shadow:inset 0 2px 6px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.1)}
+.lcd small{font:600 0.6rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.2em;color:var(--tn-dim,#a8731f);opacity:.8}
+.lcd b{font:700 1.05rem ui-monospace,Menlo,Consolas,monospace;color:var(--tn-fg,#ffc766);text-shadow:0 0 6px rgba(255,170,50,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.03em}
 .synsecs{display:flex;flex-wrap:wrap;gap:0.5rem;flex:1;min-width:0}
 .synsec{position:relative;flex:1 1 auto;padding:1.1rem 0.5rem 0.4rem;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(0,0,0,.18);box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
-.synlab{position:absolute;top:-0.55em;left:0.6rem;padding:0 0.4rem;font-size:0.6rem;font-weight:700;letter-spacing:.24em;color:#8f8a7e;background:#1c1d21;text-shadow:0 -1px 0 #000}
+.synlab{position:absolute;top:-0.55em;left:0.6rem;padding:0 0.4rem;font-size:0.6rem;font-weight:700;letter-spacing:.24em;color:var(--tn-print,#8f8a7e);background:#1c1d21;text-shadow:0 -1px 0 #000}
 .synsec .knobs{display:flex;flex-wrap:nowrap;justify-content:space-around;gap:0.25rem;padding:0}
 .synsec .knob{flex:1 1 0;min-width:calc(54px*var(--k))}
 .synsec .knob svg{width:calc(54px*var(--k));height:calc(54px*var(--k))}
@@ -331,27 +333,27 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 .synscreen{padding:7px;border-radius:13px;border:1px solid #000;background:linear-gradient(180deg,#2c2d32,#1a1b1f);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -2px 4px rgba(0,0,0,.5),0 10px 22px rgba(0,0,0,.6),0 2px 0 #000}
 .synglass{border-radius:8px;border:1px solid #000;overflow:hidden;background:#07090b;box-shadow:0 0 0 1px #000,inset 0 0 0 2px #1d1e22,inset 0 4px 12px rgba(0,0,0,.95)}
 .syntabs{display:flex;background:#222326;border-bottom:1px solid #000}
-.syntabs button{flex:1;font:700 0.68rem system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8f8a7e;background:none;border:0;border-right:1px solid #000;padding:0.55rem 0.25rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;min-height:2.4rem}
-.syntabs button:last-child{border-right:0}.syntabs button:hover{color:#e9dcc0}
-.syntabs i{width:0.45rem;height:0.45rem;border-radius:50%;background:#3a2a10;box-shadow:inset 0 1px 1px #000}
-.syntabs button.on{color:#ffc766;background:#18191c}.syntabs button.on i{background:#ffb347;box-shadow:0 0 6px 1px rgba(255,179,71,.8)}
+.syntabs button{flex:1;font:700 0.68rem system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--tn-print,#8f8a7e);background:none;border:0;border-right:1px solid #000;padding:0.55rem 0.25rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;min-height:2.4rem}
+.syntabs button:last-child{border-right:0}.syntabs button:hover{color:var(--tn-printh,#e9dcc0)}
+.syntabs i{width:0.45rem;height:0.45rem;border-radius:50%;background:var(--tn-ledoff,#3a2a10);box-shadow:inset 0 1px 1px #000}
+.syntabs button.on{color:var(--tn-fg,#ffc766);background:#18191c}.syntabs button.on i{background:var(--tn-fg,#ffb347);box-shadow:0 0 6px 1px rgba(255,179,71,.8)}
 .synpane{padding:0;height:21rem}.synpane[hidden]{display:none}   /* every tab is the same height, so the keys below never move */
 .synpane #specCv{width:100%;border-radius:0}
 .synspecbar{display:flex;flex-direction:column;gap:0.4rem;padding:0.5rem 0.6rem}
 .synspecbar>.synbtn{align-self:flex-start}
 #specCtl{width:100%}
-.lcdlab{font:600 0.68rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;color:#a8731f;text-transform:uppercase}
+.lcdlab{font:600 0.68rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;color:var(--tn-dim,#a8731f);text-transform:uppercase}
 p.lcdlab{padding:0 0.6rem 0.5rem}
 .lcdlist{background:linear-gradient(180deg,#140e06,#1c1308);height:21rem;display:flex;flex-direction:column}
-.lcdlist .synspecbar{flex-direction:row;flex-wrap:wrap;border-top:1px solid #3a2a10}
+.lcdlist .synspecbar{flex-direction:row;flex-wrap:wrap;border-top:1px solid var(--tn-ledoff,#3a2a10)}
 .lcdrows{flex:1;overflow-y:auto;min-height:0;padding:0.25rem 0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
-.lcdrow{display:flex;align-items:center;gap:0.6rem;padding:0.3rem 0.8rem;cursor:pointer;font:600 0.92rem ui-monospace,Menlo,Consolas,monospace;color:#d99a3a;text-align:left;min-height:2rem}
-.lcdrow span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lcdrow i{font-style:normal;font-size:0.7rem;letter-spacing:.12em;color:#8a5f1c;text-transform:uppercase;flex:none}
-.lcdrow:hover{background:rgba(255,179,71,.1)}.lcdrow.on{background:#ffb347;color:#1d1408;text-shadow:none}.lcdrow.on i{color:#5a3b0a}
+.lcdrow{display:flex;align-items:center;gap:0.6rem;padding:0.3rem 0.8rem;cursor:pointer;font:600 0.92rem ui-monospace,Menlo,Consolas,monospace;color:var(--tn-lab,#d99a3a);text-align:left;min-height:2rem}
+.lcdrow span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lcdrow i{font-style:normal;font-size:0.7rem;letter-spacing:.12em;color:var(--tn-dim,#8a5f1c);text-transform:uppercase;flex:none}
+.lcdrow:hover{background:rgba(255,179,71,.1)}.lcdrow.on{background:var(--tn-fg,#ffb347);color:var(--tn-lcd,#1d1408);text-shadow:none}.lcdrow.on i{color:#5a3b0a}
 .lcdrow .mini{min-height:1.7rem;min-width:1.7rem;padding:0 0.3rem}
-.lcdnote{padding:0.8rem;font:0.85rem ui-monospace,Menlo,Consolas,monospace;color:#a8731f;text-align:left}
-.lcdfind{margin:0.5rem 0.6rem 0.25rem;font:0.9rem ui-monospace,Menlo,Consolas,monospace;color:#ffc766;background:#0b0804;border:1px solid #4a3410;border-radius:5px;padding:0.4rem 0.6rem;min-height:2.2rem}
-.synkeys{padding:0;border-top:2px solid #000;background:#050506;box-shadow:inset 0 6px 8px -4px rgba(0,0,0,.9)}     /* same width as the spectrogram above it, so every column falls from its own key */
+.lcdnote{padding:0.8rem;font:0.85rem ui-monospace,Menlo,Consolas,monospace;color:var(--tn-dim,#a8731f);text-align:left}
+.lcdfind{margin:0.5rem 0.6rem 0.25rem;font:0.9rem ui-monospace,Menlo,Consolas,monospace;color:var(--tn-fg,#ffc766);background:#0b0804;border:1px solid #4a3410;border-radius:5px;padding:0.4rem 0.6rem;min-height:2.2rem}
+.synkeys{padding:0;border-top:2px solid #000;background:var(--tn-edge,#050506);box-shadow:inset 0 6px 8px -4px rgba(0,0,0,.9)}     /* same width as the spectrogram above it, so every column falls from its own key */
 .synkeys canvas{width:100%;border-radius:0}
 .synstrip{margin:0;border-radius:0;border-width:1px 0 0;min-height:2.3rem;flex-direction:row;align-items:center}.synstrip b{font-size:0.9rem;font-weight:700;letter-spacing:.04em;min-height:1.2em}
 #pianoInfo{min-height:0}
@@ -362,18 +364,18 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 /* Segmented LED look for the level bars (mic meter, volume, track meters), matching the knob rings */
 .sqm,#volTrack,.meter{background:repeating-linear-gradient(90deg,#26262a 0 5px,#0c0c0e 5px 7px);border-radius:2px}
 .sqm i,#volFill,.meter i{-webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px)}
-#volFill{background:linear-gradient(90deg,#c2410c,#ffa23a)}
+#volFill{background:linear-gradient(90deg,#c2410c,var(--tn-fg,#ffa23a))}
 
 /* Preset, SoundFont and patch arrows: round matte buttons with a green triangle that turns orange while pressed */
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN){position:relative;flex:none;align-self:center;width:2.4rem;height:2.4rem;min-width:0;min-height:0;padding:0;border-radius:50%;font-size:0;color:transparent;background:#232326;border:0;box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN){position:relative;flex:none;align-self:center;width:2.4rem;height:2.4rem;min-width:0;min-height:0;padding:0;border-radius:50%;font-size:0;color:transparent;background:var(--tn-well,#232326);border:0;box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
 .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN)::after{content:"";position:absolute;inset:0;margin:auto;width:0.85rem;height:0.85rem;background:#4af26a;filter:drop-shadow(0 0 3px rgba(74,242,106,.65))}
 .synbtn:is(.prPP,.pkPP,.sfPP)::after{clip-path:polygon(100% 0,0 50%,100% 100%);transform:translateX(-0.14rem)}
 .synbtn:is(.prPN,.pkPN,.sfPN)::after{clip-path:polygon(0 0,100% 50%,0 100%);transform:translateX(0.14rem)}
 .synbtn.sfFP::after{clip-path:polygon(50% 0,100% 100%,0 100%);transform:translateY(-0.14rem)}
 .synbtn.sfFN::after{clip-path:polygon(0 0,100% 0,50% 100%);transform:translateY(0.14rem)}
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):hover{background:#27272b}
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active{transform:none;background:#1e1e21;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active::after{background:#ffa23a;filter:drop-shadow(0 0 4px rgba(255,150,40,.8))}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):hover{background:var(--tn-well,#27272b)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active{transform:none;background:var(--tn-well,#1e1e21);box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active::after{background:var(--tn-fg,#ffa23a);filter:drop-shadow(0 0 4px rgba(255,150,40,.8))}
 
 /* Icon-only synth buttons; the resets are red */
 .synbtn.ico{width:2.4rem;padding:0;display:inline-flex;align-items:center;justify-content:center}.synbtn.ico svg{display:block}
@@ -383,49 +385,49 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .syngrid{position:relative;grid-template-columns:minmax(0,1fr) calc(15.5rem + 3.2rem);gap:0.75rem 1.9rem}
 .synscreen{position:relative}
 .syncables{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:6}
-.cb-s{fill:none;stroke:#050506;stroke-width:7;stroke-linecap:round}.cb-c{fill:none;stroke-width:3.6;stroke-linecap:round;filter:drop-shadow(0 0 3px rgba(255,255,255,.12))}.cb-h{fill:none;stroke:rgba(255,255,255,.2);stroke-width:.8;stroke-linecap:round;transform:translate(0,-1px)}
+.cb-s{fill:none;stroke:var(--tn-edge,#050506);stroke-width:7;stroke-linecap:round}.cb-c{fill:none;stroke-width:3.6;stroke-linecap:round;filter:drop-shadow(0 0 3px rgba(255,255,255,.12))}.cb-h{fill:none;stroke:rgba(255,255,255,.2);stroke-width:.8;stroke-linecap:round;transform:translate(0,-1px)}
 .syncables .off .cb-c{stroke:#35363b!important;filter:none}.syncables .off .cb-h{opacity:.3}
-.plug{fill:#8d8d93;stroke:#050506;stroke-width:1.5}.plugc{fill:#17171a}
-.jack{position:absolute;width:14px;height:14px;border-radius:50%;background:#050506;box-shadow:inset 0 1px 2px #000,0 0 0 2px #2c2d31,0 0 0 3px #000;display:block}
+.plug{fill:#8d8d93;stroke:var(--tn-edge,#050506);stroke-width:1.5}.plugc{fill:#17171a}
+.jack{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--tn-edge,#050506);box-shadow:inset 0 1px 2px #000,0 0 0 2px #2c2d31,0 0 0 3px #000;display:block}
 .jack.in{right:-7px;top:18px}.jack.out{right:-7px;bottom:18px}.jack.gl{left:-7px;top:50%;margin-top:-7px}
 .screenjack{right:-7px;top:3.4rem}
 #pnKnobs.synsecs{gap:1.05rem;padding-right:3.2rem}
-.synbyp{position:relative;display:flex;align-items:center;gap:0.7rem;padding:0.55rem 0.7rem;border-radius:10px;background:#202124;box-shadow:5px 6px 12px rgba(0,0,0,.65),-3px -3px 8px rgba(255,255,255,.035)}
+.synbyp{position:relative;display:flex;align-items:center;gap:0.7rem;padding:0.55rem 0.7rem;border-radius:10px;background:var(--tn-well,#202124);box-shadow:5px 6px 12px rgba(0,0,0,.65),-3px -3px 8px rgba(255,255,255,.035)}
 .synbyp .jack[data-j=byp-b]{right:-7px;top:12px}.synbyp .jack[data-j=byp-c]{right:-7px;bottom:12px}
-.bypname{font:700 0.68rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.24em;color:#8f8a7e;flex:1}
-.bypled{width:0.5rem;height:0.5rem;border-radius:50%;background:#3a2a10;box-shadow:inset 0 1px 1px #000}
-.bigjack{position:relative;flex:none;width:2.7rem;height:2.7rem;border-radius:50%;border:0;padding:0;cursor:pointer;background:#232326;box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
-.bigjack i{position:absolute;inset:27%;border-radius:50%;background:#050506;box-shadow:inset 0 2px 4px #000,0 0 0 2px #2c2d31}
-.bigjack:active,.bigjack[aria-pressed=true]{background:#1e1e21;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
-.bigjack[aria-pressed=true] i{box-shadow:inset 0 2px 4px #000,0 0 0 2px #ff7a2a,0 0 8px rgba(255,122,42,.7)}
-#pnKnobs.byp .bypled{background:#ff7a2a;box-shadow:0 0 6px #ff7a2a}
+.bypname{font:700 0.68rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.24em;color:var(--tn-print,#8f8a7e);flex:1}
+.bypled{width:0.5rem;height:0.5rem;border-radius:50%;background:var(--tn-ledoff,#3a2a10);box-shadow:inset 0 1px 1px #000}
+.bigjack{position:relative;flex:none;width:2.7rem;height:2.7rem;border-radius:50%;border:0;padding:0;cursor:pointer;background:var(--tn-well,#232326);box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
+.bigjack i{position:absolute;inset:27%;border-radius:50%;background:var(--tn-edge,#050506);box-shadow:inset 0 2px 4px #000,0 0 0 2px #2c2d31}
+.bigjack:active,.bigjack[aria-pressed=true]{background:var(--tn-well,#1e1e21);box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
+.bigjack[aria-pressed=true] i{box-shadow:inset 0 2px 4px #000,0 0 0 2px var(--tn-fg,#ff7a2a),0 0 8px rgba(255,122,42,.7)}
+#pnKnobs.byp .bypled{background:var(--tn-fg,#ff7a2a);box-shadow:0 0 6px var(--tn-fg,#ff7a2a)}
 #pnKnobs.byp .synmod{opacity:.55;filter:saturate(.45)}
-.synmod{--m:#ffb347;position:relative;padding-top:1.35rem;border:0;border-radius:10px;background:linear-gradient(180deg,color-mix(in srgb,var(--m) 9%,#212225),#1d1e21);box-shadow:5px 6px 12px rgba(0,0,0,.65),-3px -3px 8px rgba(255,255,255,.035),inset 0 2px 0 color-mix(in srgb,var(--m) 70%,#000)}
+.synmod{--m:var(--tn-fg,#ffb347);position:relative;padding-top:1.35rem;border:0;border-radius:10px;background:linear-gradient(180deg,color-mix(in srgb,var(--m) 9%,var(--tn-well,#212225)),var(--tn-well,#1d1e21));box-shadow:5px 6px 12px rgba(0,0,0,.65),-3px -3px 8px rgba(255,255,255,.035),inset 0 2px 0 color-mix(in srgb,var(--m) 70%,#000)}
 .synmod .synlab{top:0.35rem;left:0.7rem;padding:0;background:none;color:color-mix(in srgb,var(--m) 65%,#9a9a9a);display:flex;align-items:center;gap:0.4rem}
 .synmod .synlab::before{content:"";width:0.4rem;height:0.4rem;border-radius:50%;background:var(--m);box-shadow:0 0 5px var(--m)}
-.mod-space{--m:#6c8ebf;border-radius:16px;background:radial-gradient(120% 90% at 50% 0,color-mix(in srgb,var(--m) 14%,#212225),#1c1d20)}
-.mod-mod{--m:#9a7fd1;background:repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 2px,transparent 2px 6px),linear-gradient(180deg,color-mix(in srgb,var(--m) 9%,#212225),#1d1e21)}
-.mod-tone{--m:#4fb0aa;border-radius:6px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0 1px,rgba(0,0,0,.05) 1px 3px),linear-gradient(180deg,color-mix(in srgb,var(--m) 8%,#212225),#1d1e21)}
-.mod-disp{--m:#ffb347;background:linear-gradient(180deg,#141416,#19191c);box-shadow:inset 0 3px 8px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.06),inset 0 -2px 0 color-mix(in srgb,var(--m) 60%,#000)}
+.mod-space{--m:#6c8ebf;border-radius:16px;background:radial-gradient(120% 90% at 50% 0,color-mix(in srgb,var(--m) 14%,var(--tn-well,#212225)),#1c1d20)}
+.mod-mod{--m:#9a7fd1;background:repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 2px,transparent 2px 6px),linear-gradient(180deg,color-mix(in srgb,var(--m) 9%,var(--tn-well,#212225)),var(--tn-well,#1d1e21))}
+.mod-tone{--m:#4fb0aa;border-radius:6px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0 1px,rgba(0,0,0,.05) 1px 3px),linear-gradient(180deg,color-mix(in srgb,var(--m) 8%,var(--tn-well,#212225)),var(--tn-well,#1d1e21))}
+.mod-disp{--m:var(--tn-fg,#ffb347);background:linear-gradient(180deg,#141416,#19191c);box-shadow:inset 0 3px 8px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.06),inset 0 -2px 0 color-mix(in srgb,var(--m) 60%,#000)}
 @media (max-width:760px){.syngrid{grid-template-columns:minmax(0,1fr)}#pnKnobs.synsecs{padding-right:0}.jack,.syncables{display:none}}
 
 /* Top buttons in the knob style: raised matte caps that sink in when pressed, with a glowing LED when on */
 .syntabs{gap:0.5rem;padding:0.55rem 0.65rem;background:#18191c;border-bottom:1px solid #000}
-.syntabs button{border:0;border-right:0;border-radius:999px;background:#232326;color:#8f8a7e;padding:0.55rem 0.3rem;box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
-.syntabs button:hover{background:#27272b;color:#e9dcc0}
-.syntabs button.on,.syntabs button:active{color:#ffc766;background:#1e1e21;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
-.syntabs i{width:0.5rem;height:0.5rem;background:#3a2a10;box-shadow:inset 0 1px 1px #000}
-.syntabs button.on i{background:#ffb347;box-shadow:0 0 6px 1px rgba(255,179,71,.8)}
+.syntabs button{border:0;border-right:0;border-radius:999px;background:var(--tn-well,#232326);color:var(--tn-print,#8f8a7e);padding:0.55rem 0.3rem;box-shadow:4px 5px 8px rgba(0,0,0,.8),-3px -3px 6px rgba(255,255,255,.045)}
+.syntabs button:hover{background:var(--tn-well,#27272b);color:var(--tn-printh,#e9dcc0)}
+.syntabs button.on,.syntabs button:active{color:var(--tn-fg,#ffc766);background:var(--tn-well,#1e1e21);box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
+.syntabs i{width:0.5rem;height:0.5rem;background:var(--tn-ledoff,#3a2a10);box-shadow:inset 0 1px 1px #000}
+.syntabs button.on i{background:var(--tn-fg,#ffb347);box-shadow:0 0 6px 1px rgba(255,179,71,.8)}
 .synbtn{border-radius:10px}
 .synbtn.ico{width:2.6rem;height:2.6rem;min-height:0;border-radius:50%}
 .synbtn:active{box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 4px rgba(255,255,255,.04)}
 
 /* Neumorphic dial buttons: a matte raised cap with a recessed face, like the knobs. Icons glow orange while pressed. */
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){position:relative;flex:none;align-self:center;width:2.6rem;height:2.6rem;min-width:0;min-height:0;padding:0;border:0;border-radius:50%;background:#232326;color:#8f9096;box-shadow:5px 6px 10px rgba(0,0,0,.85),-3px -3px 7px rgba(255,255,255,.05)}
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{content:"";position:absolute;inset:0.42rem;border-radius:50%;background:#1b1b1d;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045);pointer-events:none}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){position:relative;flex:none;align-self:center;width:2.6rem;height:2.6rem;min-width:0;min-height:0;padding:0;border:0;border-radius:50%;background:var(--tn-well,#232326);color:var(--tn-print,#8f9096);box-shadow:5px 6px 10px rgba(0,0,0,.85),-3px -3px 7px rgba(255,255,255,.05)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{content:"";position:absolute;inset:0.42rem;border-radius:50%;background:var(--tn-well,#1b1b1d);box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045);pointer-events:none}
 .synbtn.ico svg{position:relative;width:1.05rem;height:1.05rem;filter:drop-shadow(0 0 3px rgba(255,255,255,.12))}
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover{background:#27272b}
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:none;background:#1e1e21;box-shadow:inset 3px 3px 7px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.04)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover{background:var(--tn-well,#27272b)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:none;background:var(--tn-well,#1e1e21);box-shadow:inset 3px 3px 7px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.04)}
 .synbtn.ico:active{color:var(--accent)}.synbtn.ico:active svg{filter:drop-shadow(0 0 4px rgba(255,150,40,.85))}
 .synbtn.ico.red{color:#ff5d4f}.synbtn.ico.red svg{filter:drop-shadow(0 0 4px rgba(255,80,70,.55))}.synbtn.ico.red:hover{color:#ff8174}.synbtn.ico.red:active{color:#ffb0a8}
 .synhbtns{gap:0.7rem}
@@ -433,47 +435,47 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 /* One unit instead of wired modules: the effects share a single raised plate split by engraved section lines. No cables, no jacks. */
 .syncables,.jack{display:none!important}
 .syngrid{grid-template-columns:minmax(0,1fr) 15.5rem;gap:0.75rem}
-#pnKnobs.synsecs{gap:0;padding:0.4rem 0.55rem 0.55rem;border-radius:12px;background:#202124;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035)}
+#pnKnobs.synsecs{gap:0;padding:0.4rem 0.55rem 0.55rem;border-radius:12px;background:var(--tn-well,#202124);box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035)}
 #pnKnobs .synbyp{background:none;box-shadow:none;border-radius:0;padding:0.4rem 0.3rem 0.7rem}
 #pnKnobs .synmod{border-radius:0;background:none;box-shadow:none;border-top:1px solid #0e0e10;padding-top:1.5rem;margin-top:0.1rem}
 #pnKnobs .synmod::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(255,255,255,.05)}
-#pnKnobs .synmod .synlab{color:#8f8a7e}
+#pnKnobs .synmod .synlab{color:var(--tn-print,#8f8a7e)}
 #pnKnobs .synmod .synlab::before{display:none}
-.synthmain .synhead{padding:0.65rem 0.85rem;border-radius:12px;background:#202124;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035);margin-bottom:0.9rem}
+.synthmain .synhead{padding:0.65rem 0.85rem;border-radius:12px;background:var(--tn-well,#202124);box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035);margin-bottom:0.9rem}
 .synthmain .synlcdrow{gap:0.6rem 0.9rem}
 
 /* Spectrogram resolution as a small low-resolution LCD in the Display section */
 #pnKnobs .mod-disp{display:flex;align-items:center;gap:0.5rem}
 #pnKnobs .mod-disp .knobs{flex:none}
-.lcdpx{position:relative;flex:1;min-width:0;align-self:center;padding:0.4rem 0.5rem;border-radius:5px;border:1px solid #000;background:#1a120a;overflow:hidden;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
+.lcdpx{position:relative;flex:1;min-width:0;align-self:center;padding:0.4rem 0.5rem;border-radius:5px;border:1px solid #000;background:var(--tn-lcd,#1a120a);overflow:hidden;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
 .lcdpx::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
-.lcdpx small{display:block;font:700 0.5rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.22em;color:#6b4513;margin-bottom:0.2rem}
-.lcdpx b{display:flex;flex-direction:column;font:700 0.82rem/1.2 ui-monospace,Menlo,Consolas,"Courier New",monospace;letter-spacing:.1em;text-transform:uppercase;color:#ffb347;text-shadow:0 0 5px rgba(255,160,50,.65);white-space:nowrap}
+.lcdpx small{display:block;font:700 0.5rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.22em;color:var(--tn-dim,#6b4513);margin-bottom:0.2rem}
+.lcdpx b{display:flex;flex-direction:column;font:700 0.82rem/1.2 ui-monospace,Menlo,Consolas,"Courier New",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--tn-fg,#ffb347);text-shadow:0 0 5px rgba(255,160,50,.65);white-space:nowrap}
 
 /* Preset, SoundFont and patch screens: the same low-resolution pixel LCD as the resolution readout */
-.synlcd .lcd{position:relative;overflow:hidden;background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
+.synlcd .lcd{position:relative;overflow:hidden;background:var(--tn-lcd,#1a120a);border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
 .synlcd .lcd::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
-.synlcd .lcd small{font:700 0.5rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.22em;color:#6b4513;opacity:1}
-.synlcd .lcd b{font:700 0.92rem ui-monospace,Menlo,Consolas,"Courier New",monospace;letter-spacing:.1em;text-transform:uppercase;color:#ffb347;text-shadow:0 0 5px rgba(255,160,50,.65)}
+.synlcd .lcd small{font:700 0.5rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.22em;color:var(--tn-dim,#6b4513);opacity:1}
+.synlcd .lcd b{font:700 0.92rem ui-monospace,Menlo,Consolas,"Courier New",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--tn-fg,#ffb347);text-shadow:0 0 5px rgba(255,160,50,.65)}
 
 /* Screen tabs: flat menu strip along the top of the LCD, not buttons. The active page is lit with a bar under it. */
 .syntabs{position:relative;gap:0;padding:0;background:#120c05;border-bottom:1px solid #000}
 .syntabs::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .syntabs button{border:0;border-right:1px solid #000;border-radius:0;background:none;box-shadow:none;color:#8a6a2e;padding:0.6rem 0.25rem;font:700 0.68rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.16em;text-transform:uppercase}
 .syntabs button:last-child{border-right:0}
-.syntabs button:hover{background:#1a1208;color:#e9dcc0;box-shadow:none}
-.syntabs button.on,.syntabs button:active{color:#ffc766;background:#2a1c0a;box-shadow:inset 0 -2px 0 #ffb347}
+.syntabs button:hover{background:#1a1208;color:var(--tn-printh,#e9dcc0);box-shadow:none}
+.syntabs button.on,.syntabs button:active{color:var(--tn-fg,#ffc766);background:#2a1c0a;box-shadow:inset 0 -2px 0 var(--tn-fg,#ffb347)}
 .syntabs i{border-radius:0;width:0.4rem;height:0.4rem}
 
 /* Lists (banks, patches, presets) and the spectrogram in the same pixel LCD style as the other screens */
 .lcdlist,.synpane[data-p="spec"]{position:relative}
-.lcdlist{background:#1a120a}
+.lcdlist{background:var(--tn-lcd,#1a120a)}
 .lcdlist::after,.synpane[data-p="spec"]::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),radial-gradient(120% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.35))}
 .lcdrows{background:none}
-.lcdrow{text-transform:uppercase;letter-spacing:.08em;color:#ffb347;text-shadow:0 0 5px rgba(255,160,50,.5)}
-.lcdrow i{color:#8a5f1c;text-shadow:none}
-.lcdrow.on{background:#ffb347;color:#1d1408;text-shadow:none}
+.lcdrow{text-transform:uppercase;letter-spacing:.08em;color:var(--tn-fg,#ffb347);text-shadow:0 0 5px rgba(255,160,50,.5)}
+.lcdrow i{color:var(--tn-dim,#8a5f1c);text-shadow:none}
+.lcdrow.on{background:var(--tn-fg,#ffb347);color:var(--tn-lcd,#1d1408);text-shadow:none}
 .lcdnote{text-transform:uppercase;letter-spacing:.06em}
 .lcdfind{text-transform:uppercase;letter-spacing:.08em;background:#0f0904;border-color:#3a2810;border-radius:2px}
 
@@ -505,13 +507,13 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 /* Bypass and Reset: two big mechanisms the size of the knobs, each with its label underneath */
 #pnKnobs .synbyp{justify-content:space-around;gap:0.5rem;padding:0.5rem 0.3rem 0.8rem}
 .bypcell{display:flex;flex-direction:column;align-items:center;gap:calc(4px*var(--k))}
-.bypcell b{font-size:calc(10px*var(--k));letter-spacing:.1em;text-transform:uppercase;color:#9a9aa6;font-weight:700;text-shadow:0 -1px 0 #000}
-.bigjack{width:calc(54px*var(--k));height:calc(54px*var(--k));display:grid;place-items:center;color:#8f9096}
+.bypcell b{font-size:calc(10px*var(--k));letter-spacing:.1em;text-transform:uppercase;color:var(--tn-print,#9a9aa6);font-weight:700;text-shadow:0 -1px 0 #000}
+.bigjack{width:calc(54px*var(--k));height:calc(54px*var(--k));display:grid;place-items:center;color:var(--tn-print,#8f9096)}
 .bigjack i{inset:24%}
-.bigjack.red::before{content:"";position:absolute;inset:18%;border-radius:50%;background:#1b1b1d;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045)}
+.bigjack.red::before{content:"";position:absolute;inset:18%;border-radius:50%;background:var(--tn-well,#1b1b1d);box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045)}
 .bigjack svg{position:relative;width:38%;height:38%}
 .bigjack.red{color:#ff5d4f}.bigjack.red svg{filter:drop-shadow(0 0 4px rgba(255,80,70,.6))}.bigjack.red:hover{color:#ff8174}.bigjack.red:active{color:#ffb0a8}
-#pnKnobs.byp #synBypass~b,#pnKnobs.byp .bypcell:first-child b{color:#ff7a2a}
+#pnKnobs.byp #synBypass~b,#pnKnobs.byp .bypcell:first-child b{color:var(--tn-fg,#ff7a2a)}
 
 /* Bypass dims the effect sections only a little */
 #pnKnobs.byp .synmod{opacity:.82;filter:saturate(.8)}
@@ -533,31 +535,31 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN)::before{border-radius:3px}
 
 /* ---- Hardware buttons for Compose and the synth panel: a cap standing on a side wall that drops when pressed, and sits a little low while latched ---- */
-.sqb,.daw .sqb,.pjrow .sqb,.dawpop .sqb,.synbtn,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){--lift:4px;border:0;background:linear-gradient(180deg,var(--fa,#3a3b40),var(--fb,#2a2b2f));color:#d0cec6;transform:translateY(0);
-  box-shadow:0 var(--lift) 0 var(--sd,#121315),0 calc(var(--lift) + 4px) 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
+.sqb,.daw .sqb,.pjrow .sqb,.dawpop .sqb,.synbtn,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){--lift:4px;border:0;background:linear-gradient(180deg,var(--fa,var(--tn-key1,#3a3b40)),var(--fb,var(--tn-key2,#2a2b2f)));color:#d0cec6;transform:translateY(0);
+  box-shadow:0 var(--lift) 0 var(--sd,var(--tn-edge,#121315)),0 calc(var(--lift) + 4px) 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
   transition:transform .05s linear,box-shadow .05s linear,color .1s;-webkit-tap-highlight-color:transparent}
 .sqb,.daw .sqb,.pjrow .sqb,.dawpop .sqb{border-radius:calc(7px*var(--k,1))}
 .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{display:none}
 .sqb:hover,.daw .sqb:hover,.synbtn:hover,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover{--fa:#44454b;--fb:#303135;background:linear-gradient(180deg,var(--fa),var(--fb))}
-.sqb:active,.daw .sqb:active,.pjrow .sqb:active,.dawpop .sqb:active,.synbtn:active,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:translateY(var(--lift));background:linear-gradient(180deg,var(--fa,#3a3b40),var(--fb,#2a2b2f));
-  box-shadow:0 0 0 var(--sd,#121315),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.sqb:active,.daw .sqb:active,.pjrow .sqb:active,.dawpop .sqb:active,.synbtn:active,.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active{transform:translateY(var(--lift));background:linear-gradient(180deg,var(--fa,var(--tn-key1,#3a3b40)),var(--fb,var(--tn-key2,#2a2b2f)));
+  box-shadow:0 0 0 var(--sd,var(--tn-edge,#121315)),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
 /* latched: sits two pixels low and the label lights */
-.sqb.on,.daw .sqb.on,.pjrow .sqb.on{--fa:#34353a;--fb:#26272b;background:linear-gradient(180deg,var(--fa),var(--fb));color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.85);border:0;transform:translateY(calc(var(--lift) - 2px));
-  box-shadow:0 2px 0 var(--sd,#121315),0 4px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
-.sqb.on:active,.daw .sqb.on:active{transform:translateY(var(--lift));box-shadow:0 0 0 var(--sd,#121315),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.sqb.on,.daw .sqb.on,.pjrow .sqb.on{--fa:var(--tn-key1,#34353a);--fb:var(--tn-key2,#26272b);background:linear-gradient(180deg,var(--fa),var(--fb));color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.85);border:0;transform:translateY(calc(var(--lift) - 2px));
+  box-shadow:0 2px 0 var(--sd,var(--tn-edge,#121315)),0 4px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.sqb.on:active,.daw .sqb.on:active{transform:translateY(var(--lift));box-shadow:0 0 0 var(--sd,var(--tn-edge,#121315)),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
 .sqb.rec,.daw .sqb.rec{color:#ff7b6b}
-.sqb.rec.on,.daw .sqb.rec.on{background:linear-gradient(180deg,#34353a,#26272b);color:#ff6b5e;text-shadow:0 0 8px rgba(255,70,60,.9);border:0}
-.sqb.sing.on,.daw .sqb.sing.on{background:linear-gradient(180deg,#34353a,#26272b);color:#7ee05a;text-shadow:0 0 8px rgba(110,230,80,.85);border:0}
+.sqb.rec.on,.daw .sqb.rec.on{background:linear-gradient(180deg,var(--tn-key1,#34353a),var(--tn-key2,#26272b));color:#ff6b5e;text-shadow:0 0 8px rgba(255,70,60,.9);border:0}
+.sqb.sing.on,.daw .sqb.sing.on{background:linear-gradient(180deg,var(--tn-key1,#34353a),var(--tn-key2,#26272b));color:#7ee05a;text-shadow:0 0 8px rgba(110,230,80,.85);border:0}
 .sqb.play,.daw .sqb.play{--fa:#3b8f4d;--fb:#2a6b3a;--sd:#10351a;color:#e8ffe9;border:0}
-.sqb:disabled,.daw .sqb:disabled{transform:none;box-shadow:0 2px 0 var(--sd,#121315),inset 0 1px 0 rgba(255,255,255,.04)}
+.sqb:disabled,.daw .sqb:disabled{transform:none;box-shadow:0 2px 0 var(--sd,var(--tn-edge,#121315)),inset 0 1px 0 rgba(255,255,255,.04)}
 @media (prefers-reduced-motion:reduce){.sqb,.synbtn{transition:none}}
 
 /* Spectrogram edge darkening: very faint */
 .synpane[data-p="spec"]::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),radial-gradient(130% 110% at 50% 50%,transparent 72%,rgba(0,0,0,.12))}
 
 /* Arrow buttons exactly as in the hardware preview: 54 by 42 caps, 6px corners, a small green triangle, 6px side wall */
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN){--lift:6px;width:54px;height:42px;border-radius:6px;box-shadow:0 var(--lift) 0 var(--sd,#121315),0 calc(var(--lift) + 5px) 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
-.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active{box-shadow:0 0 0 var(--sd,#121315),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN){--lift:6px;width:54px;height:42px;border-radius:6px;box-shadow:0 var(--lift) 0 var(--sd,var(--tn-edge,#121315)),0 calc(var(--lift) + 5px) 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
+.synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN):active{box-shadow:0 0 0 var(--sd,var(--tn-edge,#121315)),0 1px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
 .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfPP,.sfPN)::after{width:11px;height:14px;transform:none}
 .synbtn:is(.sfFP,.sfFN)::after{width:14px;height:11px;transform:none}
 .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN)::after{filter:drop-shadow(0 0 3px rgba(74,242,106,.6))}
@@ -565,9 +567,9 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 
 /* "Now" screen: what is pressed and what is heard, as its own small LCD above the effects */
 .synside{display:flex;flex-direction:column;gap:0.75rem;min-width:0}
-.lcd.synnow{position:relative;overflow:hidden;min-height:5.6rem;padding:0.5rem 0.7rem;gap:0.4rem;justify-content:flex-start;background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
+.lcd.synnow{position:relative;overflow:hidden;min-height:5.6rem;padding:0.5rem 0.7rem;gap:0.4rem;justify-content:flex-start;background:var(--tn-lcd,#1a120a);border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
 .synnow::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
-.synnow small{font-size:calc(var(--dp,1px)*10);letter-spacing:calc(var(--dp,1px)*2);color:#6b4513}
+.synnow small{font-size:calc(var(--dp,1px)*10);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-dim,#6b4513)}
 .synnow b{display:flex;flex-direction:column;gap:0.3rem;white-space:normal;overflow:visible;overflow-wrap:anywhere;text-overflow:clip;font-size:calc(var(--dp,1px)*16);line-height:1.3;min-height:0;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
 
 /* Keyboard frame: a felt strip along the back (drawn on the canvas), a brass edge and a walnut front rail under the keys */
@@ -593,12 +595,12 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 #specTags{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3}
 
 /* Panic sits between Bypass and Reset */
-.bigjack.panic::before{content:"";position:absolute;inset:18%;border-radius:50%;background:#1b1b1d;box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045)}
-.bigjack.panic{color:#ffb347}.bigjack.panic svg{filter:drop-shadow(0 0 4px rgba(255,170,60,.6))}.bigjack.panic:hover{color:#ffd08a}.bigjack.panic:active{color:#fff2cf}
+.bigjack.panic::before{content:"";position:absolute;inset:18%;border-radius:50%;background:var(--tn-well,#1b1b1d);box-shadow:inset 3px 3px 6px rgba(0,0,0,.85),inset -2px -2px 5px rgba(255,255,255,.045)}
+.bigjack.panic{color:var(--tn-fg,#ffb347)}.bigjack.panic svg{filter:drop-shadow(0 0 4px rgba(255,170,60,.6))}.bigjack.panic:hover{color:var(--tn-fg,#ffd08a)}.bigjack.panic:active{color:#fff2cf}
 #pnKnobs .synbyp{gap:0.2rem}
 
 /* Full screen spectrogram button next to the resolution LCD: a square cap with just a symbol */
-.synbtn.sqfull{--lift:6px;flex:none;align-self:center;width:46px;height:46px;min-width:0;min-height:0;padding:0;border-radius:6px;display:grid;place-items:center;color:#8f9096;margin-bottom:6px}
+.synbtn.sqfull{--lift:6px;flex:none;align-self:center;width:46px;height:46px;min-width:0;min-height:0;padding:0;border-radius:6px;display:grid;place-items:center;color:var(--tn-print,#8f9096);margin-bottom:6px}
 .synbtn.sqfull svg{display:block;filter:drop-shadow(0 0 3px rgba(255,255,255,.12))}
 .synbtn.sqfull:active{color:var(--accent)}.synbtn.sqfull:active svg{filter:drop-shadow(0 0 4px rgba(255,150,40,.85))}
 
@@ -608,30 +610,30 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 6px 18px rgba(0,0,0,.5)}
 .kydev .synth.kysynth{background:none;box-shadow:none;border:0;padding:0;margin:0}
 .kytop{display:grid;grid-template-columns:auto 1fr auto;gap:0.9rem;align-items:center}
-.lcd.kyscr{position:relative;overflow:hidden;background:#1a120a;border-radius:5px;border:1px solid #000;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);padding:0.5rem 0.8rem}
+.lcd.kyscr{position:relative;overflow:hidden;background:var(--tn-lcd,#1a120a);border-radius:5px;border:1px solid #000;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);padding:0.5rem 0.8rem}
 .kyscr::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
-.kyscr b,.kyscr span,.kyscr small,.kyhelp{font-family:"Silkscreen",ui-monospace,Menlo,Consolas,monospace;font-weight:400;text-transform:uppercase;letter-spacing:calc(var(--dp,1px)*2);color:#ffb347;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
+.kyscr b,.kyscr span,.kyscr small,.kyhelp{font-family:"Silkscreen",ui-monospace,Menlo,Consolas,monospace;font-weight:400;text-transform:uppercase;letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-fg,#ffb347);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
 .kynow{min-height:4.6rem;gap:0.3rem;justify-content:flex-start}
-.kynow small{font-size:calc(var(--dp,1px)*10);color:#6b4513;text-shadow:none}
+.kynow small{font-size:calc(var(--dp,1px)*10);color:var(--tn-dim,#6b4513);text-shadow:none}
 .kynow b{font-size:calc(var(--dp,1px)*24);min-height:1.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kynow span{font-size:calc(var(--dp,1px)*16);min-height:1.3em;color:#d99a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kynow span{font-size:calc(var(--dp,1px)*16);min-height:1.3em;color:var(--tn-lab,#d99a3a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kyrange{min-width:8.5rem;display:grid;place-items:center;padding:0.45rem 0.8rem}
 .kyrange b{font-size:calc(var(--dp,1px)*16);white-space:nowrap}
-.kyhelp{display:block;text-align:center;font-size:calc(var(--dp,1px)*10);line-height:1.7;color:#d99a3a;padding:0.5rem 0.8rem}
-.kykeys{flex:1;min-height:12rem;display:flex;flex-direction:column;border-radius:6px;overflow:hidden;background:#050506;border-top:1px solid #c9a24a55;box-shadow:inset 0 8px 10px -6px rgba(0,0,0,.95),0 2px 0 #000}
+.kyhelp{display:block;text-align:center;font-size:calc(var(--dp,1px)*10);line-height:1.7;color:var(--tn-lab,#d99a3a);padding:0.5rem 0.8rem}
+.kykeys{flex:1;min-height:12rem;display:flex;flex-direction:column;border-radius:6px;overflow:hidden;background:var(--tn-edge,#050506);border-top:1px solid #c9a24a55;box-shadow:inset 0 8px 10px -6px rgba(0,0,0,.95),0 2px 0 #000}
 .kykeys::after{content:"";display:block;flex:none;height:16px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 2px,transparent 2px 7px),repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0 1px,transparent 1px 5px),linear-gradient(180deg,#9a6a3a,#6a4020 55%,#432712);box-shadow:inset 0 1px 0 rgba(255,225,170,.45),inset 0 -2px 3px rgba(0,0,0,.6)}
 .kyctl{display:flex;flex-wrap:wrap;gap:0.9rem;align-items:center;justify-content:center;padding-bottom:6px}
-.synbtn.kypedal,.synbtn.kyoct,.synbtn.kyletters,.kysel{--lift:6px;height:46px;padding:0 16px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);color:#8f9096;text-transform:uppercase;cursor:pointer;min-height:0;min-width:0}
+.synbtn.kypedal,.synbtn.kyoct,.synbtn.kyletters,.kysel{--lift:6px;height:46px;padding:0 16px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-print,#8f9096);text-transform:uppercase;cursor:pointer;min-height:0;min-width:0}
 .synbtn.kypedal{min-width:140px}.synbtn.kyoct{min-width:130px}
-.kylamp{display:block;width:8px;height:8px;border-radius:50%;background:#3a2a10;box-shadow:inset 0 1px 1px #000}
-.kypedal.primary,.kyletters:has(input:checked){color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.8);--fa:#34353a;--fb:#26272b;background:linear-gradient(180deg,var(--fa),var(--fb));transform:translateY(4px);box-shadow:0 2px 0 var(--sd,#121315),0 4px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.kylamp{display:block;width:8px;height:8px;border-radius:50%;background:var(--tn-ledoff,#3a2a10);box-shadow:inset 0 1px 1px #000}
+.kypedal.primary,.kyletters:has(input:checked){color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.8);--fa:var(--tn-key1,#34353a);--fb:var(--tn-key2,#26272b);background:linear-gradient(180deg,var(--fa),var(--fb));transform:translateY(4px);box-shadow:0 2px 0 var(--sd,var(--tn-edge,#121315)),0 4px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
 .kypedal.primary .kylamp,.kyletters:has(input:checked) .kylamp{background:var(--accent);box-shadow:0 0 8px var(--accent)}
 .kypedal.primary:active,.kyletters:has(input:checked):active{transform:translateY(var(--lift))}
 .kyletters input{position:absolute;opacity:0;pointer-events:none}
 .tr{display:block;width:11px;height:14px;background:#4af26a;filter:drop-shadow(0 0 3px rgba(74,242,106,.6))}
 .tr.l{clip-path:polygon(100% 0,0 50%,100% 100%)}.tr.r{clip-path:polygon(0 0,100% 50%,0 100%)}
-.kyoct:active .tr{background:#ffa23a;filter:drop-shadow(0 0 4px rgba(255,150,40,.9))}
-.kysel{appearance:none;-webkit-appearance:none;border:0;background:linear-gradient(180deg,#3a3b40,#2a2b2f);color:#cfc8b8;padding:0 18px;box-shadow:0 6px 0 #121315,0 11px 10px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08)}
+.kyoct:active .tr{background:var(--tn-fg,#ffa23a);filter:drop-shadow(0 0 4px rgba(255,150,40,.9))}
+.kysel{appearance:none;-webkit-appearance:none;border:0;background:linear-gradient(180deg,var(--tn-key1,#3a3b40),var(--tn-key2,#2a2b2f));color:var(--tn-printh,#cfc8b8);padding:0 18px;box-shadow:0 6px 0 var(--tn-edge,#121315),0 11px 10px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08)}
 @media (max-width:700px){.kydev{padding:0.5rem 1.4rem 0.7rem}.kytop{grid-template-columns:auto 1fr}.kytop .kypedal{grid-column:1/-1}}
 
 /* Tabs: the longer "Instruments" label gets the room it needs */
@@ -642,20 +644,20 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 
 /* ---- The panel under the keyboard: envelope editor, the effects without a knob in the rack, and pitch ---- */
 .synlow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,0.8fr);gap:0.9rem;margin-top:1.1rem;align-items:stretch}
-.lowsec{display:flex;flex-direction:column;gap:0.5rem;padding:1.4rem 0.8rem 0.9rem;border-radius:10px;background:#202124;border:1px solid rgba(255,255,255,.06);box-shadow:6px 7px 14px rgba(0,0,0,.6),-4px -4px 10px rgba(255,255,255,.03)}
+.lowsec{display:flex;flex-direction:column;gap:0.5rem;padding:1.4rem 0.8rem 0.9rem;border-radius:10px;background:var(--tn-well,#202124);border:1px solid rgba(255,255,255,.06);box-shadow:6px 7px 14px rgba(0,0,0,.6),-4px -4px 10px rgba(255,255,255,.03)}
 .lowsec .synlab{top:0.5rem;left:0.8rem;padding:0;background:none}
-.envbox{position:relative;overflow:hidden;background:#1a120a;border:1px solid #000;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
+.envbox{position:relative;overflow:hidden;background:var(--tn-lcd,#1a120a);border:1px solid #000;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
 .envbox::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 #envCv{display:block;width:100%;height:9.5rem;cursor:crosshair;touch-action:none}
 .envoff .envbox{opacity:.75}
-.lcd.envread{flex-direction:row;justify-content:space-between;gap:0.6rem;padding:0.4rem 0.7rem;position:relative;overflow:hidden;background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
-.envread span{font-family:"Silkscreen",ui-monospace,monospace;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);color:#8a5f1c;text-transform:uppercase;white-space:nowrap}
-.envread b{font-weight:400;color:#ffb347;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
+.lcd.envread{flex-direction:row;justify-content:space-between;gap:0.6rem;padding:0.4rem 0.7rem;position:relative;overflow:hidden;background:var(--tn-lcd,#1a120a);border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07)}
+.envread span{font-family:"Silkscreen",ui-monospace,monospace;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-dim,#8a5f1c);text-transform:uppercase;white-space:nowrap}
+.envread b{font-weight:400;color:var(--tn-fg,#ffb347);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.65),var(--dp,1px) 0 rgba(60,170,255,.6),0 0 6px rgba(255,160,50,.5)}
 .envctl{display:flex;align-items:center;gap:0.9rem;margin-top:0.3rem;padding-bottom:6px}
 .envctl .knobs{flex:1;padding:0}
 .lowtgls{display:flex;flex-wrap:wrap;gap:0.8rem 0.7rem;justify-content:center;padding-bottom:6px;margin-top:0.2rem}
-.synbtn.pntgl{--lift:6px;height:44px;min-width:0;padding:0 14px;border-radius:7px;display:inline-flex;align-items:center;gap:10px;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);color:#8f9096;text-transform:uppercase;cursor:pointer}
-.synbtn.pntgl[aria-pressed="true"]{color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.8);--fa:#34353a;--fb:#26272b;background:linear-gradient(180deg,var(--fa),var(--fb));transform:translateY(4px);box-shadow:0 2px 0 var(--sd,#121315),0 4px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.synbtn.pntgl{--lift:6px;height:44px;min-width:0;padding:0 14px;border-radius:7px;display:inline-flex;align-items:center;gap:10px;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-print,#8f9096);text-transform:uppercase;cursor:pointer}
+.synbtn.pntgl[aria-pressed="true"]{color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.8);--fa:var(--tn-key1,#34353a);--fb:var(--tn-key2,#26272b);background:linear-gradient(180deg,var(--fa),var(--fb));transform:translateY(4px);box-shadow:0 2px 0 var(--sd,var(--tn-edge,#121315)),0 4px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
 .synbtn.pntgl[aria-pressed="true"] .kylamp{background:var(--accent);box-shadow:0 0 8px var(--accent)}
 .synbtn.pntgl[aria-pressed="true"]:active{transform:translateY(var(--lift))}
 .lowfx .knobs,.lowpitch .knobs{padding:0}
@@ -667,7 +669,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .lowfx{gap:0.3rem}
 
 /* ---- Piano tab reorganised: one knob area under the header, then the screen with the envelope and the display as separate screens on its right ---- */
-.synknobarea{display:flex;flex-wrap:wrap;align-items:stretch;margin-bottom:0.9rem;padding:0.4rem 0.6rem 0.6rem;border-radius:12px;background:#202124;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035)}
+.synknobarea{display:flex;flex-wrap:wrap;align-items:stretch;margin-bottom:0.9rem;padding:0.4rem 0.6rem 0.6rem;border-radius:12px;background:var(--tn-well,#202124);box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035)}
 .synknobarea>#pnKnobs,.synknobarea>#pnLow{display:contents}
 .synknobarea #pnKnobs .synmod,.synknobarea #pnLow .lowsec{flex:1 1 auto;margin:0;padding:1.6rem 0.9rem 0.5rem;border:0;border-left:1px solid #0e0e10;border-radius:0;background:none;box-shadow:inset 1px 0 0 rgba(255,255,255,.05)}
 .synknobarea #pnKnobs .synmod::before{display:none}
@@ -698,7 +700,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .mixrow .knob{flex:1 1 0;min-width:calc(58px*var(--k))}
 .mixrow .knob svg{width:calc(58px*var(--k));height:calc(58px*var(--k))}
 .tgcell{flex:1 1 0;min-width:calc(58px*var(--k));display:flex;flex-direction:column;align-items:center;gap:calc(8px*var(--k));padding-top:calc(8px*var(--k))}
-.tgcell b{font-size:calc(10px*var(--k));letter-spacing:.1em;text-transform:uppercase;color:#9a9aa6;font-weight:700;text-shadow:0 -1px 0 #000}
+.tgcell b{font-size:calc(10px*var(--k));letter-spacing:.1em;text-transform:uppercase;color:var(--tn-print,#9a9aa6);font-weight:700;text-shadow:0 -1px 0 #000}
 .synbtn.pntgl.sq{--lift:5px;width:46px;height:36px;padding:0;justify-content:center;border-radius:6px}
 .synbtn.pntgl.sq .kylamp{width:10px;height:10px}
 .synknobarea .synsec .knob svg{width:calc(58px*var(--k));height:calc(58px*var(--k))}
@@ -724,15 +726,15 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 
 /* Stepped controls (pattern, range, octave, echo time): a few notches, only the chosen one lit */
 .knob.notched line{stroke:#3d3d43;stroke-width:3.2}
-.knob.notched line.on{stroke:#ffa23a;filter:drop-shadow(0 0 3px rgba(255,150,40,.85))}
-#arpOn.step .kylamp{background:#fff4d6;box-shadow:0 0 12px #ffd08a}
+.knob.notched line.on{stroke:var(--tn-fg,#ffa23a);filter:drop-shadow(0 0 3px rgba(255,150,40,.85))}
+#arpOn.step .kylamp{background:#fff4d6;box-shadow:0 0 12px var(--tn-fg,#ffd08a)}
 
 /* Envelope heading: label, three program slots and a reset, then the on switch */
 .envhead{position:absolute;top:0.4rem;left:0.8rem;right:0.7rem;display:flex;align-items:center;gap:0.6rem;z-index:2}
 .envhead .synlab{position:static;padding:0;background:none}
 .envpre{display:flex;gap:0.35rem;flex:1;justify-content:center}
-.synbtn.envp{--lift:3px;width:26px;height:24px;min-height:0;min-width:0;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);color:#8f9096}
-.synbtn.envp[aria-pressed="true"]{color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.8);--fa:#34353a;--fb:#26272b;background:linear-gradient(180deg,var(--fa),var(--fb));transform:translateY(2px);box-shadow:0 1px 0 var(--sd,#121315),0 3px 4px rgba(0,0,0,.6)}
+.synbtn.envp{--lift:3px;width:26px;height:24px;min-height:0;min-width:0;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);color:var(--tn-print,#8f9096)}
+.synbtn.envp[aria-pressed="true"]{color:var(--accent);text-shadow:0 0 7px rgba(255,150,40,.8);--fa:var(--tn-key1,#34353a);--fb:var(--tn-key2,#26272b);background:linear-gradient(180deg,var(--fa),var(--fb));transform:translateY(2px);box-shadow:0 1px 0 var(--sd,var(--tn-edge,#121315)),0 3px 4px rgba(0,0,0,.6)}
 .synbtn.envp.red{color:#ff5d4f}
 .synbtn.pntgl.envsw{position:static}
 .envpre{gap:0.25rem}
@@ -830,7 +832,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 /* Bypass, Panic and Reset: no inner circle, a bigger icon */
 .bigjack.red::before,.bigjack.panic::before{display:none}
 .bigjack svg{width:56%;height:56%}
-.bigjack[aria-pressed=true]{color:#ff7a2a}.bigjack[aria-pressed=true] svg{filter:drop-shadow(0 0 5px rgba(255,122,42,.8))}
+.bigjack[aria-pressed=true]{color:var(--tn-fg,#ff7a2a)}.bigjack[aria-pressed=true] svg{filter:drop-shadow(0 0 5px rgba(255,122,42,.8))}
 
 /* Bigger knobs in the Piano tab's knob area; Bypass, Panic and Reset follow */
 .synknobarea .synsec .knob svg,.mixrow .knob svg{width:calc(70px*var(--k));height:calc(70px*var(--k))}
@@ -881,7 +883,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 #pnRev.synknobarea{margin:0;padding:0.4rem 0.6rem 0.5rem}
 #pnRev .lowsec{flex:1 1 auto;margin:0;padding:1.6rem 0.6rem 0.2rem;border:0;border-radius:0;background:none;box-shadow:none}
 #pnRev .knobs{justify-content:space-around;flex-wrap:nowrap}
-.synnow small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+.synnow small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-lab,#c98a3a);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
 
 /* Voice and echo are panels in the right column, under reverb */
 #pnVoice.synknobarea,#pnEcho.synknobarea{margin:0;padding:0.4rem 0.6rem 0.5rem}
@@ -890,21 +892,21 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 
 /* Top knob area: every section is its own panel, like Reverb, instead of one big plate with dividers */
 .synknobarea:not(.synplay){gap:0.75rem;padding:0;background:none;box-shadow:none;border-radius:0}
-.synknobarea:not(.synplay) #pnKnobs .synmod,.synknobarea:not(.synplay) #pnLow .lowsec,.synknobarea:not(.synplay) #pnKnobs .synbyp{border:0;border-left:0;border-radius:12px;background:#202124;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035);padding:1.6rem 0.9rem 0.5rem}
+.synknobarea:not(.synplay) #pnKnobs .synmod,.synknobarea:not(.synplay) #pnLow .lowsec,.synknobarea:not(.synplay) #pnKnobs .synbyp{border:0;border-left:0;border-radius:12px;background:var(--tn-well,#202124);box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035);padding:1.6rem 0.9rem 0.5rem}
 .synknobarea:not(.synplay) #pnKnobs .synbyp{padding:0.9rem 1rem 0.5rem 1rem}
 
 /* On-screen piano: the effect sections are separate panels too */
 .kyfx .synsecs{gap:0.75rem;flex-wrap:nowrap}
-.kyfx .synsec{border:0;border-radius:12px;background:#202124;box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035);padding:1.6rem 0.9rem 0.5rem}
+.kyfx .synsec{border:0;border-radius:12px;background:var(--tn-well,#202124);box-shadow:6px 7px 14px rgba(0,0,0,.7),-4px -4px 10px rgba(255,255,255,.035);padding:1.6rem 0.9rem 0.5rem}
 .kyfx .synsec::before{display:none}
-.kyfx .synsec .synlab{top:0.5rem;left:0.8rem;padding:0;background:none;color:#8f8a7e}
+.kyfx .synsec .synlab{top:0.5rem;left:0.8rem;padding:0;background:none;color:var(--tn-print,#8f8a7e)}
 .kyfx .synsec .synlab::before{display:none}
 @media(max-width:760px){.kyfx .synsecs{flex-wrap:wrap}}
 
 /* Compose track effects: labelled groups, each its own small panel */
 .sqfx{display:flex;flex-direction:column;gap:calc(8px*var(--k))}
-.sqfxg{position:relative;padding:calc(18px*var(--k)) calc(6px*var(--k)) calc(6px*var(--k));border-radius:calc(8px*var(--k));background:#202124;box-shadow:inset 0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.04)}
-.sqfxl{position:absolute;top:calc(5px*var(--k));left:calc(8px*var(--k));font-size:calc(9px*var(--k));font-weight:700;letter-spacing:.22em;color:#8f8a7e;text-shadow:0 -1px 0 #000}
+.sqfxg{position:relative;padding:calc(18px*var(--k)) calc(6px*var(--k)) calc(6px*var(--k));border-radius:calc(8px*var(--k));background:var(--tn-well,#202124);box-shadow:inset 0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.04)}
+.sqfxl{position:absolute;top:calc(5px*var(--k));left:calc(8px*var(--k));font-size:calc(9px*var(--k));font-weight:700;letter-spacing:.22em;color:var(--tn-print,#8f8a7e);text-shadow:0 -1px 0 #000}
 .sqfxk{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(6px*var(--k)) calc(4px*var(--k))}
 .sqfx .rstknob{align-self:center}
 /* The tracks panel is a little wider so five knobs fit on a line */
@@ -918,7 +920,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 #pnKey .keyrow .synlcd{flex:1 1 11rem}
 #pnKey .keyrow .pntgl{align-self:center;flex:none}
 #pnKey .keyrow .pntgl:disabled{opacity:.4;pointer-events:none}
-.lcd.keychords{position:relative;overflow:hidden;flex:none;flex-direction:row;flex-wrap:wrap;justify-content:space-around;gap:0 calc(var(--dp,1px)*12);padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);background:#1a120a;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);--gn:2;font:400 calc(var(--dp,1px)*16)/calc(var(--dp,1px)*24) "Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);color:#ffb347;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
+.lcd.keychords{position:relative;overflow:hidden;flex:none;flex-direction:row;flex-wrap:wrap;justify-content:space-around;gap:0 calc(var(--dp,1px)*12);padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);background:var(--tn-lcd,#1a120a);border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);--gn:2;font:400 calc(var(--dp,1px)*16)/calc(var(--dp,1px)*24) "Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-fg,#ffb347);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
 .lcd.keychords[hidden]{display:none}
 .lcd.keychords::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 #pnKey .keyrow,.synthmain #pnKey .keyrow{flex:none}
@@ -947,7 +949,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 
 /* Key, scale and chords screens: 16dp labels in brighter amber, values at 16dp too, all on the 2dp mesh (baselines at 24 and 48) */
 #pnKey .synlcd .lcd{--gn:2;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12) 0}
-#pnKey .synlcd .lcd small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+#pnKey .synlcd .lcd small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-lab,#c98a3a);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
 #pnKey .synlcd .lcd b{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2)}
 
 /* ---- Ear training: the level map and the drill screen ---- */
@@ -956,33 +958,33 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 .earblurb{margin:0 0 0.5rem;padding:0 0.25rem}
 .earlvl{display:grid;grid-template-columns:2.2rem minmax(0,1fr) auto;align-items:center;gap:0.75rem;width:100%;text-align:left;margin:0.35rem 0;cursor:pointer}
 .earlvl .num{font-size:1.1rem;font-weight:700;color:var(--accent);text-align:center}
-.earlvl .txt{display:flex;flex-direction:column;gap:0.1rem;min-width:0}.earlvl .stars{color:#ffb347;letter-spacing:0.12em;white-space:nowrap}
+.earlvl .txt{display:flex;flex-direction:column;gap:0.1rem;min-width:0}.earlvl .stars{color:var(--tn-fg,#ffb347);letter-spacing:0.12em;white-space:nowrap}
 .earlvl.locked{opacity:0.45;cursor:default}.earlvl.next{border-color:var(--accent)}
 .earov{justify-content:flex-start;gap:0.9rem}
 .earbar{width:100%;max-width:46rem;justify-content:space-between;flex-wrap:nowrap}.earbar b{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .earmeter{width:min(100%,46rem);height:0.625rem}
 .earbody{width:100%;max-width:46rem;display:flex;flex-direction:column;align-items:center;gap:1rem}
-.earlcd{position:relative;overflow:hidden;width:100%;box-sizing:border-box;text-align:left;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);background:#1a120a;border:1px solid #000;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);--gn:2;font-family:"Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase}
+.earlcd{position:relative;overflow:hidden;width:100%;box-sizing:border-box;text-align:left;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);background:var(--tn-lcd,#1a120a);border:1px solid #000;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.07);--gn:2;font-family:"Silkscreen",ui-monospace,monospace;letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase}
 .earlcd::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 .earlcd small,.earlcd b{display:block;font-weight:400;font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24)}
-.earlcd small{color:#ffb347;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
-.earlcd b{color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+.earlcd small{color:var(--tn-fg,#ffb347);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
+.earlcd b{color:var(--tn-lab,#c98a3a);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
 .earplayrow{justify-content:center}
 .synbtn.earplay,.synbtn.earback{--lift:6px;min-height:3rem;padding:0 1.4rem;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase;color:#4af26a;text-shadow:0 0 8px rgba(74,242,106,.5)}
-.synbtn.earback{color:#cfc8b8;text-shadow:none;min-width:3rem;padding:0 1rem}
+.synbtn.earback{color:var(--tn-printh,#cfc8b8);text-shadow:none;min-width:3rem;padding:0 1rem}
 .earopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(11.5rem,1fr));gap:0.9rem 1rem;width:100%;padding-bottom:6px}
 .earopts[data-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}.earopts[data-n="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
-.synbtn.earopt{--lift:6px;min-height:3.4rem;padding:0.4rem 0.8rem;display:flex;align-items:center;justify-content:center;gap:0.7rem;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase;color:#cfc8b8;text-align:center}
-.synbtn.earopt i{font-style:normal;flex:none;min-width:1.3rem;height:1.3rem;line-height:1.3rem;border-radius:4px;background:#17181b;color:#8f9096;font-size:calc(var(--dp,1px)*16);letter-spacing:0;box-shadow:inset 0 1px 2px #000}
+.synbtn.earopt{--lift:6px;min-height:3.4rem;padding:0.4rem 0.8rem;display:flex;align-items:center;justify-content:center;gap:0.7rem;font-family:"Silkscreen",ui-monospace,monospace;font-weight:400;font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2);text-transform:uppercase;color:var(--tn-printh,#cfc8b8);text-align:center}
+.synbtn.earopt i{font-style:normal;flex:none;min-width:1.3rem;height:1.3rem;line-height:1.3rem;border-radius:4px;background:#17181b;color:var(--tn-print,#8f9096);font-size:calc(var(--dp,1px)*16);letter-spacing:0;box-shadow:inset 0 1px 2px #000}
 .synbtn.earopt:disabled{opacity:1;pointer-events:none;cursor:default}
-.synbtn.earopt.ok{color:#7ee05a;text-shadow:0 0 8px rgba(126,224,90,.7);transform:translateY(4px);box-shadow:0 2px 0 var(--sd,#121315),0 4px 6px rgba(0,0,0,.6),0 0 0 2px rgba(126,224,90,.6)}
-.synbtn.earopt.bad{color:#ff5a36;text-shadow:0 0 8px rgba(255,90,54,.7);box-shadow:0 var(--lift) 0 var(--sd,#121315),0 0 0 2px rgba(255,90,54,.6)}
+.synbtn.earopt.ok{color:#7ee05a;text-shadow:0 0 8px rgba(126,224,90,.7);transform:translateY(4px);box-shadow:0 2px 0 var(--sd,var(--tn-edge,#121315)),0 4px 6px rgba(0,0,0,.6),0 0 0 2px rgba(126,224,90,.6)}
+.synbtn.earopt.bad{color:#ff5a36;text-shadow:0 0 8px rgba(255,90,54,.7);box-shadow:0 var(--lift) 0 var(--sd,var(--tn-edge,#121315)),0 0 0 2px rgba(255,90,54,.6)}
 .synbtn.earopt.tap{transform:translateY(var(--lift))}
 .earmel{display:flex;align-items:center;justify-content:center;gap:1rem;width:100%}.earmel[hidden]{display:none}
-#earMelRow{display:flex;gap:0.5rem}#earMelRow span{display:grid;place-items:center;width:3rem;height:3rem;border-radius:5px;background:#1a120a;border:1px solid #000;box-shadow:inset 0 2px 5px rgba(0,0,0,.9);font-family:"Silkscreen",ui-monospace,monospace;font-size:calc(var(--dp,1px)*24);color:#6b4513}#earMelRow span.on{color:#ffb347;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
+#earMelRow{display:flex;gap:0.5rem}#earMelRow span{display:grid;place-items:center;width:3rem;height:3rem;border-radius:5px;background:var(--tn-lcd,#1a120a);border:1px solid #000;box-shadow:inset 0 2px 5px rgba(0,0,0,.9);font-family:"Silkscreen",ui-monospace,monospace;font-size:calc(var(--dp,1px)*24);color:var(--tn-dim,#6b4513)}#earMelRow span.on{color:var(--tn-fg,#ffb347);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px rgba(255,160,50,.5)}
 .earfb{min-height:3.4rem;max-width:40rem;font-size:1rem;line-height:1.4}.earfb.good{color:#7ee05a}.earfb.miss{color:#ff9f6b}
 .earres{display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding-top:2rem}.earres[hidden]{display:none}
-.earscore{font:400 4rem "Silkscreen",ui-monospace,monospace;color:#ffb347;text-shadow:0 0 12px rgba(255,170,60,.5)}.earstar{font-size:2.6rem;color:#ffb347;letter-spacing:0.25em}.earbtns{justify-content:center;margin-top:1rem}
+.earscore{font:400 4rem "Silkscreen",ui-monospace,monospace;color:var(--tn-fg,#ffb347);text-shadow:0 0 12px rgba(255,170,60,.5)}.earstar{font-size:2.6rem;color:var(--tn-fg,#ffb347);letter-spacing:0.25em}.earbtns{justify-content:center;margin-top:1rem}
 @media(max-width:560px){.earopts{grid-template-columns:repeat(2,minmax(0,1fr))}.earopts[data-n="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}.synbtn.earopt{padding:0.3rem 0.4rem;gap:0.3rem}.synbtn.earopt i{display:none}}
 button.card.earlvl{display:grid;grid-template-columns:2.2rem minmax(0,1fr) auto;align-items:center;gap:0 0.75rem;text-align:left;padding:0.6rem 0.8rem}
 button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
@@ -990,9 +992,9 @@ button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
 
 /* Preset, SoundFont and Instrument screens: the same 16dp labels and values as the Key panel, baselines at 24 and 48 on the 2dp mesh */
 .synlcd .lcd{--gn:2;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12) 0}
-.synlcd .lcd small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:#c98a3a;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+.synlcd .lcd small{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-lab,#c98a3a);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
 .synlcd .lcd b{height:calc(var(--dp,1px)*24);font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*24);letter-spacing:calc(var(--dp,1px)*2)}
-.lcdrows .lcdhead{position:sticky;top:0;z-index:1;margin:0;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);background:#2a1a0a;color:#c98a3a;text-align:left;border-bottom:1px solid #000;letter-spacing:calc(var(--dp,1px)*2)}
+.lcdrows .lcdhead{position:sticky;top:0;z-index:1;margin:0;padding:calc(var(--dp,1px)*6) calc(var(--dp,1px)*12);background:#2a1a0a;color:var(--tn-lab,#c98a3a);text-align:left;border-bottom:1px solid #000;letter-spacing:calc(var(--dp,1px)*2)}
 
 /* Notes in the lists (empty-list messages, "more results") and section headings: 24dp pixel text, baselines on the 3dp mesh */
 .lcdnote{padding:calc(var(--dp,1px)*9) calc(var(--dp,1px)*12);font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*36);letter-spacing:calc(var(--dp,1px)*3);overflow-wrap:anywhere}
@@ -1138,3 +1140,6 @@ button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
 ::-webkit-scrollbar-thumb:active{background:repeating-linear-gradient(0deg,rgba(0,0,0,.45) 0 2px,rgba(255,255,255,.06) 2px 3px,transparent 3px 7px),linear-gradient(90deg,#ffb347,#e08a1a)}
 ::-webkit-scrollbar-corner{background:#141518}
 @supports not selector(::-webkit-scrollbar){*{scrollbar-color:#3a3b40 #141518}}
+
+/* knob captions on the synth panels follow the theme (Compose keeps its own dark look) */
+.synth .knob b,.kydev .knob b{color:var(--tn-print,#9a9aa6)}

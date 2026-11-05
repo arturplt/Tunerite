@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), assert = require('assert');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const css = read('css/themes.css'), used = new Set();
-for (const f of ['css/app.css', 'css/tuner.css', 'index.html', 'js/tuner-dial.js']) for (const m of read(f).matchAll(/var\((--tn-[a-z0-9]+)/g)) used.add(m[1]);
+for (const f of ['css/app.css', 'css/tuner.css', 'css/piano.css', 'index.html', 'js/tuner-dial.js']) for (const m of read(f).matchAll(/var\((--tn-[a-z0-9]+)/g)) used.add(m[1]);
 const themes = {}; for (const m of css.matchAll(/\[data-theme="([a-z0-9]+)"\]\{([^}]*)\}/g)) themes[m[1]] = new Set([...m[2].matchAll(/(--tn-[a-z0-9]+):/g)].map(x => x[1]));
 const ids = [...read('js/themes.js').matchAll(/id: '([a-z0-9]+)'/g)].map(m => m[1]);
 let fail = 0; const test = (n, fn) => { try { fn(); console.log('ok   ' + n); } catch (e) { fail++; console.log('FAIL ' + n + '\n     ' + e.message); } };

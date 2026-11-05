@@ -235,14 +235,17 @@ const Knobs = {
   },
   wire(el, get, put, def, steps) {
     const k = el.dataset.k, stp = steps ? 1 / steps : 0; let drag = null; get = get || (() => this.val(k)); put = put || ((kk, v) => this.set(kk, v)); def = def != null ? def : this.list.find(f => f.k === k).d;
-    el.addEventListener('pointerdown', e => { e.preventDefault(); el.focus(); el.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, v: get(), moved: false }; el.classList.add('drag'); });
+    /* A knob turns only when the press lands on its cap (the .khit disc over it), so a finger or pointer that merely crosses a panel while scrolling never moves a dial. The disc is the only part that blocks touch scrolling. */
+    const svg = el.querySelector('svg');
+    if (svg && !el.querySelector('.kwrap')) { const w = document.createElement('span'); w.className = 'kwrap'; svg.replaceWith(w); const hit = document.createElement('i'); hit.className = 'khit'; w.append(svg, hit); }
+    el.addEventListener('pointerdown', e => { if (!e.target.closest('.khit')) return; e.preventDefault(); el.focus(); el.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, v: get(), moved: false }; el.classList.add('drag'); });
     el.addEventListener('pointermove', e => { if (!drag) return; if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 4) drag.moved = true; put(k, drag.v + ((drag.y - e.clientY) + (e.clientX - drag.x)) / 150); });
     const end = () => { drag = null; el.classList.remove('drag'); };
     /* a notched control hops to its next position on a plain click, and round to the first after the last */
     el.addEventListener('pointerup', () => { const d = drag; end(); const n = +el.dataset.steps; if (d && !d.moved && n) { const cur = Math.round(get() * n); put(k, ((cur + 1) % (n + 1)) / n); } });
     el.addEventListener('pointercancel', end);
-    el.addEventListener('wheel', e => { e.preventDefault(); put(k, get() + (e.deltaY < 0 ? 1 : -1) * (stp || 0.04)); }, { passive: false });
-    el.addEventListener('dblclick', () => put(k, def));
+    el.addEventListener('wheel', e => { if (document.activeElement !== el) return; e.preventDefault(); put(k, get() + (e.deltaY < 0 ? 1 : -1) * (stp || 0.04)); }, { passive: false });      // the wheel turns a knob only after it has been clicked; otherwise it scrolls the panel
+    el.addEventListener('dblclick', e => { if (e.target.closest('.khit')) put(k, def); });
     el.addEventListener('keydown', e => {
       const q = stp || 0.05, d = { ArrowUp: q, ArrowRight: q, ArrowDown: -q, ArrowLeft: -q, PageUp: stp || 0.2, PageDown: -(stp || 0.2) }[e.key];
       if (d != null) { e.preventDefault(); e.stopPropagation(); put(k, get() + d); } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); e.stopPropagation(); put(k, e.key === 'Home' ? 0 : 1); }
