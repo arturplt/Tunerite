@@ -8,7 +8,7 @@
   --c-print:var(--tn-print,#8f9096);--c-printh:var(--tn-printh,#cfc8b8);--c-acc:var(--tn-tip,#c0321c);
   --c-slab:var(--c-ink);--c-slab2:color-mix(in srgb,var(--c-ink) 60%,var(--c-body));--c-groove:color-mix(in srgb,var(--tn-lcd2,#0e0905) 70%,var(--c-body));
   padding:0;overflow:hidden;background:var(--c-wall);font-family:"Silkscreen",ui-monospace,monospace;color:var(--c-print);user-select:none;-webkit-user-select:none}
-#s-tuner .tnstage{position:absolute;left:50%;top:50%;width:var(--sw,1280px);height:var(--sh,720px);margin:calc(var(--sh,720px)/-2) 0 0 calc(var(--sw,1280px)/-2);transform:scale(var(--s,1))}
+#s-tuner .tnstage{position:absolute;left:50%;top:50%;width:var(--sw,1280px);height:var(--sh,720px);margin:calc(var(--sh,720px)/-2) 0 0 calc(var(--sw,1280px)/-2);zoom:var(--s,1)}
 
 /* case: flat colour with a lit top edge, a shaded underside, a hard shadow on the wall (light from above) */
 #s-tuner .tndev{position:absolute;left:20px;right:20px;top:22px;bottom:52px;padding:16px 24px 20px;background:var(--c-body);border:4px solid var(--c-ink);border-radius:30px;
@@ -79,7 +79,7 @@
 
 /* lamps */
 #s-tuner .tnlamps{display:flex;justify-content:space-between;align-items:center;padding:8px 18px}
-#s-tuner .tnlamps>div{display:flex;align-items:center;gap:10px;white-space:nowrap;font-size:var(--f2,16px);letter-spacing:calc(var(--dp,1px)*2);color:var(--c-print)}
+#s-tuner .tnlamps>div{display:flex;align-items:center;gap:10px;white-space:nowrap;font-size:var(--f2,16px);letter-spacing:calc(var(--dp,1px)*2);color:var(--c-print);font-weight:400}
 #s-tuner .tnlamp{width:20px;height:20px;border-radius:50%;border:3px solid var(--c-ink);background:var(--tn-red0,#2a1a16);box-shadow:inset 0 3px 0 rgba(0,0,0,.35);transition:.08s}
 #s-tuner .tnlamp.big{width:26px;height:26px;background:var(--tn-grn0,#18261a)}
 #s-tuner .tnlamp.red.on{background:var(--tn-red,#ff5a36);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 0 14px var(--tn-red,#ff5a36),0 0 30px var(--tn-redglow,rgba(255,90,54,.6))}
@@ -98,14 +98,22 @@
 #s-tuner .tntrack::before{content:"";position:absolute;left:49px;right:49px;top:50%;height:4px;margin-top:-2px;background:var(--c-groove);border-radius:2px}
 #s-tuner .tndot{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--c-groove)}
 #s-tuner .tnknob{position:absolute;top:3px;bottom:3px;width:var(--kw);left:calc(3px + var(--p)*(100% - var(--kw) - 6px));
-  background:repeating-linear-gradient(90deg,var(--c-slab) 0 5px,var(--c-slab2) 5px 7px);border:3px solid var(--c-ink);border-radius:6px;box-shadow:0 7px 0 rgba(0,0,0,.45);transition:left .1s ease-out}
-#s-tuner .tnknob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-5px;background:var(--tn-lcd2,#0e0905);border-left:3px solid var(--c-ink);border-right:3px solid var(--c-ink)}
-#s-tuner .tnknob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--c-acc);z-index:1}
+  background:repeating-linear-gradient(90deg,var(--tn-key1h,#44454b) 0 5px,var(--tn-key2,#2a2b2f) 5px 7px);border:3px solid var(--c-ink);border-radius:6px;box-shadow:0 7px 0 rgba(0,0,0,.45);transition:left .1s ease-out}
+#s-tuner .tnknob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-8px;background:var(--tn-lcd2,#0e0905);border-left:3px solid var(--c-ink);border-right:3px solid var(--c-ink)}
+#s-tuner .tnknob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1.5px;background:var(--c-acc);z-index:1}
 #s-tuner .tncaps{display:flex;justify-content:space-between;gap:12px}
 #s-tuner .tncap{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:2px;color:var(--c-print)}
+#s-tuner .tncap span{margin-top:10px;font-size:12px;font-weight:400;letter-spacing:2px;color:var(--c-printh);text-shadow:0 1px 0 rgba(0,0,0,.6)}
+#s-tuner .tncap{isolation:isolate}
+/* the base under each key is two real rounded shapes (one dark, one a soft shadow), so the corners have no steps */
 #s-tuner .tncap button{--lift:8px;width:62px;height:56px;padding:0;border-radius:16px;border:3px solid var(--c-ink);cursor:pointer;background:linear-gradient(180deg,var(--tn-key1h,#44454b) 0 22%,var(--tn-key1,#3a3b40) 22%,var(--tn-key2,#2a2b2f));
-  box-shadow:0 var(--lift) 0 var(--c-ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28);transition:transform .06s,box-shadow .06s;position:relative}
-#s-tuner .tncap button:disabled{opacity:.45;cursor:default;transform:none;box-shadow:0 var(--lift) 0 var(--c-ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28)}
+  background-clip:padding-box;transition:transform .06s,box-shadow .06s;position:relative}
+#s-tuner .tncap button::before,#s-tuner .tncap button::after{content:"";position:absolute;left:-3px;right:-3px;top:-3px;border-radius:16px;pointer-events:none}
+#s-tuner .tncap button::before{bottom:calc(-3px - var(--lift));background:var(--c-ink);z-index:-1}
+#s-tuner .tncap button::after{left:-2px;right:-2px;top:18px;bottom:calc(-3px - var(--lift) - 8px);background:rgba(0,0,0,.28);z-index:-2}      /* tucked 1px inside the dark base and started low, so its soft edge never rings the base */
+#s-tuner .tncap button:disabled{opacity:.45;cursor:default;transform:none}
+#s-tuner .tncap button:disabled::before,#s-tuner .tncap button:disabled::after,#s-tuner .tncap button:active:not(:disabled)::before,#s-tuner .tncap button:active:not(:disabled)::after,#s-tuner .tncap button.press::before,#s-tuner .tncap button.press::after{display:none}
+#s-tuner .tncap button:disabled{box-shadow:0 var(--lift) 0 var(--c-ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28)}
 #s-tuner .tncap button:active:not(:disabled),#s-tuner .tncap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--c-ink),0 3px 0 rgba(0,0,0,.28)}
 
 /* the "switch source?" hint floats over the top of the case */

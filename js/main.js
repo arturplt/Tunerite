@@ -16,6 +16,7 @@ function bind() {
   vz.onpointerdown = e => { e.preventDefault(); getSelection().removeAllRanges(); vz.setPointerCapture(e.pointerId); clearTimeout(vHide); vp.hidden = false; setVolFrom(e.clientX); };
   vz.onpointermove = e => { if (vz.hasPointerCapture(e.pointerId)) setVolFrom(e.clientX); };
   vz.onpointerup = vz.onpointercancel = () => { Store.save(); vHide = setTimeout(() => { vp.hidden = true; }, 400); };
+  $('#setPxOct').onchange = e => { Store.data.settings.pxOct = e.target.value; Store.save(); Spec.key = null; };
   $('#setUi').onchange = e => { Store.data.settings.uiSize = e.target.value; Store.save(); applyUiSize(); };
   $('#setTheme').onchange = e => { Store.data.settings.theme = e.target.value; Store.save(); Themes.apply(e.target.value); };
   $('#setTimbre').innerHTML = timbreOptions() + '<option value="sf" id="sfOpt" hidden>SoundFont</option>';

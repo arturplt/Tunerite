@@ -2,6 +2,9 @@
 /* ---- Spectrogram over a piano keyboard (collapsed by default; only drawn while open) ---- */
 const setInst = i => { Store.data.settings.inst = i; Store.save(); Engine.applySettings(); Spec.setMode(instMode(i)); UI.refresh(); };
 const instMode = i => i === 'piano' ? 'piano' : i === 'whistle' ? 'whistle' : 'voice';
+/* The keys the Piano tab shows: all of A0 to C8, or n octaves from C to C around middle C. */
+const pianoSpan = () => { const n = +Store.data.settings.pxOct; if (!(n >= 2 && n <= 5)) return { lo: 21, hi: 108 }; const lo = Math.max(21, 48 - 12 * Math.floor((n - 1) / 2)); return { lo, hi: Math.min(108, lo + 12 * n) }; };
+
 /* Horizontal centre of every key (lo..hi) on a keyboard drawn w wide, matching Piano.draw. */
 const kbCenters = (w, lo, hi) => {
   const nw = (() => { let n = 0; for (let m = lo; m <= hi; m++) if (!isBlack(m)) n++; return n; })(), ww = w / nw, off = { 1: -0.08, 3: 0.08, 6: -0.08, 8: 0, 10: 0.08 }, out = new Float64Array(hi - lo + 1), idx = new Map();
@@ -83,8 +86,8 @@ const Spec = {
     const cv = $('#specCv'), an = Engine.specAn || Engine.analyser; if (!an) return;
     this.applyFft();
     if (!cv.clientWidth || !cv.clientHeight) return;
-    const { g, w, h } = fitCanvas(cv), lo = 21, hi = 108, a4 = Store.data.settings.a4, dpr = window.devicePixelRatio || 1, W = cv.width, H = cv.height;
-    const kb = kbCenters(w, lo, hi), sh = this.full ? Math.round(Math.min(150, h * 0.3) * dpr) : 0, key = w + 'x' + h + ':' + an.fftSize + ':' + a4 + ':' + sh;
+    const { g, w, h } = fitCanvas(cv), { lo, hi } = pianoSpan(), a4 = Store.data.settings.a4, dpr = window.devicePixelRatio || 1, W = cv.width, H = cv.height;
+    const kb = kbCenters(w, lo, hi), sh = this.full ? Math.round(Math.min(150, h * 0.3) * dpr) : 0, key = w + 'x' + h + ':' + an.fftSize + ':' + a4 + ':' + sh + ':' + lo + ':' + hi;
     if (key !== this.key) { this.key = key; g.fillStyle = '#0d0b09'; g.fillRect(0, 0, w, h); this.cols = null; }
     const nyq = Engine.ctx.sampleRate / 2;
     $('#specNote').textContent = noteName(lo) + ' to ' + noteName(hi) + (hi >= freqToMidi(nyq, a4) - 1 ? ' (the mic stops at ' + Math.round(nyq) + ' Hz). ' : '. ') + 'Brightness is how loud each pitch is. It rises from the piano keys, newest at the bottom. The line is the note the tuner locked on to.';
@@ -217,7 +220,7 @@ const Spec = {
   drawTags(tags, srcW) {
     const cv = $('#specTags'); if (!cv) return;
     const { g, w, h } = fitCanvas(cv); g.clearRect(0, 0, w, h);
-    if (this.full || !tags.length || !w || ['scope', 'chroma'].includes(Store.data.settings.specView)) return;
+    if (this.full || !tags.length || !w) return;
     /* 24dp type has 3dp font pixels, so every chip edge, text row and arrow step sits on the 3dp grid that is drawn over this pane (both start at its top left corner) */
     const u = 1 / (window.devicePixelRatio || 1), q = 3 * u, sq = v => Math.round(v / q) * q, k = w / srcW, chH = 9 * q, padX = 2 * q, gap = q;
     g.font = 24 * u + 'px Silkscreen, ui-monospace, monospace'; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
@@ -264,7 +267,7 @@ const Spec = {
 const Piano = {
   draw() {
     const cv = $('#pianoCv'); if (!cv.clientWidth) return;
-    const { g, w, h } = fitCanvas(cv), lo = 21, hi = 108;               // always the whole keyboard, A0 to C8, so it never changes size
+    const { g, w, h } = fitCanvas(cv), { lo, hi } = pianoSpan();       // the Piano tab's range: A0 to C8, or 2 to 5 octaves around middle C
     const held = Midi.keys(), voiced = performance.now() - Tuner.lastVoiced < 350 && Tuner.midi != null, heard = voiced ? Math.round(Tuner.midi) : null;
     const heardNotes = Tuner.chordNow.notes, chordOn = heardNotes.length >= 2, heardList = chordOn ? heardNotes : heard != null ? [heard] : [];
     const whites = []; for (let m = lo; m <= hi; m++) if (!isBlack(m)) whites.push(m);

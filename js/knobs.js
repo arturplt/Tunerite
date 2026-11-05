@@ -29,7 +29,7 @@ const Knobs = {
   /* The Piano tab's effects as one panel: a bypass button on top, then the Space, Modulation, Tone and Display sections, split by printed lines. */
   mountRack(host) {
     const MODS = [['mod', 'MODULATION', ['chorus', 'trem', 'vib', 'phase', 'wide']], ['tone', 'TONE', ['drive', 'tone']]];
-    host.innerHTML = '<div class="synbyp"><div class="bypcell"><button class="bigjack" id="synBypass" aria-pressed="false" aria-label="Bypass all effects" title="Bypass: hear the sound without effects. Your knobs stay where they are. Press again to turn the effects back on."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button><b>Bypass</b></div><div class="bypcell"><button class="bigjack panic" id="synPanic" aria-label="Panic" title="Panic: let go of every key and stop the sustain pedal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.5"/></svg></button><b>Panic</b></div><div class="bypcell"><button class="bigjack red" id="synReset" aria-label="Reset all effects" title="Reset: put every effect back to zero"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg></button><b>Reset</b></div></div>' +
+    host.innerHTML = '<div class="synbyp"><div class="bypcell"><button class="bigjack" id="synBypass" aria-pressed="false" aria-label="Bypass all effects" title="Bypass: hear the sound without effects. Your knobs stay where they are. Press again to turn the effects back on."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 13H4A7 7 0 0 1 18 13H20" stroke-linecap="butt"/><path d="M20 10L23 13L20 16Z" fill="currentColor" stroke="none"/><circle cx="11" cy="14" r="4" fill="currentColor" stroke="none"/></svg></button><b>Bypass</b></div><div class="bypcell"><button class="bigjack panic" id="synPanic" aria-label="Panic" title="Panic: let go of every key and stop the sustain pedal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.5"/></svg></button><b>Panic</b></div><div class="bypcell"><button class="bigjack red" id="synReset" aria-label="Reset all effects" title="Reset: put every effect back to zero"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg></button><b>Reset</b></div></div>' +
       MODS.map(m => `<div class="synsec synmod mod-${m[0]}"><span class="synlab">${m[1]}</span><div class="knobs"></div><i class="jack in" data-j="${m[0]}-in"></i><i class="jack out" data-j="${m[0]}-out"></i></div>`).join('');
     host.querySelectorAll('.synmod .knobs').forEach((el, i) => this.mount(el, this.list.filter(f => MODS[i][2].includes(f.k)), k => this.val(k), (k, v) => this.set(k, v)));
     this.mountQuality($('#pnDisplay') || host);
@@ -40,7 +40,7 @@ const Knobs = {
   /* Bypass only turns the effects off for listening; every knob keeps its value. */
   bypass(on) {
     Engine.fxBypass = on != null ? on : !Engine.fxBypass;
-    const b = $('#synBypass'), pn = $('#pnKnobs'); if (b) b.setAttribute('aria-pressed', !!Engine.fxBypass); if (pn) pn.classList.toggle('byp', !!Engine.fxBypass);
+    const b = $('#synBypass'), pn = $('#pnKnobs'); if (b) b.setAttribute('aria-pressed', !!Engine.fxBypass); if (pn) pn.classList.toggle('byp', !!Engine.fxBypass); this.lightSoon();
     Engine.setFx();
   },
   cables() {},   // the effects are one unit now; kept as a no-op so callers need no change
@@ -132,7 +132,7 @@ const Knobs = {
   /* the switches and the on/off look of the envelope section */
   paintLow() {
     const st = Store.data.settings, set = (id, on) => { const b = $(id); if (b) b.setAttribute('aria-pressed', !!on); };
-    set('#tgHuman', st.fxHuman); set('#arpOn', st.arp && st.arp.on); set('#tgSus', VKeys.pedal); set('#tgFlange', st.fxPhase === 'flanger'); set('#tgPing', st.fxPing); set('#envOn', st.envOn);
+    this.lightSoon(); set('#tgHuman', st.fxHuman); set('#arpOn', st.arp && st.arp.on); set('#tgSus', VKeys.pedal); set('#tgFlange', st.fxPhase === 'flanger'); set('#tgPing', st.fxPing); set('#envOn', st.envOn);
     const lw = $('#pnEnv'); if (lw) lw.classList.toggle('envoff', !st.envOn);
   },
   /* the envelope picture: four draggable squares (attack peak, end of decay, start of release, end) on an LCD grid */
@@ -251,7 +251,19 @@ const Knobs = {
       if (d != null) { e.preventDefault(); e.stopPropagation(); put(k, get() + d); } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); e.stopPropagation(); put(k, e.key === 'Home' ? 0 : 1); }
     });
   },
-  paint(k) { $$(`#fxKnobs .knob[data-k="${k}"], #pnKnobs .knob[data-k="${k}"], #kyKnobs .knob[data-k="${k}"], #pnLow .knob[data-k="${k}"], #pnEnv .knob[data-k="${k}"]`).forEach(el => this.paintEl(el, this.val(k), this.list.concat(this.extra).find(x => x.k === k))); },
+  /* Bluish lights for the effects at work: a page key lights when one of its knobs is off its resting place (or one of its switches is on), and Bypass lights when any page does.
+     Read from the knobs' own "lit" state, so it follows every knob and the Init and Reset buttons. Coalesced to one pass per frame. */
+  lightSoon() { if (this.lightQ) return; this.lightQ = requestAnimationFrame(() => { this.lightQ = 0; this.lightFx(); }); },
+  lightFx() {
+    const tabs = $$('.pntabs button[data-pg]'); let any = false;
+    tabs.forEach(t => {
+      const pg = t.dataset.pg, sel = pg === 'arp' ? '#arpOn[aria-pressed="true"]' : '.knob.lit, .pntgl[aria-pressed="true"]:not(#tgSus)';      // Arp is its On switch: its knobs rest off their zero
+      const on = pg !== 'view' && [...$$('.pnpages [data-pg="' + pg + '"]')].some(el => el.querySelector(sel));
+      t.classList.toggle('fx', on && !Engine.fxBypass); if (on) any = true;       // bypassed: nothing is at work, so no blue
+    });
+    const b = $('#synBypass'); if (b) b.classList.toggle('fxlit', any && !Engine.fxBypass);
+  },
+  paint(k) { this.lightSoon(); $$(`#fxKnobs .knob[data-k="${k}"], #pnKnobs .knob[data-k="${k}"], #kyKnobs .knob[data-k="${k}"], #pnLow .knob[data-k="${k}"], #pnEnv .knob[data-k="${k}"]`).forEach(el => this.paintEl(el, this.val(k), this.list.concat(this.extra).find(x => x.k === k))); },
   /* Any set of knobs: host gets one per entry of `list`; get(k) reads an amount and put(k, v) stores one. Used by the Compose tracks, which have their own amounts. */
   mount(host, list, get, put) {
     const notch = f => f.steps && f.steps <= 8;

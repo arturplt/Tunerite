@@ -71,6 +71,20 @@
   #s-piano #pnKey .keyrow{flex-direction:column;align-items:stretch;flex-wrap:nowrap}
   #s-piano.screen #pnKey .keyrow .synlcd,#s-piano .synthmain #pnKey .keyrow .synlcd{flex:none;width:100%}
   #s-piano #pnKey .keyrow .tgcell{align-self:flex-end}
+  /* Bypass, Panic and Reset sit at the right end of the Save / Init / Full screen row */
+  #s-piano .synhbtns{align-items:flex-start;flex-wrap:wrap;gap:0.3rem}
+  #s-piano .synhbtns .synbyp{margin:0.75rem 0 0 auto;padding:0 0 0.5rem;gap:0.3rem}
+  #s-piano .synhbtns .bypcell{width:auto}
+  #s-piano .synhbtns .bigjack{width:2.3rem;height:2.1rem;border-radius:0.6rem}
+  #s-piano .pnbot:empty{display:none}
+}
+
+/* wide: Bypass, Panic and Reset are single caps on the preset row and the page-key row, so their labels and the old strip go */
+@media (min-width:900px) and (min-aspect-ratio:5/4){
+  #s-piano .pnbot{display:none}
+  #s-piano .synlcd .bigjack,#s-piano .pntabs .bigjack{flex:none;width:2.3rem;height:2.3rem;min-width:0;border-radius:0.6rem}
+  #s-piano .pntabs .bigjack{height:2.1rem;width:3rem}
+  #s-piano .pntabs .bigjack::after{display:none}
 }
 
 /* ---- Hardware look for everything inside the Piano case: wells for the groups, cel-shaded knobs, caps for the keys. These come last and are scoped to #s-piano so they win over the older neumorphic rules. ---- */
@@ -98,6 +112,9 @@
 #s-piano .knob b{font:400 0.5rem "Silkscreen",ui-monospace,monospace;letter-spacing:0.03em;color:var(--c-print);text-shadow:none}
 #s-piano .knob.lit b{color:var(--c-acc)}
 #s-piano .knob.drag b::after{font-family:"Silkscreen",ui-monospace,monospace;color:var(--c-lit)}
+/* knobs that pick from a list keep their choice on show: a little LCD under the name, which stays put while a knob is dragged */
+#s-piano .knob[data-steps] b{display:flex;flex-direction:column;align-items:center;gap:0.2rem}
+#s-piano .knob[data-steps] b::after{content:attr(data-v);display:block;min-width:2.6rem;padding:0.1rem 0.35rem;border-radius:0.2rem;background:var(--tn-lcd2,#0e0905);box-shadow:inset 0 0.1rem 0.25rem rgba(0,0,0,.8);color:var(--tn-fg,#ffb347);text-shadow:0 0 0.3rem var(--tn-glow,rgba(255,170,50,.5));text-align:center;font-size:0.5rem;letter-spacing:0.05em;white-space:nowrap}
 
 /* keys: raised hardware caps that drop when pressed (arrows, icons, toggles, envelope slots) */
 #s-piano .synbtn,#s-piano .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){border:0.15rem solid var(--c-ink);border-radius:0.6rem;color:var(--c-printh);
@@ -130,3 +147,11 @@
 #s-piano .synscreen{padding:0.5rem;border:0;border-radius:1rem;background:var(--c-ink);box-shadow:inset 0 0.3rem 0 #000,0 0.2rem 0 var(--c-hi),0 0.35rem 0 var(--c-ink)}
 #s-piano .synglass{border-radius:0.5rem;box-shadow:none}
 #s-piano #pnKey.synknobarea{padding:0.45rem 0.6rem;border:0.15rem solid var(--c-ink);border-radius:0.7rem;background:var(--c-well);box-shadow:inset 0 0.3rem 0 var(--c-lip),0 0.15rem 0 var(--c-hi)}
+
+/* effects at work: the page key's lamp and the Bypass cap light blue */
+#s-piano .pntabs button.fx::after{background:#5ab4ff;border-color:#2a6aa8;box-shadow:0 0 0.45rem #5ab4ff}
+#s-piano .bigjack.fxlit:not([aria-pressed=true]){color:#5ab4ff}
+#s-piano .bigjack.fxlit:not([aria-pressed=true]) svg{filter:drop-shadow(0 0 0.3rem rgba(90,180,255,.85))}
+
+/* the NOW screen is gone: the played notes are drawn on the graph */
+#s-piano .synnow[hidden]{display:none!important}

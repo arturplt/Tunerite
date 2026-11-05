@@ -1143,3 +1143,6 @@ button.card.earlvl .txt{display:flex;flex-direction:column;text-align:left}
 
 /* knob captions on the synth panels follow the theme (Compose keeps its own dark look) */
 .synth .knob b,.kydev .knob b{color:var(--tn-print,#9a9aa6)}
+
+/* Bypass, Panic and Reset labels: bigger and brighter */
+.bypcell b{margin-top:calc(11px*var(--k));font-weight:400;font-size:calc(11.5px*var(--k));color:var(--tn-printh,#cfc8b8)}
