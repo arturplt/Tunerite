@@ -3,7 +3,10 @@
 ## Automated (no dependencies)
 ```sh
 node tests/core.test.js
+node tests/themes.test.js
 ```
+`themes.test.js` checks that every theme in `css/themes.css` sets exactly the `--tn-*` variables the Tuner tab uses.
+
 Loads the files in `js/core/` (the `CORE` block) and checks:
 - Note maths and A4 reference handling.
 - YIN accuracy (< 5¢) on sines from G2 to G5 at 48 kHz, plus 44.1 kHz; sawtooth waves (no octave errors); noise at ~20 dB SNR; silence.

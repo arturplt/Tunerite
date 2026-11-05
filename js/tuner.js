@@ -1,7 +1,7 @@
 "use strict";
 /* ---- Tuner ---- */
 const Tuner = {
-  cents: 0, midi: null, lastVoiced: 0, shown: 0,
+  cents: 0, midi: null, flashUntil: 0, flashTxt: '', lastVoiced: 0, shown: 0,
   hint: { t: 0, n: 0, want: null, buf: null, dismissed: {} },
   chordNow: { t: 0, notes: [], prev: '', buf: null },
   /* Piano mode: listen for several notes at once. A set of notes is shown only when two checks in a row agree. */
@@ -37,29 +37,49 @@ const Tuner = {
     const box = $('#instHint'); if (box.hidden === show) box.hidden = !show;
     if (show) $('#instHintTxt').textContent = { whistle: 'That sounds like a whistle. Switch to Whistle mode?', piano: 'Keys are being played. Switch to Piano mode?', voice: 'That sounds like a voice. Switch to Voice mode?' }[want];
   },
+  /* Finding the range on this screen: the three LCDs become LOW, HIGH and the size in octaves, the message line asks for the next note, and the keys become Next/Done, Redo and Exit.
+     The dial, strip and lamps keep following the live note. After saving, the result stays up for a few seconds. */
+  rangeShow: null, rangeMode: false, keyTxt: '',
+  rangeOverride(now, voiced) {
+    const rf = RangeFinder, on = rf.active && rf.onTuner, rs = !on && this.rangeShow && now < this.rangeShow.until ? this.rangeShow : null, mode = on || !!rs;
+    if (mode !== this.rangeMode) { this.rangeMode = mode; ['LOW', 'HIGH', 'OCTAVES'].forEach((t, i) => { $$('#s-tuner .tnlcd small')[i].textContent = mode ? t : ['NOTE', 'CENTS', 'FREQ \u00b7 HZ'][i]; }); }
+    const keys = on ? [rf.step === 0 ? 'NEXT' : 'DONE', 'REDO', 'EXIT'] : ['RANGE', 'A4 \u2212', 'A4 +'], kt = keys.join();
+    if (kt !== this.keyTxt) { this.keyTxt = kt; $$('#s-tuner .tncap span').forEach((s, i) => { s.textContent = keys[i]; }); }
+    $('#tuRange').disabled = on && rf.best[rf.step] == null;
+    if (!mode) return;
+    const live = voiced ? Math.round(this.midi) : null, lo = on ? rf.best[0] : rs.lo, hi = on ? rf.best[1] : rs.hi, name = m => m == null ? '--' : noteName(m);
+    const lt = lo != null ? name(lo) : on && rf.step === 0 ? name(live) : '--', ht = hi != null ? name(hi) : on && rf.step === 1 ? name(live) : '--', top = hi != null ? hi : on && rf.step === 1 ? live : null;
+    $('#tunerNote').style.fontSize = ''; $('#ppNoteGhost').style.visibility = '';
+    $('#tunerNote').textContent = lt; $('#tunerSign').textContent = ht[0]; $('#tunerCents').textContent = ht.slice(1) || ' ';
+    $('#tunerHz').textContent = lo != null && top != null && top > lo ? ((top - lo) / 12).toFixed(1) : '--';
+    $('#tunerMsg').textContent = rs ? (rs.hi - rs.lo) + ' SEMITONES SAVED' : rf.step === 0 ? (lo != null ? name(lo) + ' CAUGHT \u00b7 NEXT' : 'SING LOW, HOLD IT') : hi != null ? name(hi) + ' CAUGHT \u00b7 DONE' : 'SING HIGH, HOLD IT';
+  },
+  flash(txt) { this.flashTxt = txt; this.flashUntil = performance.now() + 1600; },
   onFrame(fr) { if (fr.midi != null) { this.midi = fr.midi; this.f = fr.f; this.lastVoiced = performance.now(); } },
   draw() {
     Midi.sweep(performance.now()); this.checkHint(performance.now()); this.checkChord(performance.now());
     const voiced = performance.now() - this.lastVoiced < 350 && this.midi != null;
-    const target = voiced ? clamp(centsOff(this.midi), -50, 50) : 0;
-    this.cents += (target - this.cents) * 0.35;
-    const tf = 'rotate(' + this.cents.toFixed(2) + ' 300 400)';
-    $('#ppNeedle').setAttribute('transform', tf); $('#ppShadow').setAttribute('transform', tf);
+    const now = performance.now(), target = voiced ? clamp(centsOff(this.midi), -50, 50) : 0;
+    this.cents = target;
+    TunerDial.fit(); TunerDial.paintInst(Math.max(0, TunerDial.INST.indexOf(Store.data.settings.inst)));
+    TunerDial.update(target, Engine.ready ? Engine.level + 18 : null, now);      // the needles are springs; 0 VU sits at -18 dBFS
     $('#ppPower').classList.toggle('on', !!Engine.ready);
-    const n = $('#tunerNote'), c = $('#tunerCents'), hz = $('#tunerHz'), msg = $('#tunerMsg'), ks = Midi.keys(), hn = this.chordNow.notes, src = ks.length ? ks : hn.length >= 2 ? hn : [];
-    const sz = s => { const v = s.length > 6 ? '26px' : s.length > 3 ? '44px' : ''; n.style.fontSize = v; $('#ppNoteGhost').style.visibility = v ? 'hidden' : ''; };
+    const n = $('#tunerNote'), c = $('#tunerCents'), sg = $('#tunerSign'), hz = $('#tunerHz'), msg = $('#tunerMsg'), ks = Midi.keys(), hn = this.chordNow.notes, src = ks.length ? ks : hn.length >= 2 ? hn : [];
+    const sz = s => { const v = s.length > 6 ? 'calc(var(--f8,64px)*.4)' : s.length > 3 ? 'calc(var(--f8,64px)*.75)' : ''; n.style.fontSize = v; $('#ppNoteGhost').style.visibility = v ? 'hidden' : ''; };
     let oct = null, zone = null;
     if (voiced) {
       const cn = centsOff(this.midi), rc = Math.round(cn);
       n.textContent = noteName(this.midi); sz(n.textContent); oct = Math.floor(Math.round(this.midi) / 12) - 1;
-      c.textContent = (rc >= 0 ? '+' : '\u2212') + String(Math.abs(rc)).padStart(2, '0');
+      sg.textContent = rc >= 0 ? '+' : '\u2212'; c.textContent = String(Math.abs(rc)).padStart(2, '0');
       zone = cn < -10 ? 'flat' : cn > 10 ? 'sharp' : 'tune';
       msg.textContent = Math.abs(cn) < 3 ? 'In tune' : Math.round(Math.abs(cn)) + '\u00a2 ' + (cn > 0 ? 'sharp \u25b2' : 'flat \u25bc');
       hz.textContent = this.f ? this.f.toFixed(1) : '\u2013\u2013';
     } else if (src.length) {                                       // keys pressed or a chord heard: name it large
       const dk = describeKeys(src); n.textContent = dk.name; sz(dk.name);
-      c.textContent = '+00'; msg.textContent = dk.detail + ' \u00b7 ' + (ks.length ? 'Keys pressed' : 'Heard through the microphone'); hz.textContent = '\u2013\u2013';
-    } else { n.textContent = '\u2013'; sz(''); c.textContent = '+00'; hz.textContent = '\u2013\u2013'; msg.textContent = Store.data.settings.inst === 'piano' ? 'Play a note' : Store.data.settings.inst === 'whistle' ? 'Whistle a note' : 'Sing a note'; }
+      sg.textContent = '+'; c.textContent = '00'; msg.textContent = dk.detail + ' \u00b7 ' + (ks.length ? 'Keys pressed' : 'Heard through the microphone'); hz.textContent = '\u2013\u2013';
+    } else { n.textContent = '\u2013'; sz(''); sg.textContent = '+'; c.textContent = '00'; hz.textContent = '\u2013\u2013'; msg.textContent = Store.data.settings.inst === 'piano' ? 'Play a note' : Store.data.settings.inst === 'whistle' ? 'Whistle a note' : 'Sing a note'; }
+    if (now < this.flashUntil) msg.textContent = this.flashTxt;                  // a short notice (the reference pitch) over the usual message
+    this.rangeOverride(now, voiced);
     const pc = voiced ? ((Math.round(this.midi) % 12) + 12) % 12 : -1;
     [...$('#ppOcts').children].forEach((d, i) => d.classList.toggle('on', i === pc));
     $('#ppFlat').classList.toggle('on', zone === 'flat'); $('#ppTune').classList.toggle('on', zone === 'tune'); $('#ppSharp').classList.toggle('on', zone === 'sharp');

@@ -1,0 +1,127 @@
+/* ---- Tuner tab. The whole instrument is drawn at a fixed design size (1280x720 landscape, 560x1380 portrait) and scaled to fill the screen,
+   so everything is always in view with no scrolling. Tuner.fit (js/tuner-dial.js) sets --s (scale), --sw/--sh (design size) and, so the LCD mesh and
+   pixel type stay on the device-pixel grid at any scale, --dp (one device pixel in design px) and --f2/--f4/--f8 (Silkscreen sizes snapped to the mesh).
+   Colours come from --tn-* variables (css/themes.css); the fallbacks are the Classic theme. ---- */
+#s-tuner{
+  --c-wall:var(--tn-wall,var(--bg));--c-ink:var(--tn-edge,#0a0a0c);--c-body:var(--tn-p1,#2b2c31);--c-lo:var(--tn-p3,#141518);
+  --c-hi:color-mix(in srgb,var(--c-body) 86%,#fff);--c-lip:color-mix(in srgb,var(--c-ink) 60%,var(--c-lo));--c-well:var(--tn-well,#202124);
+  --c-print:var(--tn-print,#8f9096);--c-printh:var(--tn-printh,#cfc8b8);--c-acc:var(--tn-tip,#c0321c);
+  --c-slab:var(--c-ink);--c-slab2:color-mix(in srgb,var(--c-ink) 60%,var(--c-body));--c-groove:color-mix(in srgb,var(--tn-lcd2,#0e0905) 70%,var(--c-body));
+  padding:0;overflow:hidden;background:var(--c-wall);font-family:"Silkscreen",ui-monospace,monospace;color:var(--c-print);user-select:none;-webkit-user-select:none}
+#s-tuner .tnstage{position:absolute;left:50%;top:50%;width:var(--sw,1280px);height:var(--sh,720px);margin:calc(var(--sh,720px)/-2) 0 0 calc(var(--sw,1280px)/-2);transform:scale(var(--s,1))}
+
+/* case: flat colour with a lit top edge, a shaded underside, a hard shadow on the wall (light from above) */
+#s-tuner .tndev{position:absolute;left:20px;right:20px;top:22px;bottom:52px;padding:16px 24px 20px;background:var(--c-body);border:4px solid var(--c-ink);border-radius:30px;
+  box-shadow:inset 0 10px 0 var(--c-hi),inset 0 -16px 0 var(--c-lo),0 12px 0 var(--c-ink),0 14px 0 var(--c-lip),0 40px 0 color-mix(in srgb,var(--c-wall) 55%,#000);
+  display:grid;grid-template-columns:500px 1fr;grid-template-rows:auto 1fr;gap:14px 24px}
+#s-tuner .tnscrew{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--c-lo);border:3px solid var(--c-ink);box-shadow:inset 0 3px 0 var(--c-hi)}
+#s-tuner .tnscrew::after{content:"";position:absolute;left:1px;right:1px;top:3px;height:2px;background:var(--c-ink);transform:rotate(35deg)}
+#s-tuner .tnscrew.a{left:12px;top:12px}#s-tuner .tnscrew.b{right:12px;top:12px}#s-tuner .tnscrew.c{left:12px;bottom:16px}#s-tuner .tnscrew.d{right:12px;bottom:16px}
+
+#s-tuner .tnhead{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 14px 0 10px;position:relative;z-index:6}
+#s-tuner .tnbrand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1;color:var(--c-printh)}
+#s-tuner .tnbrand small{display:block;font-weight:400;font-size:10px;letter-spacing:3px;margin-top:6px;color:var(--c-print)}
+#s-tuner .tnpwr{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:3px;margin-left:22px}
+#s-tuner .tnpwr i{width:14px;height:14px;border-radius:50%;background:var(--tn-ledoff,#3a2520);border:3px solid var(--c-ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.12);transition:.2s}
+#s-tuner .tnpwr i.on{background:var(--tn-red,#ff5a36);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 10px var(--tn-red,#ff5a36)}
+
+/* theme switch in the header */
+#s-tuner .tnthemewrap{margin-left:auto;position:relative}
+#s-tuner .tnthemebtn{display:flex;align-items:center;gap:10px;background:var(--c-lo);border:3px solid var(--c-ink);border-radius:10px;padding:5px 12px;cursor:pointer;color:var(--c-print);
+  font:400 10px "Silkscreen",monospace;letter-spacing:3px;box-shadow:inset 0 3px 0 var(--c-lip),0 3px 0 var(--c-ink)}
+#s-tuner .tnthemebtn b{font-weight:400;color:var(--c-acc)}
+#s-tuner .tnthemebtn:hover{color:var(--c-printh)}
+#s-tuner .tnthemebtn:active{transform:translateY(2px);box-shadow:inset 0 3px 0 var(--c-lip),0 1px 0 var(--c-ink)}
+#s-tuner .tnthemepop{position:absolute;top:calc(100% + 14px);right:0;width:330px;padding:10px;background:var(--c-body);border:4px solid var(--c-ink);border-radius:14px;
+  box-shadow:inset 0 5px 0 var(--c-hi),0 8px 0 var(--c-ink),0 22px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}
+#s-tuner .tnthemepop[hidden]{display:none}
+#s-tuner .tnthemepop h4{margin:2px 6px 0;font:400 10px "Silkscreen",monospace;letter-spacing:3px;color:var(--c-print)}
+#s-tuner .tnopt{display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:8px 34px 8px 10px;background:var(--c-lo);border:3px solid var(--c-ink);border-radius:10px;cursor:pointer;
+  color:var(--c-printh);font:400 12px "Silkscreen",monospace;letter-spacing:2px;box-shadow:inset 0 3px 0 var(--c-lip);position:relative}
+#s-tuner .tnopt small{display:block;margin-top:5px;font-size:9px;letter-spacing:1px;color:var(--c-print)}
+#s-tuner .tnopt:hover{background:var(--c-hi)}
+#s-tuner .tnopt.on{box-shadow:inset 0 3px 0 var(--c-lip),0 0 0 3px var(--c-acc)}
+#s-tuner .tnopt.on::after{content:"";position:absolute;right:12px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--c-acc);border:2px solid var(--c-ink)}
+#s-tuner .tnsw{display:grid;grid-template-columns:repeat(4,16px);border:3px solid var(--c-ink);border-radius:4px;overflow:hidden;flex:none}
+#s-tuner .tnsw i{height:26px}
+
+/* the two analog meters, recessed; the dial SVGs are built by TunerDial.build */
+#s-tuner .tnleft{display:flex;flex-direction:column;gap:16px;min-height:0}
+/* a microphone grille fills the rest of the column (portrait has no spare room, so it hides there) */
+#s-tuner .tngrille{flex:1;min-height:24px;border-radius:10px;border:3px solid var(--c-ink);background:repeating-linear-gradient(90deg,var(--c-ink) 0 5px,transparent 5px 14px),var(--c-lo);box-shadow:inset 0 5px 0 rgba(0,0,0,.5),0 3px 0 var(--c-hi)}
+#s-tuner .portrait .tngrille{display:none}
+#s-tuner .tnbezel{background:var(--c-ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 #000,0 4px 0 var(--c-hi),0 6px 0 var(--c-ink)}
+#s-tuner .tnbezel svg{display:block;width:100%;height:auto;border-radius:10px}
+
+#s-tuner .tnright{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:0}
+
+/* LCD screens: pixel font on the mesh, glass colours from the theme */
+#s-tuner .tnreadouts{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:10px}
+#s-tuner .tnlcd,#s-tuner .tnmsg,#s-tuner .tnchrom>div{--gn:2;position:relative;overflow:hidden;background:var(--tn-lcd,#1a120a);border:3px solid var(--c-ink);border-radius:8px;box-shadow:inset 0 6px 0 #000,0 3px 0 var(--c-hi)}
+#s-tuner .tnlcd{padding:12px calc(var(--dp,1px)*12) calc(var(--dp,1px)*6)}
+#s-tuner .tnlcd::after,#s-tuner .tnmsg::after,#s-tuner .tnchrom>div::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn))),repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn)))}
+#s-tuner .tnlcd small{display:block;font-size:var(--f2,16px);line-height:24px;letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-lab,#c98a3a);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4)}
+#s-tuner .tndg{position:relative;color:var(--tn-fg,#ffb347);white-space:nowrap;font-size:var(--f8,64px);line-height:72px}
+#s-tuner .tndg .g{position:absolute;left:0;top:0;opacity:.14}
+#s-tuner .tndg .v{position:relative;text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.6),var(--dp,1px) 0 rgba(60,170,255,.5),0 0 6px var(--tn-fg,#ffb347),0 0 18px var(--tn-glow,rgba(255,170,60,.6))}
+#s-tuner .tnsgn{position:relative;display:inline-block}#s-tuner .tnsgn i{visibility:hidden;font-style:normal}#s-tuner .tnsgn b{position:absolute;left:0;top:0;font-weight:400}
+#s-tuner .tnmsg{margin:0;text-align:center;font-size:var(--f4,32px);letter-spacing:calc(var(--dp,1px)*2);color:var(--tn-fg,#ffb347);text-shadow:calc(var(--dp,1px)*-1) 0 rgba(255,50,50,.5),var(--dp,1px) 0 rgba(60,170,255,.4);line-height:40px;padding:8px 12px;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+
+/* chromatic strip: twelve cells, the heard note lit; sharps are darker and carry a raised sharp sign */
+#s-tuner .tnwell{background:var(--c-well);border:3px solid var(--c-ink);border-radius:12px;padding:10px 12px;box-shadow:inset 0 5px 0 var(--c-lip),0 3px 0 var(--c-hi)}
+#s-tuner .tnchrom{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+#s-tuner .tnchrom>div{height:56px;border-width:2px;border-radius:5px;box-shadow:inset 0 4px 0 #000;display:flex;align-items:center;justify-content:center;gap:4px;padding-bottom:4px;
+  font-size:var(--f4,32px);line-height:48px;color:var(--tn-dim,#6b4a22);transition:background .08s,color .08s,box-shadow .08s}
+#s-tuner .tnchrom>div.sh{background:var(--tn-lcd2,#0e0905)}
+#s-tuner .tnchrom svg{width:10px;height:10px;fill:currentColor;align-self:flex-start;margin-top:12px;shape-rendering:crispEdges}
+#s-tuner .tnchrom>div.on{background:var(--tn-fg,#ffb347);color:var(--tn-on,#2a1604);box-shadow:inset 0 4px 0 rgba(0,0,0,.25),0 0 12px var(--tn-glow,rgba(255,170,60,.6))}
+
+/* lamps */
+#s-tuner .tnlamps{display:flex;justify-content:space-between;align-items:center;padding:8px 18px}
+#s-tuner .tnlamps>div{display:flex;align-items:center;gap:10px;white-space:nowrap;font-size:var(--f2,16px);letter-spacing:calc(var(--dp,1px)*2);color:var(--c-print)}
+#s-tuner .tnlamp{width:20px;height:20px;border-radius:50%;border:3px solid var(--c-ink);background:var(--tn-red0,#2a1a16);box-shadow:inset 0 3px 0 rgba(0,0,0,.35);transition:.08s}
+#s-tuner .tnlamp.big{width:26px;height:26px;background:var(--tn-grn0,#18261a)}
+#s-tuner .tnlamp.red.on{background:var(--tn-red,#ff5a36);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 0 14px var(--tn-red,#ff5a36),0 0 30px var(--tn-redglow,rgba(255,90,54,.6))}
+#s-tuner .tnlamp.grn.on{background:var(--tn-grn,#7ee05a);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 16px var(--tn-grn,#7ee05a),0 0 36px var(--tn-grnglow,rgba(126,224,90,.6))}
+
+/* controls: the three-position source slider with a split cap, and three hardware keys */
+#s-tuner .tnctl{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;align-items:end;padding:0 4px}
+#s-tuner .tnslabels{display:flex;justify-content:space-between;margin-bottom:8px;padding:0 4px}
+#s-tuner .tnslabels button{background:none;border:0;padding:2px 4px;cursor:pointer;position:relative;font:400 12px "Silkscreen",monospace;letter-spacing:2px;color:var(--c-print);transition:color .2s}
+#s-tuner .tnslabels button.on{color:var(--c-acc)}
+#s-tuner .tnslabels button::after{content:"";position:absolute;left:50%;bottom:-8px;width:3px;height:6px;background:var(--c-ink);transform:translateX(-50%)}
+#s-tuner .tnslabels button::before{display:none}
+#s-tuner .tnslabels .led{display:none}
+#s-tuner .tntrack{--p:.5;--kw:92px;position:relative;height:62px;background:var(--tn-lcd2,#0e0905);border:3px solid var(--c-ink);border-radius:12px;box-shadow:inset 0 8px 0 #000,0 3px 0 var(--c-hi);touch-action:none;cursor:pointer}
+#s-tuner .tntrack:focus-visible,#s-tuner .tnctl button:focus-visible,#s-tuner .tnthemebtn:focus-visible,#s-tuner .tnopt:focus-visible{outline:3px solid var(--c-acc);outline-offset:3px}
+#s-tuner .tntrack::before{content:"";position:absolute;left:49px;right:49px;top:50%;height:4px;margin-top:-2px;background:var(--c-groove);border-radius:2px}
+#s-tuner .tndot{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--c-groove)}
+#s-tuner .tnknob{position:absolute;top:3px;bottom:3px;width:var(--kw);left:calc(3px + var(--p)*(100% - var(--kw) - 6px));
+  background:repeating-linear-gradient(90deg,var(--c-slab) 0 5px,var(--c-slab2) 5px 7px);border:3px solid var(--c-ink);border-radius:6px;box-shadow:0 7px 0 rgba(0,0,0,.45);transition:left .1s ease-out}
+#s-tuner .tnknob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-5px;background:var(--tn-lcd2,#0e0905);border-left:3px solid var(--c-ink);border-right:3px solid var(--c-ink)}
+#s-tuner .tnknob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--c-acc);z-index:1}
+#s-tuner .tncaps{display:flex;justify-content:space-between;gap:12px}
+#s-tuner .tncap{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:2px;color:var(--c-print)}
+#s-tuner .tncap button{--lift:8px;width:62px;height:56px;padding:0;border-radius:16px;border:3px solid var(--c-ink);cursor:pointer;background:linear-gradient(180deg,var(--tn-key1h,#44454b) 0 22%,var(--tn-key1,#3a3b40) 22%,var(--tn-key2,#2a2b2f));
+  box-shadow:0 var(--lift) 0 var(--c-ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28);transition:transform .06s,box-shadow .06s;position:relative}
+#s-tuner .tncap button:disabled{opacity:.45;cursor:default;transform:none;box-shadow:0 var(--lift) 0 var(--c-ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28)}
+#s-tuner .tncap button:active:not(:disabled),#s-tuner .tncap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--c-ink),0 3px 0 rgba(0,0,0,.28)}
+
+/* the "switch source?" hint floats over the top of the case */
+#s-tuner .tnstage .banner{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:8;margin:0;white-space:nowrap}
+
+/* ---- portrait: the same parts stacked in one column ---- */
+#s-tuner .tnstage.portrait .tndev{left:14px;right:14px;top:18px;bottom:50px;padding:14px 18px 18px;grid-template-columns:1fr;grid-template-rows:auto auto 1fr;gap:14px}
+#s-tuner .portrait .tnhead{gap:6px;padding:0 4px}
+#s-tuner .portrait .tnbrand{font-size:19px;letter-spacing:3px}
+#s-tuner .portrait .tnbrand small{display:none}
+#s-tuner .portrait .tnthemebtn{padding:5px 9px;letter-spacing:2px}
+#s-tuner .portrait .tnpwr{margin-left:14px}
+#s-tuner .portrait .tnthemepop{width:300px}
+#s-tuner .portrait .tnreadouts{grid-template-columns:1fr 1fr}
+#s-tuner .portrait .tnreadouts .tnlcd:last-child{grid-column:1/-1}
+#s-tuner .portrait .tnchrom{grid-template-columns:repeat(6,1fr);gap:6px}
+#s-tuner .portrait .tnchrom>div{height:60px}
+#s-tuner .portrait .tnctl{grid-template-columns:1fr auto;gap:16px}
+#s-tuner .portrait .tncap button{width:50px}#s-tuner .portrait .tncaps{gap:8px}

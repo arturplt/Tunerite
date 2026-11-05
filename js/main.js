@@ -17,6 +17,7 @@ function bind() {
   vz.onpointermove = e => { if (vz.hasPointerCapture(e.pointerId)) setVolFrom(e.clientX); };
   vz.onpointerup = vz.onpointercancel = () => { Store.save(); vHide = setTimeout(() => { vp.hidden = true; }, 400); };
   $('#setUi').onchange = e => { Store.data.settings.uiSize = e.target.value; Store.save(); applyUiSize(); };
+  $('#setTheme').onchange = e => { Store.data.settings.theme = e.target.value; Store.save(); Themes.apply(e.target.value); };
   $('#setTimbre').innerHTML = timbreOptions() + '<option value="sf" id="sfOpt" hidden>SoundFont</option>';
   set('#setInst', 'inst', e => e.value); set('#setKbPlay', 'kbPlay', e => e.checked); set('#setTimbre', 'timbre', e => e.value); $$('.fxRv').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.reverb = e.target.value; Knobs.free('reverb'); Store.save(); Engine.applySettings(); $$('.fxRv').forEach(x => x.value = e.target.value); });
   $$('.fxCh').forEach(el => el.onchange = e => { e.target.blur(); Store.data.settings.chorus = e.target.checked; Knobs.free('chorus'); Store.save(); Engine.applySettings(); $$('.fxCh').forEach(x => x.checked = e.target.checked); }); set('#setKb', 'kbSound', e => e.checked);
@@ -58,7 +59,7 @@ function bind() {
   { const cv = $('#seqCv'); cv.onpointerdown = e => Seq.ovDown(e); cv.onpointermove = e => Seq.ovMove(e); cv.onpointerup = () => Seq.ovUp(); cv.onpointercancel = () => { Seq.ovDrag = null; Seq.ovMode = null; Seq.ovReg = null; }; }
   $('#sqSeek').oninput = e => { Seq.drag = true; $('#sqTime').textContent = Seq.fmt(+e.target.value) + ' / ' + Seq.fmt(Seq.length); }; $('#sqSeek').onchange = e => { Seq.drag = false; Seq.seek(+e.target.value); };
   Ed.init(); Knobs.init(); Scale.mount(); Ear.init(); Synth.init(); Vox.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
-  ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(nm => { const d = document.createElement('div'); d.className = 'ppoct' + (nm.length > 1 ? ' sh' : ''); d.innerHTML = '<b' + (nm === 'F#' ? ' class="f"' : '') + '>' + nm + '</b>'; $('#ppOcts').appendChild(d); });       // chromatic strip: the note being heard lights
+  TunerDial.init(); Themes.apply(Store.data.settings.theme);
   $('#instHintBtn').onclick = () => { if (Tuner.hint.want) setInst(Tuner.hint.want); $('#instHint').hidden = true; };
   $('#instHintNo').onclick = () => { Tuner.hint.dismissed[Tuner.hint.want] = true; $('#instHint').hidden = true; };
   $('#specFull').onclick = () => Keys.open(); $('#specClose').onclick = () => Spec.closeFull();
@@ -142,7 +143,7 @@ function bind() {
   $('#rBack').onclick = () => Routine.active ? Routine.abort() : UI.trainView('menu');
   const openRange = () => { RangeFinder.open(Store.data.settings.inst === 'whistle'); };
   const findRange = w => { const want = w ? 'whistle' : 'voice'; if (Store.data.settings.inst !== want) setInst(want); RangeFinder.open(w); };
-  $('#btnFindWhistle').onclick = $('#tuRangeWhistle').onclick = () => findRange(true); $('#tuRangeSing').onclick = () => findRange(false);
+  $('#btnFindWhistle').onclick = () => findRange(true);
   Midi.onNote = n => Guide.onKey(n);
   $('#btnEcho').onclick = async () => {
     if (!(await Midi.connect(true))) { toast(Midi.lastMsg, 8000); return; }
@@ -204,7 +205,7 @@ function bind() {
 
 ['pointerdown', 'pointermove', 'keydown', 'wheel', 'input', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { UI.lastIn = performance.now(); }, { passive: true, capture: true }));
 Profiles.load(); Store.load();
-applyUiSize();
+applyUiSize(); Themes.apply(Store.data.settings.theme);
 bind();
 Steps.init(); Meta.init(); Mark.init();
 UI.refresh();

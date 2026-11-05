@@ -1,0 +1,47 @@
+/* ---- Themes. The Tuner tab reads every colour from --tn-* variables; each rule below sets all of them for one theme.
+   "Classic" has no rule: it is the look the variables fall back to, so nothing changes until another theme is chosen.
+   The theme id is set on <html data-theme> by Themes.apply (js/themes.js). Keep every theme's variable list identical (tests/themes.test.js checks it). ---- */
+
+/* Utility: black matte plastic, white print, one orange accent, amber LCD */
+[data-theme="utility"]{
+  --tn-wall:#18181a;--tn-shop:.7;
+  --tn-p1:#2e2f33;--tn-p3:#19191b;--tn-well:#1f2023;--tn-edge:#050506;
+  --tn-face:#1c1d1f;--tn-arc:#8c897e;--tn-zone:#8c897e;--tn-zone2:#e07a33;--tn-ink:#e2ded2;--tn-hot:#e07a33;
+  --tn-needle:#e2ded2;--tn-tip:#e07a33;--tn-shield:#050506;--tn-shield2:#3d3e42;
+  --tn-lcd:#2a1d0a;--tn-lcd2:#120d05;--tn-fg:#ffc65e;--tn-lab:#f0b650;--tn-dim:#6b4f1f;--tn-on:#2a1b05;--tn-ledoff:#3a2a10;
+  --tn-red:#d9704a;--tn-grn:#8fcf7a;--tn-red0:#3a2420;--tn-grn0:#22332a;
+  --tn-key1:#54565c;--tn-key2:#3b3c40;--tn-key1h:#6b6d74;--tn-print:#8c897e;--tn-printh:#e2ded2;
+  --tn-glow:rgba(255,170,50,.6);--tn-redglow:rgba(217,112,74,.6);--tn-grnglow:rgba(143,207,122,.6)}
+
+/* Solar: light sage case, cream dial, dark olive print, teal caps */
+[data-theme="solar"]{
+  --tn-wall:#d9d1bb;--tn-shop:.26;
+  --tn-p1:#8c9b7c;--tn-p3:#76866a;--tn-well:#76866a;--tn-edge:#262d20;
+  --tn-face:#e8dfc4;--tn-arc:#6b6650;--tn-zone:#b4623e;--tn-zone2:#5d8a6a;--tn-ink:#262d20;--tn-hot:#b4623e;
+  --tn-needle:#262d20;--tn-tip:#b4623e;--tn-shield:#262d20;--tn-shield2:#4d5a42;
+  --tn-lcd:#232a17;--tn-lcd2:#151b11;--tn-fg:#e9d56b;--tn-lab:#c9b552;--tn-dim:#6b6430;--tn-on:#262208;--tn-ledoff:#4a4a20;
+  --tn-red:#d9704a;--tn-grn:#8fcf7a;--tn-red0:#5b4337;--tn-grn0:#3b5a45;
+  --tn-key1:#8db3a8;--tn-key2:#6f968c;--tn-key1h:#9cc4b9;--tn-print:#262d20;--tn-printh:#0e120b;
+  --tn-glow:rgba(230,211,106,.5);--tn-redglow:rgba(217,112,74,.5);--tn-grnglow:rgba(143,207,122,.5)}
+
+/* TU-12: olive-grey case, orange dial, red LEDs, teal caps (after the Boss tuner) */
+[data-theme="tu12"]{
+  --tn-wall:#cfcabb;--tn-shop:.45;
+  --tn-p1:#6f7566;--tn-p3:#5a6052;--tn-well:#5a6052;--tn-edge:#14130f;
+  --tn-face:#e89b3d;--tn-arc:#5a3a14;--tn-zone:#5a3a14;--tn-zone2:#1b1409;--tn-ink:#1b1409;--tn-hot:#8a1f12;
+  --tn-needle:#1b1409;--tn-tip:#8a1f12;--tn-shield:#14130f;--tn-shield2:#3a3e33;
+  --tn-lcd:#2a0d0b;--tn-lcd2:#120605;--tn-fg:#ff5a4a;--tn-lab:#d9483a;--tn-dim:#6b2a24;--tn-on:#2a0705;--tn-ledoff:#4a2a22;
+  --tn-red:#ff6a4a;--tn-grn:#8fe07a;--tn-red0:#4a2a22;--tn-grn0:#22332a;
+  --tn-key1:#6cb8b3;--tn-key2:#4f9a96;--tn-key1h:#7cc8c3;--tn-print:#efeadb;--tn-printh:#ffffff;
+  --tn-glow:rgba(255,80,60,.55);--tn-redglow:rgba(255,106,74,.6);--tn-grnglow:rgba(143,224,122,.6)}
+
+/* Phosphor: green on black, like a workshop scope */
+[data-theme="phosphor"]{
+  --tn-wall:#0b0f0b;--tn-shop:.6;
+  --tn-p1:#1a211a;--tn-p3:#0f130f;--tn-well:#121812;--tn-edge:#020402;
+  --tn-face:#071007;--tn-arc:#4f7f52;--tn-zone:#4f7f52;--tn-zone2:#6dff7a;--tn-ink:#9fe8a0;--tn-hot:#d4f04a;
+  --tn-needle:#9fe8a0;--tn-tip:#d4f04a;--tn-shield:#020402;--tn-shield2:#223825;
+  --tn-lcd:#071207;--tn-lcd2:#030603;--tn-fg:#6dff7a;--tn-lab:#3fbf55;--tn-dim:#1f5a2a;--tn-on:#031004;--tn-ledoff:#1f3a22;
+  --tn-red:#ff7a50;--tn-grn:#6dff7a;--tn-red0:#3a2420;--tn-grn0:#14281a;
+  --tn-key1:#2f4a33;--tn-key2:#223825;--tn-key1h:#3f6544;--tn-print:#6e9a68;--tn-printh:#b8e0b0;
+  --tn-glow:rgba(80,255,110,.5);--tn-redglow:rgba(255,122,80,.55);--tn-grnglow:rgba(109,255,122,.55)}
