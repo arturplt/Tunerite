@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite slider options</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#141416;color:#cfcabb;font-family:"Silkscreen",ui-monospace,monospace;padding:28px 24px 96px;user-select:none;-webkit-user-select:none}
+h1{margin:0 0 4px;font-size:20px;letter-spacing:4px;font-weight:400;color:#e2ded2}
+.sub{margin:0 0 24px;font-size:11px;letter-spacing:2px;color:#8c897e}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:18px}
+.card{background:#1d1d20;border:3px solid #050506;border-radius:14px;padding:12px;box-shadow:0 6px 0 #0c0c0d;cursor:pointer;transition:transform .08s}
+.card.sel{box-shadow:0 0 0 4px #e07a33,0 6px 0 #0c0c0d}
+.card header{display:flex;justify-content:space-between;align-items:center;margin:0 4px 10px;font-size:12px;letter-spacing:3px}
+.card header b{font-weight:400;color:#e07a33;margin-right:10px}
+.card header small{font-size:10px;letter-spacing:2px;color:#8c897e}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---- panel colours: dark and light ---- */
+.panel{border:3px solid var(--ink);border-radius:10px;padding:12px 14px 16px;background:var(--pbg);box-shadow:inset 0 5px 0 var(--phi),inset 0 -6px 0 var(--plo)}
+.panel.dark{--ink:#050506;--pbg:#2b2c2f;--phi:#3d3e42;--plo:#212225;--print:#8c897e;--tk:#0f100c;--tkin:#000;--groove:#222326;--dot:#3b3c40;
+  --k1:#54565c;--k2:#6b6d74;--k3:#3b3c40;--acc:#e07a33;--slab:#17181a;--slab2:#2e2f33;--shadow:rgba(0,0,0,.55)}
+.panel.light{--ink:#262d20;--pbg:#8c9b7c;--phi:#a4b293;--plo:#76866a;--print:#3b4632;--tk:#1d2418;--tkin:#161b11;--groove:#3c4733;--dot:#59664d;
+  --k1:#6f968c;--k2:#8db3a8;--k3:#587b72;--acc:#b4623e;--slab:#262d20;--slab2:#3b4632;--shadow:rgba(20,26,16,.5)}
+.labs{display:flex;position:relative;height:16px;margin-bottom:8px;font-size:10px;letter-spacing:2px;color:var(--print)}
+.labs span{position:absolute;transform:translateX(-50%);white-space:nowrap;transition:color .1s}
+.labs span.on{color:var(--acc)}
+
+/* ---- the track and the knob; each variant overrides sizes and looks ---- */
+.sl{--kw:90px;--kh:48px;--pad:4px;--th:64px;position:relative;height:var(--th);background:var(--tk);border:3px solid var(--ink);border-radius:calc(var(--th)/2);
+  box-shadow:inset 0 8px 0 var(--tkin);touch-action:none;cursor:pointer}
+.sl::before{content:"";position:absolute;left:calc(var(--kw)/2 + var(--pad));right:calc(var(--kw)/2 + var(--pad));top:50%;height:4px;margin-top:-2px;background:var(--groove);border-radius:2px}
+.dt{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--dot)}
+.knob{position:absolute;top:50%;width:var(--kw);height:var(--kh);margin-top:calc(var(--kh)/-2);
+  left:calc(var(--pad) + var(--p)*(100% - var(--kw) - 2*var(--pad)));transition:left .1s ease-out}
+/* shapes drawn with a clip need an outline layer: the knob is ink, ::before is the face */
+.v-clip .knob{background:var(--ink)}
+.v-clip .knob::before{content:"";position:absolute;inset:3px;background:var(--k1)}
+
+/* 01 capsule grip (Boss-like pill with ribs) */
+.v1 .knob{--kw:96px;--kh:52px;border:3px solid var(--ink);border-radius:26px;box-shadow:0 7px 0 var(--shadow);
+  background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(0,0,0,.35) 6px 8px) 18px 0/calc(100% - 36px) 100% no-repeat,
+  linear-gradient(180deg,var(--k2) 0 24%,var(--k1) 24% 70%,var(--k3) 70%)}
+.v1 .knob::after{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:4px;margin-left:-2px;background:var(--ink);opacity:.7;border-radius:2px}
+
+/* 02 black slab (Guild-like ribbed block with white stripe) */
+.v2{--th:70px}
+.v2 .knob{--kw:74px;--kh:60px;background:repeating-linear-gradient(90deg,var(--slab) 0 5px,var(--slab2) 5px 7px);border:3px solid var(--ink);border-radius:4px;box-shadow:0 7px 0 var(--shadow)}
+.v2 .knob::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:var(--slab2);border-bottom:2px solid var(--ink)}
+.v2 .knob::after{content:"";position:absolute;left:50%;top:14px;bottom:6px;width:4px;margin-left:-2px;background:#e2ded2}
+
+/* 03 lever slider (teal body with a raised lever, TU-12 style) */
+.v3{--th:60px}
+.v3 .knob{--kw:104px;--kh:40px;background:linear-gradient(180deg,var(--k2) 0 28%,var(--k1) 28% 68%,var(--k3) 68%);border:3px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--shadow)}
+.v3 .knob::after{content:"";position:absolute;right:16px;top:-12px;bottom:-12px;width:20px;border-radius:6px;border:3px solid var(--ink);box-shadow:0 5px 0 var(--shadow);
+  background:linear-gradient(90deg,var(--k2) 0 30%,var(--k1) 30% 70%,var(--k3) 70%)}
+
+/* 04 fader cap (tall block, chamfered, line across) */
+.v4{--th:76px}
+.v4 .knob{--kw:44px;--kh:66px;background:linear-gradient(180deg,var(--k2) 0 14%,var(--k1) 14% 60%,var(--k3) 60%);border:3px solid var(--ink);border-radius:5px;box-shadow:0 7px 0 var(--shadow)}
+.v4 .knob::after{content:"";position:absolute;left:50%;top:8px;bottom:8px;width:4px;margin-left:-2px;background:var(--ink)}
+
+/* 05 round knob with pointer, ridged edge */
+.v5{--th:72px}
+.v5 .knob{--kw:56px;--kh:56px;border-radius:50%;border:3px solid var(--ink);box-shadow:0 7px 0 var(--shadow);
+  background:radial-gradient(circle,var(--k1) 0 52%,transparent 53%),repeating-conic-gradient(var(--k3) 0 12deg,var(--k2) 12deg 24deg)}
+.v5 .knob::after{content:"";position:absolute;left:50%;top:5px;width:4px;height:18px;margin-left:-2px;background:var(--ink);border-radius:2px}
+
+/* 06 pixel block (chopped corners, hard stripes) */
+.v6{--th:68px;border-radius:0;clip-path:polygon(0 12px,12px 12px,12px 0,calc(100% - 12px) 0,calc(100% - 12px) 12px,100% 12px,100% calc(100% - 12px),calc(100% - 12px) calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,12px calc(100% - 12px),0 calc(100% - 12px))}
+.v6 .knob{--kw:76px;--kh:44px;border-radius:0;
+  clip-path:polygon(0 8px,8px 8px,8px 0,calc(100% - 8px) 0,calc(100% - 8px) 8px,100% 8px,100% calc(100% - 8px),calc(100% - 8px) calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,8px calc(100% - 8px),0 calc(100% - 8px));
+  background:var(--ink)}
+.v6 .knob::before{content:"";position:absolute;inset:4px;clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px));
+  background:linear-gradient(180deg,var(--k2) 0 8px,var(--k1) 8px 28px,var(--k3) 28px)}
+.v6 .knob::after{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:4px;margin-left:-2px;background:var(--ink)}
+
+/* 07 pointer cap (house shape, points up at the label) */
+.v7{--th:76px}
+.v7 .knob{--kw:60px;--kh:66px;clip-path:polygon(50% 0,100% 30%,100% 100%,0 100%,0 30%)}
+.v7 .knob::before{clip-path:polygon(50% 0,100% 30%,100% 100%,0 100%,0 30%);inset:0;background:var(--ink)}
+.v7 .knob::after{content:"";position:absolute;inset:4px 4px 4px;clip-path:polygon(50% 0,100% 29%,100% 100%,0 100%,0 29%);background:linear-gradient(180deg,var(--k2) 0 30%,var(--k1) 30% 74%,var(--k3) 74%)}
+
+/* 08 low paddle with an LED strip */
+.v8{--th:48px}
+.v8::before{height:8px;margin-top:-4px;border-radius:4px}
+.v8 .knob{--kw:120px;--kh:30px;border:3px solid var(--ink);border-radius:15px;box-shadow:0 5px 0 var(--shadow);background:linear-gradient(180deg,var(--k2) 0 30%,var(--k1) 30%)}
+.v8 .knob::after{content:"";position:absolute;left:14px;right:14px;top:8px;height:6px;border-radius:3px;background:var(--acc);box-shadow:0 0 10px var(--acc)}
+
+/* 09 split cap (two slabs with a gap, Guild's double cap) */
+.v9{--th:70px}
+.v9 .knob{--kw:92px;--kh:58px;border:3px solid var(--ink);border-radius:6px;box-shadow:0 7px 0 var(--shadow);
+  background:repeating-linear-gradient(90deg,var(--slab) 0 5px,var(--slab2) 5px 7px)}
+.v9 .knob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-5px;background:var(--tk);border-left:3px solid var(--ink);border-right:3px solid var(--ink)}
+.v9 .knob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--acc);z-index:1}
+
+/* 10 leaf (solarpunk) */
+.v10{--th:68px}
+.v10 .knob{--kw:84px;--kh:46px;border:3px solid var(--ink);border-radius:50% 4px 50% 4px;box-shadow:0 7px 0 var(--shadow);
+  background:linear-gradient(180deg,#8fb88a 0 28%,#6b9a6f 28% 70%,#4f7d58 70%)}
+.v10 .knob::after{content:"";position:absolute;left:12px;right:12px;top:50%;height:3px;margin-top:-1px;background:var(--ink);opacity:.55;transform:rotate(-8deg);border-radius:2px}
+
+/* 11 square cap with a notch arrow */
+.v11{--th:70px}
+.v11 .knob{--kw:62px;--kh:58px;border:3px solid var(--ink);border-radius:9px;box-shadow:0 7px 0 var(--shadow);background:linear-gradient(180deg,var(--k2) 0 22%,var(--k1) 22% 72%,var(--k3) 72%)}
+.v11 .knob::after{content:"";position:absolute;left:50%;top:8px;margin-left:-8px;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:13px solid var(--ink)}
+
+/* 12 thumb dimple (soft oval with a concave dent) */
+.v12{--th:64px}
+.v12 .knob{--kw:92px;--kh:48px;border:3px solid var(--ink);border-radius:24px;box-shadow:0 7px 0 var(--shadow);background:linear-gradient(180deg,var(--k2) 0 22%,var(--k1) 22% 70%,var(--k3) 70%)}
+.v12 .knob::after{content:"";position:absolute;left:50%;top:50%;width:34px;height:22px;margin:-11px 0 0 -17px;border-radius:50%;background:var(--k3);box-shadow:inset 0 4px 0 rgba(0,0,0,.35)}
+
+/* picker bar */
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 24px;background:#0c0c0d;border-top:3px solid #050506;display:flex;align-items:center;gap:16px;font-size:11px;letter-spacing:3px;color:#8c897e}
+.bar b{font-weight:400;color:#e07a33}
+</style>
+</head>
+<body>
+<h1>SLIDER OPTIONS</h1>
+<p class="sub">Each one on a dark and a light panel · tap or drag any slider (it snaps between OFF, TUNE and REF A) · click a card to pick it</p>
+<div class="grid" id="grid"></div>
+<div class="bar">PICKED <b id="pick">NONE YET</b></div>
+<script>
+const V=[
+ ['Capsule grip','ribbed pill, soft'],['Black slab','Guild block, white stripe'],['Lever slider','TU-12 teal with a raised lever'],
+ ['Fader cap','tall chamfered block'],['Round knob','ridged edge, pointer'],['Pixel block','chopped corners, hard stripes'],
+ ['Pointer cap','house shape pointing up'],['Low paddle','flat with an LED strip'],['Split cap','two slabs and a gap'],
+ ['Leaf','solarpunk, organic'],['Notch cap','square with an arrow'],['Thumb dimple','soft oval with a dent']];
+const clip=[7];   // variants drawn with clip-path
+const grid=document.getElementById('grid');
+const panel=(cls,i)=>`<div class="panel ${cls}"><div class="labs"><span style="left:calc(4px + 3px)">OFF</span><span class="on" data-k="1">TUNE</span><span data-k="2">REF A</span></div>
+<div class="sl v${i+1}" data-i="${i}" style="--p:.5"><i class="dt"></i><i class="dt"></i><i class="dt"></i><div class="knob"></div></div></div>`;
+grid.innerHTML=V.map((v,i)=>`<div class="card" data-i="${i}"><header><span><b>${String(i+1).padStart(2,'0')}</b>${v[0].toUpperCase()}</span><small>${v[1].toUpperCase()}</small></header>
+<div class="pair">${panel('dark',i)}${panel('light',i)}</div></div>`).join('');
+
+const pos=V.map(()=>1);
+function place(card){
+  const i=+card.dataset.i,p=pos[i];
+  card.querySelectorAll('.sl').forEach(sl=>{
+    sl.style.setProperty('--p',p/2);
+    const kw=parseFloat(getComputedStyle(sl.querySelector('.knob')).width),w=sl.clientWidth,pad=4,tr=w-kw-2*pad;
+    const cs=[...sl.querySelectorAll('.dt')];
+    [0,1,2].forEach((k,j)=>cs[j].style.left=(pad+kw/2+tr*k/2+3)+'px');
+    const labs=sl.parentElement.querySelectorAll('.labs span');
+    [0,1,2].forEach(k=>{labs[k].style.left=(pad+kw/2+tr*k/2+3)+'px';labs[k].classList.toggle('on',k===p)});
+  });
+}
+const cards=[...grid.children];
+const relayout=()=>cards.forEach(place);
+relayout();addEventListener('resize',relayout);document.fonts.ready.then(relayout);
+
+grid.addEventListener('pointerdown',e=>{
+  const sl=e.target.closest('.sl');if(!sl)return;
+  const card=sl.closest('.card'),i=+card.dataset.i;
+  const snap=ev=>{const r=sl.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width;const n=Math.max(0,Math.min(2,Math.round((x-.1)/.4)));
+    if(n!==pos[i]){pos[i]=n;place(card)}};
+  sl.setPointerCapture(e.pointerId);snap(e);
+  const mv=ev=>snap(ev),up=()=>{sl.removeEventListener('pointermove',mv);sl.removeEventListener('pointerup',up)};
+  sl.addEventListener('pointermove',mv);sl.addEventListener('pointerup',up);
+});
+grid.addEventListener('click',e=>{
+  const card=e.target.closest('.card');if(!card||e.target.closest('.sl'))return;
+  cards.forEach(c=>c.classList.toggle('sel',c===card));
+  const i=+card.dataset.i;document.getElementById('pick').textContent=String(i+1).padStart(2,'0')+' · '+V[i][0].toUpperCase();
+});
+</script>
+</body>
+</html>

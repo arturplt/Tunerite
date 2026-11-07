@@ -1,31 +1,8 @@
 "use strict";
-/* ---- Ear training in Practice: the level map, and the drill screen. The curriculum and the question maker are in core/ear.js. ---- */
+/* ---- Ear training in Practice: the drill screen (the level map is on the Practice device, js/practice-device.js). The curriculum and the question maker are in core/ear.js. ---- */
 const Ear = {
   on: false, lv: null, q: null, prev: null, n: 0, qi: 0, ok: 0, tap: [], locked: false, hs: [], timer: 0, done: false,
   prog() { const s = Store.data; if (!s.ear) s.ear = { levels: {} }; return s.ear.levels; },
-  /* ---- the level map in the Practice tab ---- */
-  renderMap() {
-    const host = $('#earMap'); if (!host) return; const P = this.prog(); host.textContent = '';
-    const total = EAR.LEVELS.length, passed = EAR.LEVELS.filter(l => P[l.id] && P[l.id].stars >= 1).length, stars = EAR.LEVELS.reduce((a, l) => a + (P[l.id] ? P[l.id].stars : 0), 0), nxt = EAR.next(P);
-    const head = document.createElement('div'); head.className = 'card earhead';
-    head.innerHTML = '<div class="muted small">Listen, then answer. Score 80% on a level to open the next one; 90% earns a second star and 100% a third. Headphones help.</div>';
-    const st = document.createElement('div'); st.className = 'earstats'; st.innerHTML = '<span><b>' + passed + ' / ' + total + '</b>levels passed</span><span><b>' + stars + ' / ' + total * 3 + '</b>stars</span>'; head.appendChild(st);
-    const go = document.createElement('button'); go.className = 'btn primary'; go.style.marginTop = '0.5rem'; go.textContent = passed ? 'Continue: ' + nxt.title : 'Start: ' + nxt.title; go.onclick = () => this.open(nxt.id); head.appendChild(go); host.appendChild(head);
-    EAR.UNITS.forEach(u => {
-      const sec = document.createElement('details'); sec.className = 'fold earunit'; sec.dataset.k = 'ear-' + u.id; const done = u.levels.filter(l => P[l.id] && P[l.id].stars >= 1).length;
-      const open = u.levels.some(l => l.id === nxt.id); if (open) sec.open = true;
-      const sm = document.createElement('summary'); sm.innerHTML = '<span></span><i></i>'; sm.children[0].textContent = u.title; sm.children[1].textContent = done + ' / ' + u.levels.length; sec.appendChild(sm);
-      const bl = document.createElement('div'); bl.className = 'muted small earblurb'; bl.textContent = u.blurb; sec.appendChild(bl);
-      u.levels.forEach((l, i) => {
-        const ok = EAR.unlocked(P, l.id), p = P[l.id], b = document.createElement('button'); b.className = 'card earlvl' + (ok ? '' : ' locked') + (l.id === nxt.id ? ' next' : ''); b.disabled = !ok;
-        b.innerHTML = '<span class="num"></span><span class="txt"><span class="t"></span><span class="muted small"></span></span><span class="stars"></span>';
-        b.querySelector('.num').textContent = ok ? (i + 1) : '🔒'; b.querySelector('.t').textContent = l.title; b.querySelector('.muted').textContent = l.desc;
-        b.querySelector('.stars').textContent = p ? '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars) : ok ? '☆☆☆' : '';
-        b.title = ok ? (p ? 'Best ' + Math.round(p.best * 100) + '%' : 'Not tried yet') : 'Pass the level before this one to open it'; b.onclick = () => this.open(l.id); sec.appendChild(b);
-      });
-      host.appendChild(sec);
-    });
-  },
   /* ---- sound ---- */
   stop() { this.hs.forEach(h => { try { h.stop(); } catch (e) { /* already gone */ } }); this.hs = []; },
   async play(events) {
@@ -36,10 +13,10 @@ const Ear = {
   /* ---- a drill ---- */
   open(id) {
     const lv = EAR.level(id); if (!lv || !EAR.unlocked(this.prog(), id)) return; this.lv = lv;
-    this.on = true; this.n = this.lv.n; this.qi = 0; this.ok = 0; this.prev = null; this.done = false; $('#o-ear').classList.add('on'); $('#earRes').hidden = true; $('#earBody').hidden = false;
+    this.on = true; this.n = this.lv.n; this.qi = 0; this.ok = 0; this.log = []; this.prev = null; this.done = false; $('#o-ear').classList.add('on'); PDev.sync(); $('#earRes').hidden = true; $('#earBody').hidden = false;
     $('#earTitle').textContent = EAR.unitOf(this.lv).title + ' · ' + this.lv.title; this.ask();
   },
-  close() { this.on = false; clearTimeout(this.timer); this.stop(); $('#o-ear').classList.remove('on'); this.renderMap(); },
+  close() { this.on = false; clearTimeout(this.timer); this.stop(); $('#o-ear').classList.remove('on'); PDev.refresh(); },
   ask() {
     clearTimeout(this.timer); this.q = EAR.make(this.lv, Math.random, this.prev); this.prev = this.q; this.tap = []; this.locked = false;
     $('#earStep').textContent = (this.qi + 1) + ' / ' + this.n + ' · ' + this.ok + ' right'; $('#earBar').style.width = (this.qi / this.n * 100) + '%';
@@ -62,7 +39,7 @@ const Ear = {
   verdict(good, chosen) {
     this.locked = true; const q = this.q, fb = $('#earFb');
     $$('#earOpts .earopt').forEach(b => { if (q.answer != null) { if (b.dataset.id === q.answer) b.classList.add('ok'); else if (b.dataset.id === chosen) b.classList.add('bad'); } b.disabled = true; });
-    if (good) this.ok++;
+    if (good) this.ok++; (this.log = this.log || []).push(good ? 1 : 0);
     fb.className = 'earfb ' + (good ? 'good' : 'miss'); fb.textContent = (good ? 'Right. ' : 'Not quite. ') + q.explain;
     this.qi++; $('#earStep').textContent = Math.min(this.qi, this.n) + ' / ' + this.n + ' · ' + this.ok + ' right'; $('#earBar').style.width = (this.qi / this.n * 100) + '%';
     if (good) this.timer = setTimeout(() => this.advance(), q.seq ? 1400 : 1000);
@@ -80,6 +57,7 @@ const Ear = {
     res.querySelector('.earnote').textContent = this.ok + ' of ' + this.n + ' right.' + (passed && first && nxt ? ' Opened: ' + nxt.title + '.' : '');
     const btns = res.querySelector('.earbtns'), add = (t, f, cls) => { const b = document.createElement('button'); b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = t; b.onclick = f; btns.appendChild(b); };
     if (passed && nxt) add('Next level ▶', () => this.open(nxt.id), 'primary'); add('Try again', () => this.open(id), passed && nxt ? '' : 'primary'); add('Level map', () => this.close());
+    PDev.showResult({ kind: 'ear', id, pct: pct * 100, r: { kind: 'ear', id, pct: pct * 100, stars, passed, first, nxt: nxt || null, opened: passed && first && nxt ? nxt : null, improved: !old || pct > old.best + 1e-9, gain: Math.max(0, stars - (old ? old.stars : 0)) }, rows: [['SCORE', Math.round(pct * 100) + '%'], ['RIGHT', this.ok + ' OF ' + this.n], ['WRONG', String(this.n - this.ok)]], strip: this.log.slice(), stripLabel: 'QUESTION BY QUESTION', details: null }); this.close();
   },
   key(e) {
     if (!this.on || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;

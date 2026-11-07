@@ -45,6 +45,8 @@ const SetUI = {
   },
   init() {
     $$('#s-settings [data-ctl="rocker"]').forEach(el => this.rocker(el)); $$('#s-settings [data-ctl="keys"]').forEach(el => this.keys(el)); $$('#s-settings [data-ctl="fader"]').forEach(el => this.fader(el)); $$('#s-settings .stp').forEach(el => this.stepper(el));
+    const sec = $$('#s-settings .secbtn'), show = k => { $('#s-settings').dataset.sec = k; sec.forEach(b => b.setAttribute('aria-pressed', b.dataset.sec === k ? 'true' : 'false')); };
+    sec.forEach(b => b.addEventListener('click', () => show(b.dataset.sec))); show($('#s-settings').dataset.sec || 'disp');
     ['#setTempo', '#setVol'].forEach(id => $(id).addEventListener('input', () => this.readouts()));
   },
   /* the numbers next to the faders, and every stepper's screen, follow the settings */

@@ -20,7 +20,12 @@ const PianoUI = {
     tabs.innerHTML = this.PAGES.map(([id, name]) => '<button type="button" role="tab" data-pg="' + id + '">' + name + '</button>').join('');
     tabs.onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.pg) this.show(b.dataset.pg); };
     // Save, Init and Full screen: wide layout puts the first two on the preset row and the third on the key row; the stacked layout keeps the three together in their own row (see place)
-    this.hb = head.querySelector('.synhbtns'); this.prow = head.querySelector('.synlcd'); this.krow = $('#pnKey .keyrow');
+    this.hb = head.querySelector('.synhbtns');
+    // Preset, SoundFont and Instrument sit on the spectrogram's LCD, top left
+    const row = head.querySelector('.synlcdrow'), spec = fx.querySelector('.synpane[data-p="spec"]'), hud = mk('pnhud');
+    if (row && spec) { [...row.children].forEach(c => hud.appendChild(c)); row.remove(); spec.appendChild(hud); }
+    // a short buzz on every hardware key, where the phone has a motor
+    fx.closest('.screen').addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && navigator.vibrate && e.target.closest('.synbtn,.bigjack,.pntabs button,.syntabs button,.lcdrow')) { try { navigator.vibrate(8); } catch (x) { /* no motor */ } } });
     right.append(head, tabs, pages, bot); fx.appendChild(right);
     this.pages = pages; this.tabs = tabs; this.show(this.page);
     new MutationObserver(() => Knobs.lightSoon()).observe(pages, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-pressed'] }); Knobs.lightSoon();      // knobs and switches light the page keys and Bypass
@@ -30,15 +35,13 @@ const PianoUI = {
      pixels that comes to about a CSS pixel (more on wider screens), so the readouts are as big as the Tuner's; in the wide layout it is left alone. */
   place(narrow) {
     if (this.narrow === narrow || !this.hb) return; this.narrow = narrow;
-    const b = id => this.hb.querySelector(id) || (this.prow && this.prow.querySelector(id)) || (this.krow && this.krow.querySelector(id));
-    const save = b('#prSave'), init = b('#prInit'), full = b('#specFull');
+    const b = id => this.hb.querySelector(id);
     const jack = this.cells.map(c => c.querySelector('button'));      // Bypass, Panic, Reset
     this.cells.forEach((c, i) => { if (jack[i].parentNode !== c) c.insertBefore(jack[i], c.firstChild); });
-    if (narrow) { [save, init, full].forEach(x => x && this.hb.appendChild(x)); if (this.byp) this.hb.appendChild(this.byp); }
+    if (narrow) { if (this.byp) this.hb.appendChild(this.byp); }
     else {
-      /* wide: Panic and Reset follow Save and Init on the preset row, and Bypass leads the page keys (Init already has a power icon, so Bypass sits with the effects) */
-      [save, init].forEach(x => x && this.prow && this.prow.appendChild(x)); if (full && this.krow) this.krow.appendChild(full);
-      if (this.prow) { this.prow.appendChild(jack[1]); this.prow.appendChild(jack[2]); } this.tabs.insertBefore(jack[0], this.tabs.firstChild); if (this.byp) this.bot.appendChild(this.byp); }
+      /* wide: Panic and Reset follow Full screen on the button row, and Bypass leads the page keys (Init already has a power icon, so Bypass sits with the effects) */
+      this.hb.appendChild(jack[1]); this.hb.appendChild(jack[2]); this.tabs.insertBefore(jack[0], this.tabs.firstChild); if (this.byp) this.bot.appendChild(this.byp); }
   },
   fit() {
     const s = $('#s-piano'), narrow = window.matchMedia('(max-width:899px),(max-aspect-ratio:5/4)').matches;

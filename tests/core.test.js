@@ -56,7 +56,7 @@ test('Tracker: brief octave glitch is rejected, sustained octave jump is accepte
   for (let i = 0; i < 2; i++) out = t.push(440, 0.95, 0.1);
   assert.ok(Math.abs(out - 57) < 0.01, 'glitch leaked: ' + out);
   t.push(220, 0.95, 0.1);
-  for (let i = 0; i < 8; i++) out = t.push(440, 0.95, 0.1);
+  for (let i = 0; i < 12; i++) out = t.push(440, 0.95, 0.1);
   assert.ok(Math.abs(out - 69) < 0.01, 'sustained jump not accepted: ' + out);
 });
 test('Tracker: smooths single-frame outliers', () => {

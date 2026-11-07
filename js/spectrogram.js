@@ -108,6 +108,7 @@ const Spec = {
       this.cols = { f0, f1 };
     }
     const view = Store.data.settings.specView || 'water', voiced = performance.now() - Tuner.lastVoiced < 350 && Tuner.midi != null;
+    { const sc = $('#sandCtl'); if (sc) sc.hidden = view !== 'sand'; cv.parentNode.classList.toggle('sandview', view === 'sand'); }
     if (this.lastView !== view) { this.lastView = view; g.fillStyle = '#0d0b09'; g.fillRect(0, 0, w, h); this.pk = null; this.hold = null; }      // a new view starts on a clean screen
     this.curO = O; if (view !== 'water') this.alt(view, g, w, h, dpr, sh, D, an, dbAt, idx, lo, hi, a4, binHz); else {
     const rh = Math.max(1, Math.round(2 * dpr)), area = H - sh, { f0, f1 } = this.cols, row = g.createImageData(W, rh), px8 = row.data;
@@ -151,6 +152,7 @@ const Spec = {
   },
   /* Three more ways to see the sound: the live spectrum (a curve over the same piano columns), a scope of the waveform, and a chroma wheel of the twelve note names. */
   alt(view, g, w, h, dpr, sh, D, an, dbAt, idx, lo, hi, a4, binHz) {
+    if (view === 'sand') return Sand.draw(g, w, h - sh / dpr, dpr);          // the sand pane replaces the graph
     const ah = h - sh / dpr, acc = this.palAcc(), u = 1 / dpr, f = n => n * u, { f0, f1 } = this.cols;
     g.fillStyle = '#0d0b09'; g.fillRect(0, 0, w, ah);
     g.strokeStyle = 'rgba(255,255,255,0.05)'; g.lineWidth = 1; g.beginPath(); for (let i = 1; i < 4; i++) { const y = Math.round(ah * i / 4) + 0.5; g.moveTo(0, y); g.lineTo(w, y); } g.stroke();

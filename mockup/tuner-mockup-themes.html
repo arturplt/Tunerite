@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite TU-12 themes</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Bold.ttf) format("truetype");font-weight:700}
+:root{--dp:1px}
+/* ================= THEMES: every colour in the tuner comes from these variables ================= */
+:root,[data-theme="utility"]{   /* dark, matte, black plastic, white print */
+  --wall:#18181a;--wall-sh:#0d0d0e;--ink:#050506;--print:#e2ded2;--print-lo:#8c897e;
+  --body:#2b2c2f;--body-hi:#3d3e42;--body-lo:#212225;--lip:#141415;--clay:#e07a33;--sun:#e0922f;
+  --teal:#54565c;--teal-lo:#3b3c40;--teal-hi:#6b6d74;--glass:#0f100c;--inset:#000;--groove:#222326;--dotc:#3b3c40;
+  --lcd-bg:#2a1d0a;--lcd-fg:#ffc65e;--lcd-lab:#f0b650;--lcd-dim:#6b4f1f;--lcd-off:#0f100c;--lcd-sh:#08090a;--lcd-on:#2a1b05;--lcd-glow:rgba(255,170,50,.6);
+  --lamp-r0:#3a2420;--lamp-g0:#22332a;--lamp-r:#d9704a;--lamp-g:#8fcf7a;--pwr0:#4a2a22;--pwr:#e8693a;
+  --dface:#1c1d1f;--dface2:#151617;--dprint:#e2ded2;--dprint2:#8c897e;--dacc:#e07a33;--dzone:#e07a33;
+  --dsh:#000;--dshop:.7;--dshield:#050506;--dshield2:#3d3e42;--dtop:#000;--dtopo:.6}
+[data-theme="solar"]{--note:#6d6650;          /* light sage, cel-shaded, solarpunk */
+  --wall:#d9d1bb;--wall-sh:#bdb59e;--ink:#262d20;--print:#262d20;--print-lo:#4a5640;
+  --body:#8c9b7c;--body-hi:#a4b293;--body-lo:#76866a;--lip:#55644b;--clay:#b4623e;--sun:#cfa84a;
+  --teal:#6f968c;--teal-lo:#587b72;--teal-hi:#8db3a8;--glass:#1d2418;--inset:#161b11;--groove:#3c4733;--dotc:#59664d;
+  --lcd-bg:#232a17;--lcd-fg:#e9d56b;--lcd-lab:#c9b552;--lcd-dim:#6b6430;--lcd-off:#1d2418;--lcd-sh:#151b11;--lcd-on:#262208;--lcd-glow:rgba(230,211,106,.5);
+  --lamp-r0:#5b4337;--lamp-g0:#3b5a45;--lamp-r:#d9704a;--lamp-g:#8fcf7a;--pwr0:#6a4a38;--pwr:#e08a4e;
+  --dface:#e8dfc4;--dface2:#d8cda9;--dprint:#262d20;--dprint2:#6b6650;--dacc:#b4623e;--dzone:#5d8a6a;
+  --dsh:#1a2014;--dshop:.26;--dshield:#262d20;--dshield2:#4d5a42;--dtop:#1a2014;--dtopo:.32}
+[data-theme="tu12"]{--note:#6d6a5c;            /* olive-grey case, orange dial, red LEDs: after the Boss TU-12 */
+  --wall:#cfcabb;--wall-sh:#aaa597;--ink:#14130f;--print:#efeadb;--print-lo:#c5c0ae;
+  --body:#6f7566;--body-hi:#868c7c;--body-lo:#5a6052;--lip:#3a3e33;--clay:#f08a3a;--sun:#e0922f;
+  --teal:#4f9a96;--teal-lo:#3a7774;--teal-hi:#6cb8b3;--glass:#120605;--inset:#000;--groove:#2a2c24;--dotc:#3b3c34;
+  --lcd-bg:#2a0d0b;--lcd-fg:#ff5a4a;--lcd-lab:#d9483a;--lcd-dim:#6b2a24;--lcd-off:#1a0907;--lcd-sh:#120605;--lcd-on:#2a0705;--lcd-glow:rgba(255,80,60,.55);
+  --lamp-r0:#4a2a22;--lamp-g0:#22332a;--lamp-r:#ff6a4a;--lamp-g:#8fe07a;--pwr0:#4a2a22;--pwr:#ff7a3a;
+  --dface:#e89b3d;--dface2:#d98a2e;--dprint:#1b1409;--dprint2:#5a3a14;--dacc:#8a1f12;--dzone:#1b1409;
+  --dsh:#5a2f00;--dshop:.45;--dshield:#14130f;--dshield2:#3a3e33;--dtop:#3a1d00;--dtopo:.35}
+[data-theme="phosphor"]{        /* green phosphor on black, workshop instrument */
+  --wall:#0b0f0b;--wall-sh:#060806;--ink:#020402;--print:#b8e0b0;--print-lo:#6e9a68;
+  --body:#1a211a;--body-hi:#2a342a;--body-lo:#121812;--lip:#0b0f0b;--clay:#c8f04a;--sun:#8fd46a;
+  --teal:#2f4a33;--teal-lo:#223825;--teal-hi:#3f6544;--glass:#040a04;--inset:#000;--groove:#172017;--dotc:#263326;
+  --lcd-bg:#071207;--lcd-fg:#6dff7a;--lcd-lab:#3fbf55;--lcd-dim:#1f5a2a;--lcd-off:#040a04;--lcd-sh:#030603;--lcd-on:#031004;--lcd-glow:rgba(80,255,110,.5);
+  --lamp-r0:#3a2420;--lamp-g0:#14281a;--lamp-r:#ff7a50;--lamp-g:#6dff7a;--pwr0:#1f3a22;--pwr:#6dff7a;
+  --dface:#071007;--dface2:#050a05;--dprint:#9fe8a0;--dprint2:#4f7f52;--dacc:#d4f04a;--dzone:#6dff7a;
+  --dsh:#000;--dshop:.6;--dshield:#020402;--dshield2:#223825;--dtop:#000;--dtopo:.6}
+/* a quick power-cycle flicker when the theme changes */
+.stage.swap .device{animation:swap .28s steps(4)}
+@keyframes swap{0%{opacity:.25}50%{opacity:.8}100%{opacity:1}}
+
+/* theme manager */
+.head{position:relative;z-index:6}
+.themewrap{margin-left:auto;position:relative}
+.themewrap+.bloomsw{margin-left:20px}
+.themebtn{display:flex;align-items:center;gap:10px;background:var(--body-lo);border:3px solid var(--ink);border-radius:10px;padding:5px 12px;cursor:pointer;color:var(--print-lo);
+  font:400 10px "Silkscreen",monospace;letter-spacing:3px;box-shadow:inset 0 3px 0 var(--lip),0 3px 0 var(--ink)}
+.themebtn b{font-weight:400;color:var(--clay)}
+.themebtn:hover{color:var(--print)}
+.themebtn:active{transform:translateY(2px);box-shadow:inset 0 3px 0 var(--lip),0 1px 0 var(--ink)}
+.themebtn:focus-visible,.topt:focus-visible{outline:3px solid var(--clay);outline-offset:3px}
+.themepop{position:absolute;top:calc(100% + 14px);right:0;width:330px;padding:10px;background:var(--body);border:4px solid var(--ink);border-radius:14px;
+  box-shadow:inset 0 5px 0 var(--body-hi),0 8px 0 var(--ink),0 22px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}
+.themepop[hidden]{display:none}
+.themepop h4{margin:2px 6px 0;font:400 10px "Silkscreen",monospace;letter-spacing:3px;color:var(--print-lo)}
+.topt{display:flex;align-items:center;gap:14px;padding-right:34px!important;text-align:left;width:100%;padding:8px 10px;background:var(--body-lo);border:3px solid var(--ink);border-radius:10px;cursor:pointer;
+  color:var(--print);font:400 12px "Silkscreen",monospace;letter-spacing:2px;box-shadow:inset 0 3px 0 var(--lip);position:relative}
+.topt small{display:block;margin-top:5px;font-size:9px;letter-spacing:1px;color:var(--print-lo)}
+.topt:hover{background:var(--body-hi)}
+.topt.on{box-shadow:inset 0 3px 0 var(--lip),0 0 0 3px var(--clay)}
+.topt.on::after{content:"";position:absolute;right:12px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--clay);border:2px solid var(--ink)}
+.sw{display:grid;grid-template-columns:repeat(4,16px);gap:0;border:3px solid var(--ink);border-radius:4px;overflow:hidden;flex:none}
+.sw i{height:26px}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--wall);font-family:"Silkscreen",ui-monospace,monospace;color:var(--print);
+  overflow:hidden;user-select:none;-webkit-user-select:none}
+.stage{position:absolute;left:50%;top:50%;width:var(--sw,1280px);height:var(--sh,720px);margin:calc(var(--sh,720px)/-2) 0 0 calc(var(--sw,1280px)/-2);transform:scale(var(--s,1))}
+
+/* ---------- case ---------- */
+.device{position:relative;background:var(--body);border:4px solid var(--ink);border-radius:30px;padding:22px 24px 26px;
+  box-shadow:
+    inset 0 10px 0 var(--body-hi),      /* lit top edge */
+    inset 0 -16px 0 var(--body-lo),     /* shaded underside */
+    0 12px 0 var(--ink),                /* case thickness */
+    0 14px 0 var(--lip),
+    0 40px 0 var(--wall-sh);            /* hard shadow on the wall, light from above */
+  display:flex;flex-direction:column;gap:16px}
+.screw{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--body-lo);border:3px solid var(--ink);box-shadow:inset 0 3px 0 var(--body-hi)}
+.screw::after{content:"";position:absolute;left:1px;right:1px;top:3px;height:2px;background:var(--ink);transform:rotate(35deg)}
+.screw.a{left:12px;top:12px}.screw.b{right:12px;top:12px}.screw.c{left:12px;bottom:16px}.screw.d{right:12px;bottom:16px}
+
+.head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 14px 0 10px}
+.brand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1}
+.brand small{display:block;font-weight:400;font-size:10px;letter-spacing:3px;margin-top:6px;color:var(--print-lo)}
+.solar{display:none!important}.nosprout .sprout{display:none}.solar{flex:1;max-width:210px;height:26px;display:grid;grid-template-columns:repeat(6,1fr);gap:3px;padding:3px;background:var(--ink);border-radius:6px;position:relative;overflow:hidden;
+  box-shadow:0 3px 0 var(--lip)}
+.solar i{background:#34493f;border-radius:2px;box-shadow:inset 0 3px 0 #46634f}
+.solar::after{content:"";position:absolute;top:0;bottom:0;width:26px;left:-40px;background:rgba(255,255,255,.14);transform:skewX(-20deg);animation:sheen 4.5s linear infinite}
+@keyframes sheen{to{left:calc(100% + 20px)}}
+.pwr{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:3px}
+.pwr i{width:14px;height:14px;border-radius:50%;background:var(--pwr0);border:3px solid var(--ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.12);transition:.2s}
+.on .pwr i{background:var(--pwr);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 10px var(--pwr)}
+
+/* ---------- meter bezels: recessed, top edge casts a shadow inside ---------- */
+.bezel{background:var(--ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 var(--inset),0 4px 0 var(--body-hi),0 6px 0 var(--ink)}
+.bezel svg{display:block;width:100%;height:auto;border-radius:10px}
+
+/* ---------- LCD ---------- */
+.readouts{display:grid;grid-template-columns:1.15fr 1fr 1.45fr;gap:12px}
+.lcd{position:relative;background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;padding:12px calc(var(--dp)*12) calc(var(--dp)*6);overflow:hidden;
+  box-shadow:inset 0 6px 0 var(--inset),0 3px 0 var(--body-hi)}
+.lcd::after,.msg::after,.chrom div::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--gn))),repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--gn)))}
+.lcd,.msg,.chrom div{--gn:2}
+.lcd small{display:block;font-size:var(--f2);line-height:24px;letter-spacing:calc(var(--dp)*2);color:var(--lcd-lab);text-shadow:calc(var(--dp)*-1) 0 rgba(255,50,50,.5),var(--dp) 0 rgba(60,170,255,.4)}
+.dg{position:relative;color:var(--lcd-fg);white-space:nowrap}
+.dg .g{position:absolute;left:0;top:0;opacity:.14}
+.dg .v{position:relative;text-shadow:calc(var(--dp)*-1) 0 rgba(255,50,50,.6),var(--dp) 0 rgba(60,170,255,.5),0 0 6px var(--lcd-fg),0 0 18px var(--lcd-glow)}
+.off .dg .v,.off .msg{opacity:0}
+.sgn{position:relative;display:inline-block}.sgn i{visibility:hidden;font-style:normal}.sgn b{position:absolute;left:0;top:0;font-weight:400}
+.msg{text-align:center;margin:-2px 0 0;font-size:var(--f4);letter-spacing:calc(var(--dp)*2);color:var(--lcd-fg);text-shadow:calc(var(--dp)*-1) 0 rgba(255,50,50,.5),var(--dp) 0 rgba(60,170,255,.4);line-height:40px;padding:8px 12px;
+  background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;box-shadow:inset 0 6px 0 var(--inset),0 3px 0 var(--body-hi);position:relative;overflow:hidden;text-transform:uppercase;transition:opacity .2s}
+
+/* ---------- chromatic strip ---------- */
+.well{background:var(--body-lo);border:3px solid var(--ink);border-radius:12px;padding:10px 12px;box-shadow:inset 0 5px 0 var(--lip),0 3px 0 var(--body-hi)}
+.chrom{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+.chrom div{height:56px;border-radius:5px;background:var(--lcd-off);border:2px solid var(--ink);box-shadow:inset 0 4px 0 var(--inset);
+  position:relative;overflow:hidden;font-size:var(--f4);line-height:48px;padding-top:0;text-align:center;color:var(--lcd-dim);transition:background .08s,color .08s,box-shadow .08s}
+.chrom div.sh{background:var(--lcd-sh)}
+.chrom div.lit{background:var(--lcd-fg);color:var(--lcd-on);box-shadow:inset 0 4px 0 rgba(0,0,0,.25),0 0 12px var(--lcd-glow)}
+.lamps{display:flex;justify-content:space-between;align-items:center;padding:8px 18px}
+.lamps>div{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:2px;color:var(--print)}
+.lamp{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);background:var(--lamp-r0);box-shadow:inset 0 3px 0 rgba(0,0,0,.35);transition:.08s}
+.lamp.g{background:var(--lamp-g0)}
+.lamp.r.lit{background:var(--lamp-r);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 0 14px var(--lamp-r)}
+.lamp.g.lit{background:var(--lamp-g);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 16px var(--lamp-g)}
+.lamp.big{width:26px;height:26px}
+
+/* ---------- controls row ---------- */
+.ctl{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;align-items:end;padding:4px 8px 4px}
+.slot{position:relative}
+.slabels{display:flex;justify-content:space-between;font-size:11px;letter-spacing:2px;margin-bottom:8px;padding:0 4px}
+.slabels b{font-weight:400;cursor:pointer;position:relative;padding:2px 4px;transition:color .2s}
+.slabels b.on{color:var(--clay)}
+.slabels b::after{content:"";position:absolute;left:50%;bottom:-8px;width:3px;height:6px;background:var(--ink);transform:translateX(-50%)}
+.track{background:var(--lcd-off);--p:.5;--kw:92px;position:relative;height:62px;background:var(--glass);border:3px solid var(--ink);border-radius:12px;
+  box-shadow:inset 0 8px 0 var(--inset),0 3px 0 var(--body-hi);touch-action:none;cursor:grab}
+.track::before{content:"";position:absolute;left:49px;right:49px;top:50%;height:4px;margin-top:-2px;background:var(--groove);border-radius:2px}
+.knob{--slab:var(--ink);--slab2:color-mix(in srgb,var(--ink) 65%,var(--body-hi));position:absolute;top:3px;bottom:3px;width:var(--kw);left:calc(3px + var(--p)*(100% - var(--kw) - 6px));
+  background:repeating-linear-gradient(90deg,var(--slab) 0 5px,var(--slab2) 5px 7px);
+  border:3px solid var(--ink);border-radius:6px;
+  box-shadow:0 7px 0 rgba(20,26,16,.55);          /* hard cast shadow falls down onto the panel */
+  transition:left .1s ease-out}
+/* split cap: two ribbed slabs with a gap showing the slot, an accent line in the middle of each pair */
+.knob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-5px;background:var(--lcd-off);border-left:3px solid var(--ink);border-right:3px solid var(--ink)}
+.knob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--clay);z-index:1}
+.dot{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--dotc)}
+
+.caps{display:flex;justify-content:space-between;gap:12px}
+.cap{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:2px}
+.cap button{--lift:8px;width:62px;height:56px;border-radius:16px;border:3px solid var(--ink);cursor:pointer;
+  background:linear-gradient(180deg,var(--teal-hi) 0 22%,var(--teal) 22%);
+  box-shadow:0 var(--lift) 0 var(--ink),0 calc(var(--lift) + 8px) 0 rgba(20,26,16,.28);
+  transition:transform .06s,box-shadow .06s;position:relative;top:0}
+.cap button:active,.cap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(20,26,16,.28)}
+.cap button:focus-visible{outline:3px solid var(--clay);outline-offset:3px}
+
+/* ---------- sprout on top of the case ---------- */
+.sprout{position:absolute;right:150px;top:-4px;width:70px;height:78px;pointer-events:none;overflow:visible}
+.sprout .sway{transform-origin:35px 72px;animation:sway 5s ease-in-out infinite}
+@keyframes sway{50%{transform:rotate(3deg)}0%,100%{transform:rotate(-3deg)}}
+.sprout .lf{transform-box:fill-box;transform-origin:0% 100%;transition:transform .7s cubic-bezier(.3,1.6,.5,1)}
+.sprout .lf.r{transform-origin:100% 100%}
+.sprout .lf{transform:scale(.55)}
+.bloom .sprout .lf{transform:scale(1)}
+.sprout .bud{transform-box:fill-box;transform-origin:50% 100%;transform:scale(.0);transition:transform .6s cubic-bezier(.3,1.8,.5,1) .25s}
+.bloom .sprout .bud{transform:scale(1)}
+
+/* off: everything goes quiet */
+.off .chrom div.lit,.off .lamp.lit{background:inherit;box-shadow:none}
+.note{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:10px;letter-spacing:2px;color:var(--note,var(--print-lo))}
+
+/* sprout switch: a little rocker like the app's Settings */
+.bloomsw{margin-left:auto;margin-right:22px;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;cursor:pointer;font:400 10px "Silkscreen",monospace;letter-spacing:3px;color:var(--print-lo)}
+.bloomsw i{position:relative;width:38px;height:20px;border-radius:10px;background:var(--lcd-off);border:3px solid var(--ink);box-shadow:inset 0 4px 0 var(--inset),0 3px 0 var(--body-hi)}
+.bloomsw i::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--teal);border:2px solid var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.5);transition:left .1s ease-out}
+.bloomsw.on i::after{left:19px;background:var(--clay)}
+.bloomsw:focus-visible{outline:3px solid var(--clay);outline-offset:4px}
+/* ---------- landscape layout: analog dials left, everything else right, no scrolling ---------- */
+.device{position:absolute;left:20px;right:20px;top:74px;bottom:50px;padding:16px 24px 20px;display:grid;grid-template-columns:500px 1fr;grid-template-rows:auto 1fr;gap:14px 24px}
+.head{grid-column:1/-1}
+.left{display:flex;flex-direction:column;gap:16px;min-height:0}
+.right{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:0}
+.readouts{grid-template-columns:1fr 1fr 1.3fr;gap:10px}
+.chrom div{display:flex;align-items:center;justify-content:center;gap:4px;padding-bottom:4px}.chrom svg.sh{width:10px;height:10px;fill:currentColor;align-self:flex-start;margin-top:12px;shape-rendering:crispEdges}
+.ctl{padding:0 4px}
+
+/* ---------- portrait / phone: the same parts, stacked in one column ---------- */
+.portrait .device{left:14px;right:14px;top:72px;bottom:46px;padding:14px 18px 18px;grid-template-columns:1fr;grid-template-rows:auto auto 1fr;gap:14px}
+.portrait .head{gap:6px;padding:0 4px}
+.portrait .brand{font-size:19px;letter-spacing:3px}
+.portrait .brand small,.portrait .bloomsw span{display:none}
+.portrait .themebtn{padding:5px 9px;letter-spacing:2px}
+.portrait .themewrap+.bloomsw{margin-left:12px;margin-right:14px}
+.portrait .readouts{grid-template-columns:1fr 1fr}
+.portrait .readouts .lcd:last-child{grid-column:1/-1}
+.portrait .chrom{grid-template-columns:repeat(6,1fr);gap:6px}
+.portrait .chrom div{height:60px}
+.portrait .ctl{grid-template-columns:1fr auto;gap:16px}
+.portrait .cap button{width:50px}.portrait .caps{gap:8px}
+.portrait .note{padding:0 12px;line-height:1.5;font-size:9px;letter-spacing:1px}
+.portrait .themepop{width:300px}
+</style>
+</head>
+<body>
+<div class="stage on" id="stage">
+
+  <!-- sprout grows when the note is held in tune -->
+  <svg class="sprout" viewBox="0 0 70 78" aria-hidden="true">
+    <g class="sway">
+      <path d="M35 72 C35 52 34 38 35 22" stroke="var(--ink)" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M35 72 C35 52 34 38 35 22" stroke="#6b9a6f" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <g class="lf l"><path d="M35 46 C16 46 8 34 8 24 C22 24 34 32 35 46Z" fill="#6b9a6f" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><path d="M33 44 C24 38 16 32 12 27" stroke="#3f6a4a" stroke-width="2" fill="none"/></g>
+      <g class="lf r"><path d="M35 36 C52 36 62 26 62 16 C48 16 36 24 35 36Z" fill="#7fae7a" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><path d="M37 34 C46 28 54 22 58 19" stroke="#3f6a4a" stroke-width="2" fill="none"/></g>
+      <g class="bud"><circle cx="35" cy="17" r="7" fill="#cfa84a" stroke="var(--ink)" stroke-width="3"/><circle cx="35" cy="17" r="2.5" fill="#b4623e"/></g>
+    </g>
+    <path d="M21 72 H49 L46 78 H24Z" fill="#b4623e" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  </svg>
+
+  <div class="device">
+    <span class="screw a"></span><span class="screw b"></span><span class="screw c"></span><span class="screw d"></span>
+
+    <div class="head">
+      <div class="brand">TUNERITE<small>CHROMATIC TUNER · DIGITAL PROCESSING</small></div>
+      <div class="themewrap"><button class="themebtn" id="themeBtn" type="button" aria-haspopup="listbox" aria-expanded="false">THEME <b id="themeName">UTILITY</b></button>
+        <div class="themepop" id="themePop" role="listbox" aria-label="Theme" hidden><h4>THEMES</h4></div></div>
+      <button class="bloomsw on" id="bloomSw" type="button" aria-label="Sprout on or off"><span>SPROUT</span><i></i></button>
+      <div class="pwr">POWER<i></i></div>
+    </div>
+
+    <div class="left">
+    <!-- CENTS METER -->
+    <div class="bezel"><svg id="cents" viewBox="0 0 600 300" role="img" aria-label="Analog cents meter"></svg></div>
+    <!-- VU METER -->
+    <div class="bezel"><svg id="vu" viewBox="0 0 600 220" role="img" aria-label="Analog level meter"></svg></div>
+
+    </div>
+    <div class="right">
+    <div class="readouts">
+      <div class="lcd"><small>NOTE</small><div class="dg" style="font-size:var(--f8);line-height:72px"><span class="g">888</span><span class="v" id="vNote">A4</span></div></div>
+      <div class="lcd"><small>CENTS</small><div class="dg" style="font-size:var(--f8);line-height:72px"><span class="g">+88</span><span class="v"><span class="sgn"><i>+</i><b id="vSign">+</b></span><span id="vCents">00</span></span></div></div>
+      <div class="lcd"><small>FREQ · HZ</small><div class="dg" style="font-size:var(--f8);line-height:72px"><span class="g">888.8</span><span class="v" id="vHz">440.0</span></div></div>
+    </div>
+    <div class="msg" id="msg">Listening</div>
+
+    <div class="well"><div class="chrom" id="chrom"></div></div>
+    <div class="well lamps">
+      <div><span class="lamp r" id="lF"></span>◀ FLAT</div>
+      <div><span class="lamp g big" id="lT"></span>IN TUNE</div>
+      <div>SHARP ▶<span class="lamp r" id="lS"></span></div>
+    </div>
+
+    <div class="ctl">
+      <div class="slot">
+        <div class="slabels" id="slabels"><b data-i="0">OFF</b><b data-i="1" class="on">TUNE</b><b data-i="2">REF A</b></div>
+        <div class="track" id="track" style="--p:.5"><i class="dot" style="left:49px"></i><i class="dot" style="left:50%"></i><i class="dot" style="left:calc(100% - 49px)"></i><div class="knob" id="knob"></div></div>
+      </div>
+      <div class="caps">
+        <div class="cap"><button type="button" aria-label="Pitch"></button>PITCH</div>
+        <div class="cap"><button type="button" aria-label="Down"></button>DOWN</div>
+        <div class="cap"><button type="button" aria-label="Up"></button>UP</div>
+      </div>
+    </div>
+    </div>
+  </div>
+  <div class="note">MOCKUP · animation only · drag or tap the slider · T cycles themes</div>
+</div>
+
+<script>
+(()=>{
+const fit=()=>{const r=document.documentElement.style,dpr=window.devicePixelRatio||1,portrait=innerWidth/innerHeight<1,
+    DW=portrait?560:1280,DH=portrait?1420:720,sc=Math.min(innerWidth/DW,innerHeight/DH);
+  r.setProperty('--sw',DW+'px');r.setProperty('--sh',DH+'px');document.getElementById('stage').classList.toggle('portrait',portrait);
+  r.setProperty('--s',sc.toFixed(4));r.setProperty('--dp',(1/(dpr*sc)).toFixed(4)+'px');
+  /* LCD glyph pixels snap to whole multiples of the 2-device-pixel mesh so type stays on the grid at any window size */
+  for(const p of [2,4,8]){const q=Math.max(2,2*Math.floor(p*sc*dpr/2));r.setProperty('--f'+p,(q*8/(dpr*sc)).toFixed(3)+'px')}};
+fit();addEventListener('resize',fit);
+const $=id=>document.getElementById(id), NS="http://www.w3.org/2000/svg";
+const P=(a,r,cx,cy)=>[cx+r*Math.sin(a*Math.PI/180),cy-r*Math.cos(a*Math.PI/180)];
+const f=n=>n.toFixed(1);
+const arc=(a0,a1,r,cx,cy)=>{const[p,q]=[P(a0,r,cx,cy),P(a1,r,cx,cy)];return `M${f(p[0])} ${f(p[1])}A${r} ${r} 0 0 1 ${f(q[0])} ${f(q[1])}`};
+
+/* ---------- shared bits for both dials ---------- */
+function frame(w,h,cx,cy,faceTop,faceBot){
+  return `<defs><clipPath id="w${w}"><rect x="6" y="6" width="${w-12}" height="${h-12}" rx="10"/></clipPath></defs>
+  <rect width="${w}" height="${h}" fill="var(--dshield)"/>
+  <g clip-path="url(#w${w})">
+  <rect x="6" y="6" width="${w-12}" height="${h-12}" fill="${faceTop}"/>
+  <path d="M6 ${h*0.62} H${w-6} V${h-6} H6Z" fill="${faceBot}"/>`;
+}
+const glass=(w,h)=>`
+  <path d="M${w*0.62} 6 H${w*0.8} L${w*0.5} ${h-6} H${w*0.32}Z" fill="#fff" opacity=".06"/>
+  <path d="M${w*0.84} 6 H${w*0.88} L${w*0.58} ${h-6} H${w*0.54}Z" fill="#fff" opacity=".04"/>
+  <rect x="6" y="6" width="${w-12}" height="20" fill="var(--dtop)" style="opacity:var(--dtopo)"/>
+  <rect x="6" y="26" width="${w-12}" height="4" fill="var(--dtop)" style="opacity:.3"/>
+  </g><rect x="6" y="6" width="${w-12}" height="${h-12}" rx="10" fill="none" stroke="var(--dshield)" stroke-width="3"/>`;
+
+/* ---------- cents dial ---------- */
+const CX=300,CY=392,CR=300;
+let s=frame(600,300,CX,CY,"var(--dface)","var(--dface2)");
+s+=`<path d="${arc(-45,-9,322,CX,CY)}" stroke="var(--dprint2)" stroke-width="10" fill="none"/>
+<path d="${arc(9,45,322,CX,CY)}" stroke="var(--dprint2)" stroke-width="10" fill="none"/>
+<path d="${arc(-9,9,322,CX,CY)}" stroke="var(--dzone)" stroke-width="10" fill="none"/>
+<path d="${arc(-45,45,CR-10,CX,CY)}" stroke="var(--dprint)" stroke-width="2.5" fill="none"/>`;
+for(let c=-50;c<=50;c+=2){const a=c*.9,big=c%10===0,[x1,y1]=P(a,CR-10,CX,CY),[x2,y2]=P(a,CR-(big?36:22),CX,CY);
+  s+=`<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="var(--dprint)" stroke-width="${big?4:2}" stroke-linecap="round"/>`;}
+for(let c=-50;c<=50;c+=10){const[x,y]=P(c*.9,CR-62,CX,CY);
+  s+=`<text x="${f(x)}" y="${f(y+7)}" text-anchor="middle" font-family="Silkscreen,monospace" font-size="${c?14:18}" font-weight="700" fill="${Math.abs(c)>=40?'var(--dacc)':'var(--dprint)'}">${c>0?'+'+c:c}</text>`;}
+s+=`<text x="76" y="244" font-family="Georgia,serif" font-size="46" fill="var(--dprint)" text-anchor="middle">♭</text>
+<text x="524" y="244" font-family="Georgia,serif" font-size="46" fill="var(--dprint)" text-anchor="middle">♯</text>
+<text x="300" y="196" text-anchor="middle" font-family="Silkscreen,monospace" font-size="13" letter-spacing="4" fill="var(--dprint2)">CENTS</text>
+<g id="cSh" style="opacity:var(--dshop)"><line x1="${CX}" y1="${CY}" x2="${CX}" y2="${CY-CR+4}" stroke="var(--dsh)" stroke-width="4" stroke-linecap="round"/></g>
+<g id="cN"><line x1="${CX}" y1="${CY}" x2="${CX}" y2="${CY-CR+4}" stroke="var(--dprint)" stroke-width="4" stroke-linecap="round"/><line x1="${CX}" y1="${CY-CR+50}" x2="${CX}" y2="${CY-CR+4}" stroke="var(--dacc)" stroke-width="4" stroke-linecap="round"/></g>
+<path d="M190 300 V272 Q190 254 208 254 H392 Q410 254 410 272 V300Z" fill="var(--dshield)"/>
+<path d="M190 272 Q190 258 208 258 H392 Q410 258 410 272" fill="none" stroke="var(--dshield2)" stroke-width="3"/>
+<rect x="190" y="290" width="220" height="10" fill="var(--dshield)"/>`;
+s+=glass(600,300);
+$("cents").innerHTML=s;
+
+/* ---------- VU dial ---------- */
+const VX=300,VY=312,VR=270;
+const VT=[[-20,-50],[-10,-28],[-5,-8],[0,24],[3,50]];
+const vuAng=db=>{db=Math.max(-20,Math.min(3,db));for(let i=1;i<VT.length;i++)if(db<=VT[i][0]){const[a,b]=[VT[i-1],VT[i]];return a[1]+(b[1]-a[1])*(db-a[0])/(b[0]-a[0]);}return 50};
+let v=frame(600,220,VX,VY,"var(--dface)","var(--dface2)");
+v+=`<path d="${arc(vuAng(0),50,VR+22,VX,VY)}" stroke="var(--dacc)" stroke-width="12" fill="none"/>
+<path d="${arc(-50,vuAng(0),VR+22,VX,VY)}" stroke="var(--dprint)" stroke-width="2.5" fill="none"/>`;
+const ticks=[-20,-15,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3];
+for(const d of ticks){const big=[-20,-10,-5,0,3].includes(d),a=vuAng(d),[x1,y1]=P(a,VR+14,VX,VY),[x2,y2]=P(a,VR-(big?24:12),VX,VY);
+  v+=`<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${d>0?'var(--dacc)':'var(--dprint)'}" stroke-width="${big?4:2.4}" stroke-linecap="round"/>`;}
+for(const d of [-20,-10,-5,0,3]){const[x,y]=P(vuAng(d),VR-46,VX,VY);
+  v+=`<text x="${f(x)}" y="${f(y+6)}" text-anchor="middle" font-family="Silkscreen,monospace" font-size="17" font-weight="700" fill="${d>0?'var(--dacc)':'var(--dprint)'}">${d>0?'+'+d:d}</text>`;}
+v+=`<text x="300" y="168" text-anchor="middle" font-family="Silkscreen,monospace" font-size="26" font-weight="700" letter-spacing="6" fill="var(--dprint)">VU</text>
+<text x="300" y="190" text-anchor="middle" font-family="Silkscreen,monospace" font-size="10" letter-spacing="4" fill="var(--dprint2)">MIC LEVEL</text>
+<g id="vSh" style="opacity:var(--dshop)"><line x1="${VX}" y1="${VY}" x2="${VX}" y2="${VY-VR+6}" stroke="var(--dsh)" stroke-width="4" stroke-linecap="round"/></g>
+<g id="vN"><line x1="${VX}" y1="${VY}" x2="${VX}" y2="${VY-VR+6}" stroke="var(--dprint)" stroke-width="4" stroke-linecap="round"/></g>
+<path d="M230 220 V196 Q230 182 244 182 H356 Q370 182 370 196 V220Z" fill="var(--dshield)"/>
+<path d="M230 196 Q230 186 244 186 H356 Q370 186 370 196" fill="none" stroke="var(--dshield2)" stroke-width="3"/>`;
+v+=glass(600,220);
+$("vu").innerHTML=v;
+
+/* needles + the shadow they cast (light is above, so the shadow is displaced downward and falls on the dial face) */
+const cN=$("cN"),cSh=$("cSh"),vN=$("vN"),vSh=$("vSh");
+function setNeedle(n,sh,a,cx,cy,drop){
+  n.setAttribute("transform",`rotate(${a.toFixed(2)} ${cx} ${cy})`);
+  sh.setAttribute("transform",`translate(${(a*0.12).toFixed(2)} ${drop}) rotate(${a.toFixed(2)} ${cx} ${cy})`);
+}
+
+/* ---------- chromatic strip ---------- */
+const NAMES=["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+const SHARP='<svg class="sh" viewBox="0 0 5 5"><path d="M1 0h1v5H1zM3 0h1v5H3zM0 1h5v1H0zM0 3h5v1H0z"/></svg>';
+$("chrom").innerHTML=NAMES.map(n=>`<div class="${n.includes("♯")?"sh":""}">${n[0]}${n.includes("♯")?SHARP:""}</div>`).join("");
+const cells=[...$("chrom").children];
+
+/* ---------- three-position slider ---------- */
+const track=$("track"),labels=[...document.querySelectorAll("#slabels b")],stage=$("stage");
+document.getElementById('bloomSw').onclick=e=>{const on=e.currentTarget.classList.toggle('on');stage.classList.toggle('nosprout',!on)};
+let pos=1;
+/* ---------- theme manager ---------- */
+const THEMES=[
+ {id:'utility', name:'UTILITY', note:'Black matte plastic, amber LCD',   sw:['#2b2c2f','#1c1d1f','#2a1d0a','#e07a33'], sprout:false},
+ {id:'solar',   name:'SOLAR',   note:'Sage cel-shaded, plant on top',    sw:['#8c9b7c','#e8dfc4','#232a17','#b4623e'], sprout:true},
+ {id:'tu12',    name:'TU-12',   note:'Olive case, orange dial, red LEDs',sw:['#6f7566','#e89b3d','#2a0d0b','#ff5a4a'], sprout:false},
+ {id:'phosphor',name:'PHOSPHOR',note:'Green on black, workshop scope',   sw:['#1a211a','#071007','#071207','#6dff7a'], sprout:false}];
+const themeBtn=$('themeBtn'),themePop=$('themePop'),bloomSw=$('bloomSw');
+let themeId='utility';
+try{const t=localStorage.getItem('tunerite-theme');if(THEMES.some(x=>x.id===t))themeId=t}catch(e){}
+const qt=new URLSearchParams(location.search).get('theme');if(THEMES.some(x=>x.id===qt))themeId=qt;
+themePop.insertAdjacentHTML('beforeend',THEMES.map(t=>`<button class="topt" role="option" type="button" data-id="${t.id}"><span class="sw">${t.sw.map(c=>`<i style="background:${c}"></i>`).join('')}</span><span>${t.name}<small>${t.note}</small></span></button>`).join(''));
+function setSprout(on){bloomSw.classList.toggle('on',on);stage.classList.toggle('nosprout',!on)}
+function applyTheme(id,flash){
+  const t=THEMES.find(x=>x.id===id)||THEMES[0];themeId=t.id;
+  document.documentElement.dataset.theme=t.id;$('themeName').textContent=t.name;
+  [...themePop.querySelectorAll('.topt')].forEach(b=>{const on=b.dataset.id===t.id;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
+  setSprout(t.sprout);
+  try{localStorage.setItem('tunerite-theme',t.id)}catch(e){}
+  if(flash){stage.classList.remove('swap');void stage.offsetWidth;stage.classList.add('swap')}
+}
+const openPop=o=>{themePop.hidden=!o;themeBtn.setAttribute('aria-expanded',o)};
+themeBtn.onclick=e=>{e.stopPropagation();openPop(themePop.hidden)};
+themePop.onclick=e=>{const b=e.target.closest('.topt');if(b){applyTheme(b.dataset.id,true);openPop(false)}e.stopPropagation()};
+document.addEventListener('click',()=>openPop(false));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')openPop(false);
+  if((e.key==='t'||e.key==='T')&&!e.ctrlKey&&!e.metaKey){applyTheme(THEMES[(THEMES.findIndex(x=>x.id===themeId)+1)%THEMES.length].id,true)}});
+applyTheme(themeId,false);
+
+function setPos(i){
+  pos=i;track.style.setProperty("--p",i/2);
+  labels.forEach((b,k)=>b.classList.toggle("on",k===i));
+  stage.classList.toggle("on",i>0);stage.classList.toggle("off",i===0);
+  $("msg").textContent=i===2?"Reference  A 440":"Listening";
+}
+labels.forEach(b=>b.onclick=()=>setPos(+b.dataset.i));
+let dragging=false;
+const fromX=e=>{const r=track.getBoundingClientRect(),kw=92,p=(e.clientX-r.left-kw/2)/(r.width-kw);return Math.max(0,Math.min(1,p))};
+const snap=e=>{const i=Math.round(fromX(e)*2);if(i!==pos)setPos(i)};   // always sits on a detent, no in-between and no sinking
+track.addEventListener("pointerdown",e=>{dragging=true;track.setPointerCapture(e.pointerId);snap(e)});
+track.addEventListener("pointermove",e=>{if(dragging)snap(e)});
+const end=()=>{dragging=false};
+track.addEventListener("pointerup",end);track.addEventListener("pointercancel",end);
+document.querySelectorAll(".cap button").forEach(b=>{
+  b.addEventListener("click",()=>{b.classList.add("press");setTimeout(()=>b.classList.remove("press"),130)});
+});
+
+/* ---------- fake signal: a few notes, each starting off pitch and settling in ---------- */
+const SEQ=[[9,4],[1,4],[4,4],[7,3],[6,4],[2,5]];   // pitch class, octave
+let ni=0,ts=0,startOff=0;
+function newNote(t){ni=(ni+1)%SEQ.length;ts=t;startOff=(Math.random()<.5?-1:1)*(18+Math.random()*28)}
+newNote(0);
+
+/* spring-driven needles */
+const sp={c:{x:-45,v:0,k:150,d:15},u:{x:-50,v:0,k:85,d:11}};
+function step(o,target,dt){const a=o.k*(target-o.x)-o.d*o.v;o.v+=a*dt;o.x+=o.v*dt}
+
+let last=performance.now(),tick=0,inTuneT=0,env=0,shownSig=false;
+function frameLoop(now){
+  const dt=Math.min(.033,(now-last)/1000);last=now;const t=now/1000;
+  const on=pos>0;let cents=0,sig=false,dbTarget=-20,note=SEQ[ni],freq=440;
+  if(on){
+    if(pos===2){            // reference tone: dead centre with a tiny shimmer, steady level
+      sig=true;note=[9,4];cents=Math.sin(t*9)*.6;dbTarget=-6+Math.sin(t*3)*.8;
+    }else{
+      const age=t-ts,dur=5.2;
+      if(age>dur)newNote(t);
+      sig=age<4.4;
+      cents=startOff*Math.exp(-age/1.5)+Math.sin(t*6.3)*2.2*Math.exp(-age/3)+Math.sin(t*1.7)*1.2;
+      const atk=Math.min(1,age/.08),dec=Math.exp(-age/2.6);
+      dbTarget=sig?-4-12*(1-atk*dec)+Math.sin(t*5.5)*1.2:-20;
+    }
+  }
+  /* needles */
+  step(sp.c,sig?Math.max(-50,Math.min(50,cents))*.9:(on?0:-45),dt);
+  step(sp.u,on?vuAng(dbTarget):-50,dt);
+  setNeedle(cN,cSh,sp.c.x,CX,CY,11);
+  setNeedle(vN,vSh,sp.u.x,VX,VY,9);
+
+  /* readouts at ~15 fps */
+  if(now-tick>66){tick=now;
+    const [pc,oc]=note,nm=NAMES[pc];
+    const ok=on&&sig;
+    $("vNote").textContent=ok?nm.replace("♯","#")+oc:"--";
+    $("vSign").textContent=ok?(cents>=0?"+":"-"):"";
+    $("vCents").textContent=ok?String(Math.min(99,Math.round(Math.abs(cents)))).padStart(2,"0"):"--";
+    freq=440*Math.pow(2,((pc+12*(oc+1))-69)/12+cents/1200);
+    $("vHz").textContent=ok?freq.toFixed(1):"---";
+    cells.forEach((c,i)=>c.classList.toggle("lit",ok&&i===pc));
+    const tun=ok&&Math.abs(cents)<=4;
+    $("lF").classList.toggle("lit",ok&&cents<-4);$("lS").classList.toggle("lit",ok&&cents>4);$("lT").classList.toggle("lit",tun);
+    inTuneT=tun?inTuneT+.066:0;
+    stage.classList.toggle("bloom",inTuneT>.9);
+    if(pos===1)$("msg").textContent=!ok?"Sing a note":tun?"In tune":cents<0?"A little flat":"A little sharp";
+  }
+  requestAnimationFrame(frameLoop);
+}
+requestAnimationFrame(frameLoop);
+})();
+</script>
+</body>
+</html>

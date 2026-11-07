@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite sand pane mockup</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Bold.ttf) format("truetype");font-weight:700}
+:root{--wall:#18181a;--ink:#050506;--body:#2b2c31;--lo:#141518;--print:#8f9096;--printh:#cfc8b8}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--wall);font-family:"Silkscreen",ui-monospace,monospace;color:var(--print);user-select:none;-webkit-user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+/* mock-up controls: a strip along the top so nothing ever covers the pane. Stand-ins for singing, not part of the instrument. */
+.bar{position:fixed;left:12px;right:12px;top:10px;padding:8px 12px;background:var(--body);border:4px solid var(--ink);border-radius:14px;
+  box-shadow:inset 0 4px 0 #46474d,0 6px 0 var(--ink);display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;z-index:2}
+.bar h1{margin:0;font:700 12px "Silkscreen",monospace;letter-spacing:3px;color:var(--printh)}
+.bar label,.bar small{font-size:9px;letter-spacing:2px}
+.keys{display:grid;grid-template-columns:repeat(12,30px);gap:3px}
+.keys button{height:34px;padding:0;border:3px solid var(--ink);border-radius:6px;cursor:pointer;font:700 8px "Silkscreen",monospace;color:var(--ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),inset 0 -3px 0 rgba(0,0,0,.25),0 3px 0 var(--ink)}
+.keys button:active{transform:translateY(2px)}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--lo);color:var(--printh);border:3px solid var(--ink);border-radius:8px;padding:6px 9px;cursor:pointer;font:400 9px "Silkscreen",monospace;letter-spacing:2px;box-shadow:inset 0 3px 0 #2a2b30,0 3px 0 var(--ink)}
+.btn:active{transform:translateY(2px)}
+.btn.on{color:var(--ink);background:#e0b43a}
+.stat{display:flex;gap:8px;align-items:baseline;font-size:9px;letter-spacing:2px}
+.stat b{font:700 14px "Silkscreen",monospace;color:#ffb347;text-shadow:0 0 8px rgba(255,170,60,.6)}
+input[type=range]{width:150px}
+#accv{font:700 11px "Silkscreen",monospace;color:#ffb347;width:30px}
+#shelf{display:flex;gap:6px;align-items:center}
+#shelf img{width:84px;height:42px;border:3px solid var(--ink);border-radius:4px;cursor:pointer;image-rendering:pixelated;background:#000}
+#shelf img:hover{border-color:#e0b43a}
+#help{position:relative}
+#help summary{cursor:pointer;font:700 12px "Silkscreen",monospace;color:#e0b43a;list-style:none;border:3px solid var(--ink);border-radius:8px;padding:4px 9px;background:var(--lo)}
+#help p{position:absolute;left:0;top:34px;width:430px;margin:0;padding:12px;background:var(--body);border:4px solid var(--ink);border-radius:12px;box-shadow:0 8px 0 var(--ink);font-size:9px;line-height:15px;letter-spacing:1px;z-index:5}
+#toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--body);border:3px solid var(--ink);border-radius:8px;padding:8px 14px;font-size:9px;letter-spacing:2px;color:var(--printh);opacity:0;transition:opacity .3s;z-index:6;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="bar" id="bar">
+  <h1>SAND PANE</h1>
+  <div class="keys" id="keys"></div>
+  <div class="row"><label>ACCURACY</label><input type="range" id="acc" min="0" max="100" value="100"><span id="accv">100</span></div>
+  <div class="row">
+    <button class="btn" id="flip">TURN OVER</button>
+    <button class="btn" id="shake" title="Two quick jolts: towers taller than 4 topple">SHAKE</button>
+    <button class="btn" id="shelve" title="Finish this pane: put it on the shelf and start a fresh one">SHELVE</button>
+    <button class="btn" id="clear">EMPTY</button>
+    <button class="btn" id="mic" title="Play notes by singing: hold a steady pitch">MIC</button>
+    <button class="btn on" id="snd">SOUND</button>
+    <button class="btn" id="real" title="Hold a note for 3 s before it pours (keys: hold the key)">REAL 3 S LOCK</button>
+    <button class="btn" id="auto">AUTO DEMO</button>
+  </div>
+  <div class="stat"><span>GRAINS</span><b id="grains">0</b></div>
+  <div id="shelf" title="Shelf: click a pane to take it down, shift-click to delete it"></div>
+  <details id="help"><summary>?</summary><p>
+    Debug mode: a note pours the moment you play it; it is saved automatically and survives a reload. Each note is its own material.
+    Whole notes are solids, heavy to light: C gravel, D coarse, E and F sand, G fine, A dust, B powder. Sharps are liquids of different weight: C# tar, D# syrup, F# oil, G# spirit, A# ether. Heavy ones sink under water, light ones float on top of it, and after a turn-over they all drift far.
+    Same note three times in a row = CHARGED: heavy, vivid, glowing; it pulses at the note's own rate and sinks through plain sand.
+    Accuracy: higher = tighter, brighter, sparklier; lower = wider, duller. Three perfect in a row makes it rain around the notes you have sung.
+    Turn over: heavy notes drop straight down, light ones drift wide in turbulence and settle last. Each pour sweeps a little, so the notes lay down layers.
+    SHAKE gives the pane two quick jolts: any tower taller than 4 topples. Keys: A W S E D F T G Y H U J = C to B. Shift = sloppy note. MIC listens to your voice: the note is the pitch, accuracy is how close to it you stay.
+    SHELVE keeps a finished pane as a thumbnail on the shelf. The pane holds a fixed amount: when there is no room left, turn it over or shelve it.
+  </p></details>
+</div>
+<div id="toast"></div>
+
+<script>
+(() => {
+const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const KEYMAP = { a:0, w:1, s:2, e:3, d:4, f:5, t:6, g:7, y:8, h:9, u:10, j:11 };
+const SHARP = NAMES.map(n => n.includes('#'));
+const hue = n => (n * 30 + 355) % 360;
+
+// the pane: a low-res LCD grid, K times finer than the first version so it holds more, smaller grains
+const K = 1.5, GW = 252, GH = 126, CELL = 3, PW = GW * CELL, PH = GH * CELL, FR = 14;   // FR: glass frame thickness
+const STEP = 1 / 90;                                  // physics ticks per second
+const LOCK_MS = 3000, SOFT_LOCK_MS = 700, INK = '#050506', FULL_AT = .995;
+const EMPTY = 0, SAND = 1, WATER = 2, GLIT = 3, LIQ = 4, GLOW = 16;       // GLOW: a bit in a grain's V byte, set on "charged" sand
+// whole notes are solids and sharps are liquids; every note has its own weight.
+// solids, heavy to light: gravel, coarse, sand, sand, fine, dust, powder. speed: how fast it falls; R: how far a resting grain looks sideways for a lower spot (light ones level out flatter); l: how lightly it drifts.
+// liquids, like oils of different weight (dens, water is 1): the heavy ones sink under water, the light ones float on top of it. visc: how thick (0 flows freely).
+const MAT = [
+  { name: 'GRAVEL', kind: SAND, speed: 1.7, R: 3, l: 0 }, { name: 'TAR', kind: LIQ, dens: 1.25, visc: .55, l: .95 },
+  { name: 'COARSE', kind: SAND, speed: 1.35, R: 4, l: .15 }, { name: 'SYRUP', kind: LIQ, dens: 1.1, visc: .4, l: .95 },
+  { name: 'SAND', kind: SAND, speed: 1.1, R: 6, l: .3 },
+  { name: 'SAND', kind: SAND, speed: 1, R: 6, l: .4 }, { name: 'OIL', kind: LIQ, dens: .92, visc: .25, l: .95 },
+  { name: 'FINE', kind: SAND, speed: .8, R: 8, l: .55 }, { name: 'SPIRIT', kind: LIQ, dens: .82, visc: .15, l: .95 },
+  { name: 'DUST', kind: SAND, speed: .6, R: 10, l: .75 }, { name: 'ETHER', kind: LIQ, dens: .7, visc: .08, l: .95 },
+  { name: 'POWDER', kind: SAND, speed: .45, R: 14, l: .9 }];
+const densF = i => T[i] === WATER ? 1 : MAT[N[i]].dens;
+const PULSE = n => .9 * Math.pow(2, n / 6);                                  // glow pulses per second: higher notes flicker faster
+
+function hsl2rgb(h, s, l) { s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)); return [f(0) * 255, f(8) * 255, f(4) * 255].map(Math.round); }
+const pack = ([r, g, b]) => (255 << 24 | b << 16 | g << 8 | r) >>> 0;
+// three vividness levels (dull, normal, vivid) of four grain shades each: index = level * 4 + shade; sharps are deeper
+const LEVELS = [[.4, -7], [1, 0], [1.2, 5]];
+const PAL = NAMES.map((_, n) => LEVELS.flatMap(([sm, dl]) => [-9, -2, 5, 12].map(d => pack(hsl2rgb(hue(n), Math.min(100, (SHARP[n] ? 62 : 80) * sm), (SHARP[n] ? 40 : 56) + d + dl)))));
+const WATERC = [pack([40, 110, 200]), pack([60, 140, 225]), pack([30, 90, 170])];
+const GLITC = pack([255, 220, 100]);
+const rgbOf = n => hsl2rgb(hue(n), SHARP[n] ? 62 : 80, SHARP[n] ? 40 : 56);
+const cssOf = n => { const [r, g, b] = rgbOf(n); return `rgb(${r},${g},${b})`; };
+
+const CAP = GW * GH;
+const T = new Uint8Array(CAP), N = new Uint8Array(CAP), V = new Uint8Array(CAP), P = new Uint8Array(CAP);   // P: each grain's own phase and pace, so no two grains move in step
+const idx = (x, y) => y * GW + x;
+const set = (i, t, n, v) => { T[i] = t; N[i] = n; V[i] = v; P[i] = (Math.random() * 256) | 0; };
+const swap = (a, b) => { const t = T[a], n = N[a], v = V[a], p = P[a]; T[a] = T[b]; N[a] = N[b]; V[a] = V[b]; P[a] = P[b]; T[b] = t; N[b] = n; V[b] = v; P[b] = p; };
+
+// which way a grain in the air is pushed this tick: a slow swing, plus two crossing waves of turbulence and a little noise. Lighter notes feel it more.
+const sway = (x, y, tick, l, p) => {
+  const base = Math.sin(tick * (.035 + p * .00009) + p * .0246 + y * .15 + x * .027), turb = Math.sin(tick * .029 + x * .2 - y * .11) * Math.sin(tick * .02 - x * .073 + y * .15);
+  return base + turb * (.4 + .8 * l) + (Math.random() - .5) * .5 * (.3 + l) > 0 ? 1 : -1;
+};
+// a slender vertical strand: grains stacked above this one (gaps allowed), taller than 4, with nothing beside them. Such a strand topples sideways.
+const strand = (i, y) => y >= 6 && (T[i - GW] || T[i - 2 * GW]) && (T[i - 3 * GW] || T[i - 4 * GW]) && (T[i - 5 * GW] || T[i - 6 * GW]) && !T[i - 1] && !T[i + 1] && !T[i - GW - 1] && !T[i - GW + 1] && !T[i - 3 * GW - 1] && !T[i - 3 * GW + 1];
+const fluid = t => t === WATER || t === LIQ, free = c => !T[c] || fluid(T[c]);
+
+// shaking: two quick jolts. A grain with nothing above it hops to a spot nearby that is at least 4 cells lower, so towers taller than 4 topple and gentle slopes are left alone.
+function shakeHop(i, x, y, d) {
+  if (T[i - GW] || y <= 3 || Math.random() > .6) return false;
+  const xx = x + d * (1 + ((Math.random() * 14) | 0));
+  if (xx < 0 || xx >= GW || y + 4 >= GH || T[idx(xx, y)] || !free(idx(xx, y + 1)) || !free(idx(xx, y + 2)) || !free(idx(xx, y + 3)) || !free(idx(xx, y + 4))) return false;
+  swap(i, idx(xx, y)); return true;
+}
+const shaking = () => shk > 0 && ((1 - shk) < .3 || ((1 - shk) > .45 && (1 - shk) < .75));   // the two jolts, each a third of a second
+function step(tick) {
+  for (let y = GH - 2; y >= 0; y--) {
+    const ltr = ((y + tick) & 1) === 0;
+    for (let k = 0; k < GW; k++) {
+      const x = ltr ? k : GW - 1 - k, i = idx(x, y), t = T[i];
+      if (!t) continue;
+      const b = i + GW, d = Math.random() < .5 ? -1 : 1;
+      if (fluid(t)) {
+        if (shaking() && shakeHop(i, x, y, d)) continue;               // liquids topple too
+        if (t === LIQ && Math.random() < MAT[N[i]].visc) continue;   // thick liquids move less often
+        if (T[b] && fluid(T[b]) && densF(i) > densF(b) && Math.random() < .5) { swap(i, b); continue; }   // a heavier liquid sinks through a lighter one: oil ends up on top of water
+        if (fl > 0 && t === LIQ && x + d >= 0 && x + d < GW && T[i + d] === WATER && Math.random() < .25) { swap(i, i + d); continue; }   // after a turn-over the liquids wander through the water
+        if (!T[b]) {
+          if (fl > 0) {                                             // after a turn-over liquid floats down too, drifting a long way sideways; it still reaches the bottom in the end
+            const l = t === WATER ? .85 : .97;
+            if (Math.random() > pfall * (.5 + .4 * (1 - l))) continue;
+            const dd = sway(x, y, tick, l, P[i]);
+            if (strand(i, y) && x + dd >= 0 && x + dd < GW && !T[b + dd] && Math.random() < .75) { swap(i, b + dd); continue; }
+            if (t === LIQ && Math.random() < .45 && x + dd >= 0 && x + dd < GW && free(i + dd)) { swap(i, i + dd); continue; }   // it flutters across without falling
+            if (x + dd >= 0 && x + dd < GW && !T[b + dd] && Math.random() < .3 + .6 * l) swap(i, b + dd); else swap(i, b);
+            continue;
+          }
+          if (Math.random() > .75 + .25 * P[i] / 255) continue;
+          swap(i, b); continue;
+        }
+        const xa = x + d, xb = x - d;
+        if (xa >= 0 && xa < GW && !T[b + d]) { swap(i, b + d); continue; }
+        if (xb >= 0 && xb < GW && !T[b - d]) { swap(i, b - d); continue; }
+        // flow sideways only toward a spot where it can then drop; a surface with steps of one cell stays still, so liquid comes to rest instead of shuffling forever
+        for (let r = 1; r <= 4; r++) { const xx = x + d * r; if (xx < 0 || xx >= GW || T[idx(xx, y)]) break; if (!T[idx(xx, y + 1)]) { swap(i, idx(xx, y)); break; } }
+      } else {                                                      // sand and glitter: down, or slide down a slope; it sinks through any liquid
+        const m = MAT[N[i]], ch = V[i] & GLOW;
+        if (free(b)) {
+          if (fl > 0) {                                             // just turned over: grains in the air drift down slowly, swinging side to side
+            // heavy notes drop almost straight down and quickly; light ones drift wide and linger (pfall climbs to 1, so every grain gets to the bottom)
+            const l = MAT[N[i]].l;
+            if (Math.random() > Math.min(1, pfall * (1.5 - .9 * l))) continue;
+            const dd = sway(x, y, tick, l, P[i]), xd = x + dd;
+            if (strand(i, y) && xd >= 0 && xd < GW && free(b + dd) && Math.random() < .75) { swap(i, b + dd); continue; }   // a strand taller than 4 topples either way, so no long thin lines
+            if (l > .45 && Math.random() < .35 * (l - .3) && xd >= 0 && xd < GW && free(i + dd)) { swap(i, i + dd); continue; }   // light grains also flutter sideways without falling
+            if (Math.random() < .1 + .85 * l && xd >= 0 && xd < GW && free(b + dd)) swap(i, b + dd); else swap(i, b);
+            continue;
+          }
+          if (Math.random() > .7 + .3 * P[i] / 255) continue;        // each grain has its own pace, so a falling stream spreads out in time
+          if (m.speed < 1 && Math.random() > m.speed) continue;      // dust hangs in the air
+          let dst = b;
+          const l = m.l, sw = sway(x, y, tick, l, P[i]);
+          if (strand(i, y) && x + sw >= 0 && x + sw < GW && free(b + sw) && Math.random() < .5) dst = b + sw;   // a stream taller than 4 widens
+          else if (Math.random() < .03 + .1 * l && x + sw >= 0 && x + sw < GW && free(b + sw)) dst = b + sw;   // a touch of turbulence even when just pouring
+          else if (m.speed < 1 && Math.random() < .4 && x + d >= 0 && x + d < GW && free(b + d)) dst = b + d;   // dust drifts sideways
+          swap(i, dst);
+          if ((m.speed > 1 || ch) && y + 2 < GH && Math.random() < (ch ? .8 : .6) && free(dst + GW)) swap(dst, dst + GW);   // gravel and charged sand fall faster
+          continue;
+        }
+        if (ch && !fluid(T[b]) && !(V[b] & GLOW) && Math.random() < .2) { swap(i, b); continue; }   // charged sand is denser: it works down through ordinary sand
+        const xa = x + d, xb = x - d;
+        if (xa >= 0 && xa < GW && free(b + d) && !T[i + d]) { swap(i, b + d); continue; }
+        if (xb >= 0 && xb < GW && free(b - d) && !T[i - d]) { swap(i, b - d); continue; }
+        if (shaking() && shakeHop(i, x, y, d)) continue;
+        // settle: look a few cells sideways for a lower spot. Heavy notes barely do, light ones level out, so each note lays down its own kind of layer
+        const R = ch ? 4 : m.R;
+        for (let r = 2; r <= R; r++) { const xx = x + d * r; if (xx < 0 || xx >= GW || T[idx(xx, y)]) break; if (free(idx(xx, y + 1))) { swap(i, idx(xx, y)); break; } }
+      }
+    }
+  }
+}
+
+function put(x, y, t, n, lvl = 1, glow = 0) {
+  x = Math.round(x); y = Math.round(y); if (y < 0 || y >= GH) return;
+  if (x < 0) x = -x; if (x >= GW) x = 2 * (GW - 1) - x; x = Math.max(0, Math.min(GW - 1, x));      // a scattered grain bounces off the frame instead of vanishing
+  for (let o = 0; o <= 12; o = o > 0 ? -o : 1 - o) {                                                  // a blocked spot at the top: use the nearest free one
+    const xx = x + o; if (xx < 0 || xx >= GW) continue; const i = idx(xx, y);
+    if (!T[i]) { set(i, t, n, lvl * 4 + ((Math.random() * 4) | 0) + (glow ? GLOW : 0)); return; }
+  }
+}
+
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+let Wd = 0, Hd = 0, dpr = 1, S = 1, OX = 0, OY = 0, cellPx = 3, meshPat = null;
+const hash = (x, y, t) => { let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(t, 1274126177); h = Math.imul(h ^ (h >>> 13), 1103515245); return (h ^ (h >>> 16)) >>> 0; };
+function resize() {
+  dpr = devicePixelRatio || 1; Wd = innerWidth; Hd = innerHeight; cv.width = Wd * dpr; cv.height = Hd * dpr;
+  // every grid cell is a whole number of device pixels, so the dot mesh stays perfectly even (no beating or moire)
+  const fr = 2 * FR / CELL, top = $('bar').getBoundingClientRect().bottom + 12;
+  cellPx = Math.max(2, Math.floor(Math.min((Wd - 48) * dpr / (GW + fr), (Hd - top - 8) * dpr / (GH + fr + 20))));
+  S = cellPx / (CELL * dpr);
+  OX = Math.round(((Wd - (PW + 2 * FR) * S) / 2 + FR * S) * dpr) / dpr; OY = Math.round((top + FR * S) * dpr) / dpr;
+  meshPat = null;
+}
+addEventListener('resize', resize); resize(); if (document.fonts) document.fonts.ready.then(resize);
+
+const grid = document.createElement('canvas'); grid.width = GW; grid.height = GH;
+const gx = grid.getContext('2d'), img = gx.createImageData(GW, GH), px = new Uint32Array(img.data.buffer);
+const glowCv = document.createElement('canvas'); glowCv.width = GW; glowCv.height = GH;
+const glx = glowCv.getContext('2d'), gimg = glx.createImageData(GW, GH), gpx = new Uint32Array(gimg.data.buffer);
+// the dot mesh: a dark gap on the right and bottom of every cell, one device pixel wide at small sizes
+function makeMesh() {
+  const m = document.createElement('canvas'); m.width = m.height = cellPx; const c = m.getContext('2d'), w = Math.max(1, Math.round(cellPx / 5));
+  c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(cellPx - w, 0, w, cellPx); c.fillRect(0, cellPx - w, cellPx, w);
+  return g.createPattern(m, 'repeat');
+}
+// a smooth dark-amber glass colour down the pane, with a faint fixed grain that never repeats
+const BGROW = Array.from({ length: GH }, (_, y) => [22 - y * .07, 14 - y * .05, 8 - y * .03]);
+const BGPX = new Uint32Array(CAP);
+for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) { const j = (hash(x, y, 7) % 3) - 1, c = BGROW[y]; BGPX[idx(x, y)] = pack([c[0] + j, c[1] + j, c[2] + j * .5].map(v => Math.max(0, Math.round(v)))); }
+
+/* ---- state ---- */
+let shk = 0, topOcc = 0, lock = null, mlock = null, streak = 0, flip = null, banner = null, flash = 0, rep = 0, lastN = null, filled = 0, dirty = false, tick = 0, acc = 0;
+const pours = [];                            // every pour in progress: you can play faster than the sand falls
+let fl = 0, pfall = 1;                       // after a turn-over: fl runs 1 -> 0 over FLOAT_S, pfall is the chance a grain moves on a tick
+const FLOAT_S = 9; let sung = [];            // sung: the notes sung so far, newest last; the rain falls around their columns
+const colX = n => (n + .5) / 12 * GW;
+let real = false, auto = false, autoT = 0, soundOn = true;
+const accVal = () => $('acc').value / 100;
+const toast = (s, ms = 2200) => { const e = $('toast'); e.textContent = s; e.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => e.style.opacity = 0, ms); };
+
+/* ---- sound: a soft sand hiss while pouring (pitched by the material) and a quiet tone for each note ---- */
+let ac = null, sandG = null, sandF = null;
+function audio() {
+  if (ac) { if (ac.state === 'suspended') ac.resume(); return ac; }
+  try {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const nb = ac.createBuffer(1, ac.sampleRate, ac.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(); src.buffer = nb; src.loop = true; sandF = ac.createBiquadFilter(); sandF.type = 'bandpass'; sandG = ac.createGain(); sandG.gain.value = 0;
+    src.connect(sandF); sandF.connect(sandG); sandG.connect(ac.destination); src.start();
+  } catch (e) { ac = null; }
+  return ac;
+}
+function blip(n, charged) {
+  if (!soundOn || mic.on) return; const c = audio(); if (!c) return;
+  const t = c.currentTime, f = 261.63 * Math.pow(2, n / 12);
+  for (const [mul, vol] of charged ? [[1, .07], [1.5, .05], [2, .04]] : [[1, .07]]) {
+    const o = c.createOscillator(), v = c.createGain(); o.type = 'triangle'; o.frequency.value = f * mul;
+    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(vol, t + .01); v.gain.exponentialRampToValueAtTime(.0005, t + (charged ? .7 : .35));
+    o.connect(v); v.connect(c.destination); o.start(t); o.stop(t + .8);
+  }
+}
+function sandSound() {
+  if (!ac || !sandG) return;
+  const p = pours[0], on = soundOn && p && !(flip && !flip.done);
+  sandG.gain.setTargetAtTime(on ? Math.min(.16, .04 + .035 * pours.length) : 0, ac.currentTime, .06);
+  if (p) { const n = p.n, mt = p.kind === 'water' ? { f: 2500, q: 2 } : MAT[n].kind === LIQ ? { f: 700 + 300 * (1.3 - MAT[n].dens), q: 3 } : { f: 500 + 3200 * MAT[n].l, q: .7 }; sandF.frequency.setTargetAtTime(mt.f, ac.currentTime, .05); sandF.Q.value = mt.q; }
+}
+
+/* ---- microphone: the note is the pitch you hold, the accuracy is how close to it you stay ---- */
+const mic = { on: false, an: null, buf: null, det: null };
+function detect(buf, sr) {
+  const len = buf.length; let rms = 0; for (let i = 0; i < len; i++) rms += buf[i] * buf[i]; rms = Math.sqrt(rms / len); if (rms < .015) return null;
+  const minLag = Math.floor(sr / 1000), maxLag = Math.min(len >> 1, Math.floor(sr / 70)), n = len - maxLag, c = new Float32Array(maxLag + 1); let m0 = 0;
+  for (let i = 0; i < n; i++) m0 += buf[i] * buf[i];
+  let best = 0; for (let lag = minLag; lag <= maxLag; lag++) { let s = 0; for (let i = 0; i < n; i++) s += buf[i] * buf[i + lag]; c[lag] = s; if (s > best) best = s; }
+  if (best / m0 < .5) return null;                                       // not a clear pitch
+  for (let lag = minLag + 1; lag < maxLag; lag++) if (c[lag] >= best * .9 && c[lag] >= c[lag - 1] && c[lag] >= c[lag + 1]) {   // the first strong peak, so octaves are not mistaken for the note
+    const a = c[lag - 1], b = c[lag], d = c[lag + 1], sh = (a - d) / (2 * (a - 2 * b + d) || 1), f = sr / (lag + sh), midi = 69 + 12 * Math.log2(f / 440), nn = Math.round(midi);
+    return { n: ((nn % 12) + 12) % 12, oct: Math.floor(nn / 12) - 1, cents: (midi - nn) * 100 };
+  }
+  return null;
+}
+async function micToggle() {
+  if (mic.on) { mic.on = false; mic.det = null; mlock = null; $('mic').classList.remove('on'); return; }
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const c = audio(); if (!c) throw 0; const s = c.createMediaStreamSource(st); mic.an = c.createAnalyser(); mic.an.fftSize = 4096; s.connect(mic.an); mic.buf = new Float32Array(4096);
+    mic.on = true; $('mic').classList.add('on'); toast('LISTENING: HOLD A STEADY NOTE');
+  } catch (e) { toast('NO MICROPHONE ACCESS'); }
+}
+function micUpdate(dt) {
+  if (!mic.on) return;
+  micUpdate.carry = (micUpdate.carry || 0) + dt; micUpdate.skip = !micUpdate.skip;
+  if (micUpdate.skip) return;                                    // listen every other frame: the pitch search is the costly part
+  dt = micUpdate.carry; micUpdate.carry = 0;
+  mic.an.getFloatTimeDomainData(mic.buf); const det = detect(mic.buf, ac.sampleRate); mic.det = det;
+  if (det) {
+    if (!mlock || mlock.n !== det.n) mlock = { n: det.n, t: 0, sum: 0, cnt: 0, gap: 0, ms: real ? LOCK_MS : SOFT_LOCK_MS };
+    mlock.t += dt * 1000; mlock.sum += Math.abs(det.cents); mlock.cnt++; mlock.gap = 0;
+    if (mlock.t >= mlock.ms) { const avg = mlock.sum / mlock.cnt, a = Math.max(0, Math.min(1, 1 - (avg - 3) / 40)), n = mlock.n; mlock = null; spawn(n, a); }
+  } else if (mlock && (mlock.gap += dt) > .3) mlock = null;
+}
+
+/* ---- saving: the pane survives a reload, and finished panes go on a shelf as thumbnails ---- */
+const SK = 'tunerite.sandpane.v1', SH = 'tunerite.sandshelf.v1';
+// a cell becomes one number (material, note, vividness, glow); runs of equal numbers are stored once, so layered sand stays small
+function encode() {
+  const out = []; let prev = -1, run = 0;
+  for (let i = 0; i < CAP; i++) {
+    const v = T[i] ? T[i] | N[i] << 3 | ((V[i] >> 2) & 3) << 7 | (V[i] & GLOW ? 1 : 0) << 9 : 0;
+    if (v === prev) run++; else { if (run) out.push(prev, run); prev = v; run = 1; }
+  }
+  out.push(prev, run); return out.join(',');
+}
+function decode(str) {
+  T.fill(0); N.fill(0); V.fill(0); P.fill(0); const a = str.split(',').map(Number); let i = 0;
+  for (let k = 0; k + 1 < a.length && i < CAP; k += 2) {
+    const v = a[k], run = a[k + 1];
+    for (let r = 0; r < run && i < CAP; r++, i++) if (v) { P[i] = (Math.random() * 256) | 0; T[i] = v & 7; N[i] = (v >> 3) & 15; V[i] = ((v >> 7) & 3) * 4 + ((Math.random() * 4) | 0) + ((v >> 9) & 1 ? GLOW : 0); }
+  }
+}
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } } };
+const save = () => store.set(SK, { d: encode(), s: sung.slice(-80) });
+function load() { const o = store.get(SK); if (o && o.d) { decode(o.d); sung = o.s || []; } }
+function thumb() { const c = document.createElement('canvas'); c.width = 126; c.height = 63; const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(grid, 0, 0, 126, 63); return c.toDataURL('image/png'); }
+function shelfDraw() {
+  const sh = store.get(SH) || [], el = $('shelf'); el.innerHTML = '';
+  sh.forEach((e, i) => { const im = new Image(); im.src = e.th; im.title = `${new Date(e.t).toLocaleDateString()} - ${e.n} grains`; im.onclick = ev => shelfPick(i, ev.shiftKey); el.appendChild(im); });
+}
+function wipe() { T.fill(0); N.fill(0); V.fill(0); P.fill(0); streak = 0; sung = []; fl = 0; rep = 0; lastN = null; pours.length = 0; mlock = null; lock = null; dirty = true; }
+function shelve() {
+  if (filled < 50) return toast('NOTHING TO SHELVE YET');
+  const sh = store.get(SH) || []; sh.push({ t: Date.now(), n: filled, d: encode(), th: thumb() });
+  while (sh.length > 10) sh.shift();
+  while (!store.set(SH, sh) && sh.length > 1) sh.shift();
+  wipe(); save(); shelfDraw(); banner = { t: 0, text: 'SHELVED!', sub: 'A NEW PANE', cyan: true };
+}
+function shelfPick(i, del) {
+  const sh = store.get(SH) || []; if (!sh[i]) return;
+  if (del) { sh.splice(i, 1); store.set(SH, sh); shelfDraw(); return; }
+  if (filled > 50 && !confirm('Replace the pane on the bench? Shelve it first to keep it.')) return;
+  decode(sh[i].d); sung = []; fl = 0; pours.length = 0; dirty = true;
+}
+
+/* ---- playing ---- */
+// debug behaviour: a note pours the instant it is played. The real thing holds it for 3 s first (hold the key; letting go early cancels).
+function startLock(n, acc, key) { audio(); if (real) lock = { n, acc, t: 0, ms: LOCK_MS, key }; else spawn(n, acc); }
+
+// the pane is full only when there is really no room left: the row where grains enter is almost all taken. Sand sinks through water, so a pane with room for water has room for sand.
+const isFull = () => filled / CAP > FULL_AT || topOcc > GW * .9;
+// how tall the sand already stands around a column, in cells
+function pileHeight(cx) { let h = 0; for (let x = Math.max(0, cx - 10); x <= Math.min(GW - 1, cx + 10); x++) { let y = 0; while (y < GH && !T[idx(x, y)]) y++; h = Math.max(h, GH - y); } return h; }
+function spawn(n, acc) {
+  if (isFull()) { banner = { t: 0, text: 'PANE FULL', sub: 'TURN IT OVER OR SHELVE IT', warn: true }; return; }
+  const perfect = acc >= .9; sung.push(n); dirty = true;
+  rep = n === lastN ? rep + 1 : 1; lastN = n;
+  const charged = rep % 3 === 0;                          // the same note three times in a row
+  if (charged) { flash = .5; banner = { t: 0, text: 'CHARGED!', sub: `${NAMES[n]} x3 - HEAVY, GLOWING`, cyan: true }; }
+  blip(n, charged);
+  // accuracy shapes the pour: a tight, vivid, sparkly stream when close to pitch; a wide, dull scatter when not. The nozzle sweeps a little, which lays the note down as a layer.
+  pours.push({ kind: 'sand', t: MAT[n].kind, n, acc, charged, left: Math.round((130 + 140 * acc) * (charged ? 1.2 : 1) * K * K), x: colX(n), sweep: K * 10 + pileHeight(Math.round(colX(n))) * .7, phase: Math.random() * 6.28,
+    spread: K * (1.5 + (1 - acc) * (1 - acc) * 26), glit: MAT[n].kind === LIQ || acc < .6 ? 0 : (acc - .6) / .4 * .22, lvl: charged ? 2 : acc < .45 ? 0 : acc < .85 ? 1 : 2 });
+  if (perfect) {
+    if (++streak >= 3) { streak = 0; flash = 1; banner = { t: 0, text: '3 PERFECT!', sub: 'WATER BONUS' }; setTimeout(() => pours.push({ kind: 'water', left: Math.round(520 * K * K), n, x: GW / 2 }), 700); }
+  } else streak = 0;
+}
+
+// the pane turns over top to bottom, so the rows swap places and every column keeps its own left-right position
+function rotateGrid() {
+  for (let y = 0; y < GH >> 1; y++) for (let x = 0; x < GW; x++) {
+    const i = idx(x, y), j = idx(x, GH - 1 - y); let t = T[i]; T[i] = T[j]; T[j] = t; t = N[i]; N[i] = N[j]; N[j] = t; t = V[i]; V[i] = V[j]; V[j] = t; t = P[i]; P[i] = P[j]; P[j] = t;
+  }
+}
+
+$('keys').innerHTML = NAMES.map((n, i) => `<button data-n="${i}" title="${MAT[i].name}" style="background:${cssOf(i)}">${n}</button>`).join('');
+$('keys').onclick = e => { const b = e.target.closest('button'); if (b) startLock(+b.dataset.n, accVal(), null); };
+$('acc').oninput = () => { $('accv').textContent = $('acc').value; };
+$('real').onclick = e => { real = !real; e.currentTarget.classList.toggle('on', real); };
+$('auto').onclick = e => { auto = !auto; e.currentTarget.classList.toggle('on', auto); };
+$('snd').onclick = e => { soundOn = !soundOn; e.currentTarget.classList.toggle('on', soundOn); };
+$('mic').onclick = micToggle;
+$('clear').onclick = wipe;
+$('shelve').onclick = shelve;
+$('flip').onclick = () => { if (!flip) flip = { t: 0, done: false }; };
+$('shake').onclick = () => { shk = 1; };
+addEventListener('keydown', e => { if (e.repeat || e.ctrlKey || e.metaKey) return; const k = e.key.toLowerCase(), n = KEYMAP[k]; if (n != null) startLock(n, e.shiftKey ? .4 : accVal(), k); });
+addEventListener('keyup', e => { if (lock && lock.key === e.key.toLowerCase()) lock = null; });
+addEventListener('beforeunload', save);
+
+function update(dt) {
+  if (lock && (lock.t += dt * 1000) >= lock.ms) { const { n, acc: a } = lock; lock = null; spawn(n, a); }
+  micUpdate(dt);
+  if (auto && !lock && !flip && (autoT -= dt) <= 0) {      // demo player: now and then repeats a note so the charged state shows up
+    autoT = .35 + Math.random() * .9;
+    startLock(lastN != null && Math.random() < .4 ? lastN : (Math.random() * 12) | 0, Math.random() < .55 ? .92 + Math.random() * .08 : .1 + Math.random() * .75, null);
+  }
+  if (flip) { flip.t += dt / .9; if (flip.t >= .5 && !flip.done) { rotateGrid(); flip.done = true; fl = 1; dirty = true; } if (flip.t >= 1) flip = null; }
+  if (banner && (banner.t += dt) > 2) banner = null;
+  flash = Math.max(0, flash - dt * 1.6);
+  if (shk > 0) { shk = Math.max(0, shk - dt); dirty = true; }
+  if (fl > 0) { fl = Math.max(0, fl - dt / FLOAT_S); pfall = .1 + .9 * (1 - fl) * (1 - fl); }
+  if (pours.length || fl > 0 || flip) dirty = true;
+  acc += dt;
+  while (acc >= STEP) {
+    acc -= STEP;
+    if (flip && !flip.done) continue;                         // the sand holds still while the pane is mid-turn
+    for (let q = pours.length - 1; q >= 0; q--) {
+      const pour = pours[q], per = pour.kind === 'water' ? 12 : pour.t === LIQ ? 6 : 4;
+      if (pour.kind === 'sand') pour.phase += .05;
+      for (let k = 0; k < per && pour.left > 0; k++, pour.left--) {
+        if (pour.kind === 'water') {                                // rain only around the notes that were sung, the last one a bit more often
+          const m = sung.length ? (Math.random() < .3 ? sung[sung.length - 1] : sung[(Math.random() * sung.length) | 0]) : 5;
+          put(colX(m) + (Math.random() + Math.random() + Math.random() - 1.5) * 9 * K, (Math.random() * 4) | 0, WATER, 0);
+        } else {
+          const gl = Math.random() < pour.glit, far = Math.random() < (1 - pour.acc) * .3;       // a sloppy note also flings a few grains well outside its column
+          const dx = (Math.random() + Math.random() + Math.random() - 1.5) * pour.spread * (far ? 2.2 : 1) + Math.sin(pour.phase) * pour.sweep;
+          const lv = Math.max(0, Math.min(2, pour.lvl + (Math.random() < .12 ? (Math.random() < .5 ? -1 : 1) : 0)));
+          pour.nx = pour.x + Math.sin(pour.phase) * pour.sweep; put(pour.x + dx, (Math.random() * 4) | 0, gl ? GLIT : pour.t, pour.n, lv, pour.charged);
+        }
+      }
+      if (pour.left <= 0) pours.splice(q, 1);
+    }
+    step(tick++);
+  }
+  sandSound();
+}
+
+const bright = (c, k) => { const r = c & 255, g = (c >> 8) & 255, b = (c >> 16) & 255; return (255 << 24 | Math.round(b + (255 - b) * k) << 16 | Math.round(g + (255 - g) * k) << 8 | Math.round(r + (255 - r) * k)) >>> 0; };
+
+function render(now) {
+  // sand to the low-res grid; charged grains pulse at their note's rate and light a halo layer drawn over the screen
+  let sand = 0, all = 0; topOcc = 0; gpx.fill(0);
+  for (let y = 0; y < GH; y++) {
+    for (let x = 0; x < GW; x++) {
+      const i = idx(x, y), t = T[i];
+      if (!t) { px[i] = BGPX[i]; continue; }
+      all++; if (y === 0) topOcc++;
+      if (t === WATER) { const r = hash(x, y, now / 220 | 0) & 15; px[i] = r === 0 ? WATERC[1] : r < 6 ? WATERC[2] : WATERC[0]; continue; }   // shimmering at random, no pattern
+      sand++;
+      let c = t === GLIT ? ((hash(x, y, now / 160 | 0) & 7) === 0 ? pack([255, 255, 255]) : GLITC) : PAL[N[i]][V[i] & 15];
+      if (t === LIQ && (hash(x, y, now / 200 | 0) & 15) === 0) c = bright(c, .35);                                          // liquid glints
+      if (V[i] & GLOW) { const p = .5 + .5 * Math.sin(now / 1000 * Math.PI * 2 * PULSE(N[i]) + (x + y) * .03); gpx[i] = (((25 + 85 * p) | 0) << 24 | (c & 0xffffff)) >>> 0; c = bright(c, .06 + .16 * p); }
+      px[i] = c;
+    }
+  }
+  filled = all;
+  gx.putImageData(img, 0, 0); glx.putImageData(gimg, 0, 0);
+  for (const pour of pours) if (pour.kind === 'sand' && pour.nx != null) {                      // a funnel in the note's colour over the spot it is pouring into
+    const nx = Math.round(pour.nx); gx.fillStyle = INK; gx.fillRect(nx - 6, 0, 13, 1); gx.fillRect(nx - 5, 1, 11, 1); gx.fillRect(nx - 3, 2, 7, 1); gx.fillRect(nx - 1, 3, 3, 1);
+    gx.fillStyle = cssOf(pour.n); gx.fillRect(nx - 5, 0, 11, 1); gx.fillRect(nx - 4, 1, 9, 1); gx.fillRect(nx - 2, 2, 5, 1); gx.fillRect(nx, 3, 1, 1);
+  }
+  $('grains').textContent = sand;
+
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, Wd, Hd);
+  const ph = 1 - shk, jolt = shk > 0 ? Math.max(0, 1 - ph / .22) + Math.max(0, 1 - Math.abs(ph - .45) / .22) * (ph >= .45 ? 1 : 0) : 0;   // two jolts, pam pam
+  const jx = jolt ? Math.round((Math.random() < .5 ? -1 : 1) * 4 * jolt) : 0, jy = jolt ? Math.round((Math.random() - .5) * 3 * jolt) : 0;
+  const cx = OX + jx + PW * S / 2, cy = OY + jy + PH * S / 2, f = flip ? Math.cos(Math.min(1, flip.t) * Math.PI) : 1;   // 1 -> -1: the screen turns over
+  g.save(); g.translate(cx, cy); g.scale(S, S); g.translate(-PW / 2, -PH / 2);
+  // glass frame: ink outline, lit top edge, shaded underside
+  const fx = -FR, fy = -FR, fw = PW + FR * 2, fh = PH + FR * 2;
+  g.fillStyle = INK; g.beginPath(); g.roundRect(fx - 4, fy - 4, fw + 8, fh + 8, 16); g.fill();
+  g.fillStyle = '#2b2c31'; g.beginPath(); g.roundRect(fx, fy, fw, fh, 12); g.fill();
+  g.fillStyle = '#46474d'; g.fillRect(fx + 4, fy + 2, fw - 8, 3); g.fillStyle = '#141518'; g.fillRect(fx + 4, fy + fh - 5, fw - 8, 3);
+  for (const [sx, sy] of [[fx + 6, fy + 6], [fx + fw - 12, fy + 6], [fx + 6, fy + fh - 12], [fx + fw - 12, fy + fh - 12]]) { g.fillStyle = INK; g.fillRect(sx, sy, 6, 6); g.fillStyle = '#6a6b72'; g.fillRect(sx + 1, sy + 1, 2, 2); }   // sealing rivets
+  g.fillStyle = INK; g.fillRect(-3, -3, PW + 6, PH + 6);
+  // the glass over the screen: one soft vignette, one glare band, a shadow under the top rim. Smooth shapes only, so nothing repeats.
+  const veil = () => {
+    const vg = g.createRadialGradient(PW / 2, PH / 2, PH * .5, PW / 2, PH / 2, PW * .62); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.4)'); g.fillStyle = vg; g.fillRect(0, 0, PW, PH);
+    g.save(); g.beginPath(); g.rect(0, 0, PW, PH); g.clip(); g.fillStyle = 'rgba(255,255,255,.06)';
+    g.beginPath(); g.moveTo(110, 0); g.lineTo(230, 0); g.lineTo(90, PH); g.lineTo(-30, PH); g.fill(); g.restore();
+    const sh = g.createLinearGradient(0, 0, 0, 14); sh.addColorStop(0, 'rgba(0,0,0,.55)'); sh.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = sh; g.fillRect(0, 0, PW, 14);
+    if (flash) { g.fillStyle = `rgba(255,255,255,${flash * .5})`; g.fillRect(0, 0, PW, PH); }
+  };
+  if (flip) {                                                                     // only the screen turns over: the frame and the glass stay put
+    g.save(); g.beginPath(); g.rect(0, 0, PW, PH); g.clip(); g.translate(PW / 2, PH / 2); g.scale(1, f); g.translate(-PW / 2, -PH / 2);
+    g.imageSmoothingEnabled = false; g.drawImage(grid, 0, 0, PW, PH); g.restore(); veil();
+  }
+  g.restore();
+  if (!flip) {
+    // the screen at whole device pixels: cell size is an integer, the mesh is aligned to it
+    const x0 = Math.round((OX + jx) * dpr), y0 = Math.round((OY + jy) * dpr);
+    g.setTransform(1, 0, 0, 1, x0, y0); g.imageSmoothingEnabled = false;
+    g.drawImage(grid, 0, 0, GW * cellPx, GH * cellPx);
+    g.save(); g.globalCompositeOperation = 'lighter'; g.filter = `blur(${cellPx * 1.6}px)`; g.drawImage(glowCv, 0, 0, GW * cellPx, GH * cellPx); g.restore();   // the glow of charged sand
+    meshPat = meshPat || makeMesh(); g.fillStyle = meshPat; g.fillRect(0, 0, GW * cellPx, GH * cellPx);
+    const k = cellPx / CELL; g.scale(k, k); veil(); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // under the pane: what was last played (or heard), the same-note counter, the lock-in meter, the fill level and the perfect-streak lights
+  g.save(); g.translate(OX - FR * S, OY + (PH + FR + 14) * S); g.scale(S, S);
+  const L = mlock || lock, det = mic.on ? mic.det : null;
+  const label = L ? `LOCKING ${NAMES[L.n]}` : det ? `${NAMES[det.n]}${det.oct} ${det.cents >= 0 ? '+' : ''}${Math.round(det.cents)}C` : lastN != null ? `${NAMES[lastN]} ${MAT[lastN].name}` : mic.on ? 'SING A NOTE' : 'PLAY A NOTE';
+  const txt = (s, x, y, px, c, al = 'left') => { g.font = `700 ${px}px Silkscreen, monospace`; g.textAlign = al; g.fillStyle = c; g.fillText(s, Math.round(x), Math.round(y)); };
+  txt(label, FR, 8, 9, L ? cssOf(L.n) : det ? cssOf(det.n) : lastN != null ? cssOf(lastN) : '#8f9096');
+  if (L) {
+    const mw = PW - 190, cells = 40, fill = Math.floor(L.t / L.ms * cells);
+    g.fillStyle = INK; g.fillRect(FR - 2, 14, mw + 4, 16); g.fillStyle = '#141518'; g.fillRect(FR, 16, mw, 12);
+    for (let i = 0; i < cells; i++) { g.fillStyle = i < fill ? cssOf(L.n) : '#26272c'; g.fillRect(Math.round(FR + 2 + i * (mw - 4) / cells), 18, Math.round((mw - 4) / cells) - 2, 8); }
+  } else {
+    const on = lastN == null ? 0 : (rep - 1) % 3 + 1;
+    for (let i = 0; i < 3; i++) { const x = FR + i * 34; g.fillStyle = INK; g.fillRect(x - 2, 14, 30, 16); g.fillStyle = i < on ? '#5fe0ff' : '#26272c'; g.fillRect(x, 16, 26, 12); if (i < on) { g.fillStyle = '#d6f6ff'; g.fillRect(x, 16, 26, 3); } }
+    txt('SAME NOTE X3 = CHARGED', FR + 112, 26, 9, '#8f9096');
+  }
+  const pct = Math.round(filled / CAP * 100);
+  txt(`FILL ${pct}%`, PW / 2 + FR, 8, 9, isFull() ? '#ff6a4a' : filled / CAP > .85 ? '#ffb347' : '#8f9096', 'center');
+  g.fillStyle = INK; g.fillRect(PW / 2 - 60 + FR, 14, 120, 8); g.fillStyle = '#141518'; g.fillRect(PW / 2 - 58 + FR, 16, 116, 4); g.fillStyle = isFull() ? '#ff6a4a' : '#e0b43a'; g.fillRect(PW / 2 - 58 + FR, 16, Math.min(116, 116 * filled / CAP), 4);
+  txt('PERFECT STREAK', PW + FR, 8, 9, '#8f9096', 'right');
+  for (let i = 0; i < 3; i++) { const x = PW + FR - 94 + i * 34, on = i < streak; g.fillStyle = INK; g.fillRect(x - 2, 14, 30, 16); g.fillStyle = on ? '#ffd24a' : '#26272c'; g.fillRect(x, 16, 26, 12); if (on) { g.fillStyle = '#fff3b0'; g.fillRect(x, 16, 26, 3); } }
+  g.restore();
+
+  if (banner) {                                                                   // announcements stay inside the screen
+    const a = banner.t > 1.5 ? 1 - (banner.t - 1.5) / .5 : 1, k = .6 + .4 * Math.min(1, banner.t / .2);
+    g.save(); g.translate(OX, OY); g.scale(S, S); g.beginPath(); g.rect(0, 0, PW, PH); g.clip();
+    g.globalAlpha = Math.max(0, a); g.translate(PW / 2, 70 - banner.t * 6); g.scale(k, k); g.textAlign = 'center';
+    g.font = '700 26px Silkscreen, monospace'; g.fillStyle = INK; g.fillText(banner.text, 2, 2); g.fillStyle = banner.warn ? '#ff6a4a' : banner.cyan ? '#5fe0ff' : `hsl(${(now / 4) % 360} 95% 65%)`; g.fillText(banner.text, 0, 0);
+    g.font = '700 11px Silkscreen, monospace'; g.fillStyle = INK; g.fillText(banner.sub, 1, 25); g.fillStyle = '#9fd8ff'; g.fillText(banner.sub, 0, 24); g.restore();
+  }
+}
+
+let last = performance.now();
+function frame(now) { update(Math.min(.05, (now - last) / 1000)); last = now; render(now); requestAnimationFrame(frame); }
+load(); shelfDraw();
+setInterval(() => { if (dirty && !pours.length && !(fl > 0) && !flip) { save(); dirty = false; } }, 2500);
+document.fonts.load('700 12px Silkscreen').finally(() => requestAnimationFrame(frame));
+})();
+</script>
+</body>
+</html>

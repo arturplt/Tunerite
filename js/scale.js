@@ -31,19 +31,37 @@ const Scale = {
   degrees() { const c = this.cfg(), p = this.pcs(); if (!p || c.chord === 'off') return null; const root = 60 + c.key, out = []; for (let m = root; m < root + 12; m++) if (p.has(m % 12)) out.push(this.nameOf(this.chordFor(m))); return out; },
   set(k, v) { this.cfg()[k] = v; Store.save(); this.paint(); if (k === 'scale' || k === 'key' || k === 'chord') { if (typeof Midi !== 'undefined' && Midi.panic) Midi.panic(); } },
   step(k, list, d) { const c = this.cfg(), i = list.findIndex(x => x[0] === c[k]); this.set(k, list[(i + d + list.length) % list.length][0]); },
+  menu: null,
+  /* Key, Scale and Chords are caps under the screen; each opens its list on the LCD, in place of the spectrogram, and the same cap (or the close key) puts the spectrogram back. */
   mount() {
     const host = $('#pnKey'); if (!host) return;
-    const pair = (id, lab) => `<div class="synlcd"><button class="synbtn pkPP" type="button" data-a="${id}-1" aria-label="Previous ${lab}" title="Previous ${lab}">◀</button><div class="lcd"><small>${lab.toUpperCase()}</small><b id="pk${id}"></b></div><button class="synbtn pkPN" type="button" data-a="${id}1" aria-label="Next ${lab}" title="Next ${lab}">▶</button></div>`;
-    host.innerHTML = `<div class="synlcdrow keyrow">${pair('key', 'Key')}${pair('scale', 'Scale')}${pair('chord', 'Chords')}<div class="tgcell pklock"><button class="synbtn pntgl sq" id="pkLock" type="button" aria-pressed="true" aria-label="Lock" title="Lock: the keys outside the scale make no sound. Off, they are only greyed out."><i class="kylamp"></i></button><b>Lock</b></div></div><div class="lcd keychords" id="pkDeg" hidden></div>`;
-    host.addEventListener('click', e => {
-      const b = e.target.closest('[data-a]'); if (!b) return; const [id, d] = [b.dataset.a.replace(/-?1$/, ''), b.dataset.a.endsWith('-1') ? -1 : 1];
-      if (id === 'key') this.set('key', (this.cfg().key + d + 12) % 12); else this.step(id, id === 'scale' ? this.SCALES : this.CHORDS, d);
-    });
+    const cap = (m, lab) => `<button class="synbtn kycap" type="button" data-m="${m}" aria-pressed="false" title="Choose the ${lab.toLowerCase()} on the screen">${lab}</button>`;
+    host.innerHTML = `<div class="keycaps">${cap('key', 'Key')}${cap('scale', 'Scale')}${cap('chord', 'Chords')}<button class="synbtn kycap" id="pkLock" type="button" aria-pressed="true" aria-label="Lock" title="Lock: the keys outside the scale make no sound. Off, they are only greyed out.">Lock</button></div>`;
+    const glass = $('.synglass'), spec = $('.synpane[data-p="spec"]');
+    const pane = document.createElement('div'); pane.className = 'synpane lcdlist'; pane.dataset.p = 'scale'; pane.hidden = true;
+    pane.innerHTML = '<div class="pkhead"><b id="pkTitle"></b><button class="synbtn" id="pkClose" type="button" aria-label="Close" title="Back to the spectrogram">✕</button></div><div id="pkRows" class="lcdrows"></div><div class="lcd keychords" id="pkDeg" hidden></div>';
+    glass.insertBefore(pane, glass.querySelector('.synkeys'));
+    const hud = document.createElement('div'); hud.className = 'pnkeyhud'; hud.id = 'pkHud'; hud.hidden = true; if (spec) spec.appendChild(hud);
+    host.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (b) this.open(b.dataset.m); });
+    $('#pkClose').onclick = () => this.open(null);
+    $$('.syntabs button').forEach(b => b.addEventListener('click', () => { this.menu = null; this.paint(); }));
     $('#pkLock').onclick = () => this.set('lock', !this.cfg().lock); this.paint();
+  },
+  open(m) {
+    this.menu = m === this.menu ? null : m; if (typeof Synth !== 'undefined') Synth.show(this.menu ? 'scale' : 'spec'); this.rows(); this.paint();
+  },
+  rows() {
+    const box = $('#pkRows'); if (!box || !this.menu) return; const c = this.cfg(), m = this.menu; box.textContent = ''; box.className = m === 'key' ? 'lcdrows' : 'lcdrows';
+    $('#pkTitle').textContent = { key: 'Key', scale: 'Scale', chord: 'Chords' }[m];
+    const mk = (text, on, click, parent) => { const r = document.createElement('div'); r.className = 'lcdrow' + (on ? ' on' : ''); r.setAttribute('role', 'option'); r.innerHTML = '<span></span>'; r.firstChild.textContent = text; r.onclick = click; parent.appendChild(r); };
+    if (m === 'key') { const g = document.createElement('div'); g.className = 'pkgrid'; NOTE_NAMES.forEach((n, i) => mk(n, c.key === i, () => { this.set('key', i); this.rows(); }, g)); box.appendChild(g); }
+    else (m === 'scale' ? this.SCALES : this.CHORDS).forEach(x => mk(x[1], c[m] === x[0], () => { this.set(m, x[0]); this.rows(); }, box));
   },
   paint() {
     const c = this.cfg(), set = (id, t) => { const el = $(id); if (el && el.textContent !== t) el.textContent = t; };
-    set('#pkkey', NOTE_NAMES[c.key]); set('#pkscale', this.SCALES.find(x => x[0] === c.scale)[1]); set('#pkchord', this.CHORDS.find(x => x[0] === c.chord)[1]);
+    
+    const hud = $('#pkHud'); if (hud) { const parts = []; if (c.scale !== 'off') parts.push(NOTE_NAMES[c.key] + ' ' + this.SCALES.find(x => x[0] === c.scale)[1]); else if (c.key) parts.push('Key ' + NOTE_NAMES[c.key]); if (c.chord !== 'off') parts.push(this.CHORDS.find(x => x[0] === c.chord)[1]); hud.hidden = !parts.length; hud.textContent = parts.join(' · '); }
+    $$('#pnKey [data-m]').forEach(b => b.setAttribute('aria-pressed', this.menu === b.dataset.m && typeof Synth !== 'undefined' && Synth.tab === 'scale'));
     const lk = $('#pkLock'); if (lk) { lk.setAttribute('aria-pressed', !!c.lock); lk.disabled = c.scale === 'off'; }
     const dg = this.degrees(), el = $('#pkDeg'); if (el) { el.hidden = !dg; if (dg) { el.textContent = ''; dg.forEach(n => { const s = document.createElement('span'); s.textContent = n; el.appendChild(s); }); } }
   }

@@ -1,0 +1,80 @@
+/* ---- Progress: the same plastic device as Settings (case, rail, LCDs), with LED charts and LCD lists. Colours come from the --tn-* theme variables. js/ui.js fills it. ---- */
+#s-progress{--wall:var(--tn-wall,var(--bg));--ink:var(--tn-edge,#0a0a0c);--print:var(--tn-printh,#cfc8b8);--print-lo:var(--tn-print,#8f9096);
+  --body:var(--tn-p1,#2b2c31);--body-lo:var(--tn-p3,#141518);--body-hi:color-mix(in srgb,var(--body) 86%,#fff);--lip:color-mix(in srgb,var(--ink) 60%,var(--body-lo));--wall-sh:color-mix(in srgb,var(--wall) 55%,#000);
+  --clay:var(--tn-hot,var(--tn-fg,#ffb347));--teal:var(--tn-key1,#3a3b40);--teal-lo:var(--tn-key2,#2a2b2f);--teal-hi:var(--tn-key1h,#44454b);
+  --glass:var(--tn-lcd2,#0e0905);--inset:#000;--groove:color-mix(in srgb,var(--tn-lcd2,#0e0905) 70%,var(--body));
+  --lcd-bg:var(--tn-lcd,#1a120a);--lcd-fg:var(--tn-fg,#ffb347);--lcd-lab:var(--tn-lab,#c98a3a);--lcd-glow:var(--tn-glow,rgba(255,170,50,.6));
+  --lamp-r0:var(--tn-red0,#2a1a16);--lamp-g:var(--tn-grn,#7ee05a);--lamp-r:var(--tn-red,#ff5a36);
+  font-family:"Silkscreen",ui-monospace,monospace;color:var(--print)}
+#s-progress.screen{padding:0.4rem 0.4rem 0}
+#s-progress .setcase{max-width:80rem;border:4px solid var(--ink);border-radius:24px;padding:0.7rem 1rem 1rem;gap:0.6rem;
+  background:var(--body);
+  box-shadow:inset 0 10px 0 var(--body-hi),inset 0 -16px 0 var(--body-lo),0 12px 0 var(--ink),0 14px 0 var(--lip),0 30px 0 var(--wall-sh);margin-bottom:32px}
+#s-progress .sethead{background:none;box-shadow:none;padding:0.2rem 0.6rem 0;gap:0.6rem 0.9rem}
+#s-progress .setbody{display:grid;grid-template-columns:15rem minmax(0,1fr);gap:1rem;align-items:start}
+#s-progress .setrail{background:var(--body-lo);border:3px solid var(--ink);border-radius:12px;padding:0.7rem 0.7rem 0.8rem;box-shadow:inset 0 5px 0 var(--lip),0 3px 0 var(--body-hi);display:flex;flex-direction:column;gap:0.25rem}
+#s-progress .setrail h4{margin:0 0 0.5rem 0.2rem;font:400 0.75rem "Silkscreen",monospace;letter-spacing:.25em;text-transform:uppercase;color:var(--print-lo)}
+#s-progress .secbtn{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:0.75rem;min-height:2.9rem;padding:0.3rem 0.6rem;background:none;border:3px solid transparent;border-radius:8px;cursor:pointer;color:var(--print-lo);font:400 0.8rem "Silkscreen",monospace;letter-spacing:.18em;text-transform:uppercase;text-align:left}
+#s-progress .secbtn svg{width:1.35rem;height:1.35rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#s-progress .secbtn .lamp{margin-left:auto;width:14px;height:14px;border-radius:50%;border:3px solid var(--ink);background:var(--lamp-r0);box-shadow:inset 0 3px 0 rgba(0,0,0,.35)}
+#s-progress .secbtn[aria-pressed="true"]{color:var(--clay);background:var(--glass);border-color:var(--ink);box-shadow:inset 0 5px 0 var(--inset)}
+#s-progress .secbtn[aria-pressed="true"] .lamp{background:var(--lamp-r);box-shadow:0 0 10px var(--lamp-r)}
+#s-progress .secbtn:focus-visible{outline:3px solid var(--clay);outline-offset:2px}
+#s-progress .splabel{top:0.8rem;left:1.1rem;font:400 0.75rem "Silkscreen",monospace;letter-spacing:.25em;color:var(--print-lo)}
+#s-progress .slcd{background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;box-shadow:inset 0 4px 0 var(--inset);padding:4px 12px 5px}
+#s-progress .slcd small{color:var(--lcd-lab);font-size:11px;line-height:1.4;letter-spacing:2px;text-shadow:none}
+#s-progress .slcd b{color:var(--lcd-fg);font-size:16px;line-height:1.4;letter-spacing:2px;margin-top:2px;text-shadow:-1px 0 rgba(255,50,50,.5),1px 0 rgba(60,170,255,.4),0 0 6px var(--lcd-glow)}
+#s-progress .slcd.one{padding-top:5px;padding-bottom:5px}
+#s-progress .sethead{flex-wrap:wrap;gap:0.3rem 0.6rem;padding:0.1rem 0.2rem 0}
+#s-progress .sethead .slcd{padding:2px 9px 3px;border-width:2px;border-radius:6px}
+#s-progress .sethead .slcd small{font-size:9px;line-height:1.2}#s-progress .sethead .slcd b{font-size:13px;line-height:1.2;margin-top:0}
+#s-progress .setrail{padding:0.5rem}#s-progress .secbtn{min-height:2.4rem;font-size:0.7rem;letter-spacing:.12em;gap:0.55rem}#s-progress{--lcd-off:color-mix(in srgb,var(--lcd-lab) 9%,var(--glass));--lcd-dim:color-mix(in srgb,var(--lcd-lab) 40%,var(--lcd-bg));--blue:#4a9cff;--sun:var(--clay)}
+#s-progress .setgrid>.ppanel{display:none}
+#s-progress[data-sec="ov"] .ppanel[data-sec="ov"],#s-progress[data-sec="sing"] .ppanel[data-sec="sing"],#s-progress[data-sec="pia"] .ppanel[data-sec="pia"],
+#s-progress[data-sec="crs"] .ppanel[data-sec="crs"],#s-progress[data-sec="ear"] .ppanel[data-sec="ear"]{display:flex}
+#s-progress .ppanel{position:relative;flex-direction:column;gap:0.5rem;background:var(--body-lo);border:3px solid var(--ink);border-radius:12px;padding:2.2rem 1rem 1rem;
+  box-shadow:inset 0 5px 0 var(--lip),0 3px 0 var(--body-hi);min-width:0}
+#s-progress .splabel{position:absolute;margin:0}
+#s-progress .phd{display:flex;align-items:center;margin:0.3rem 0 0;font:400 0.7rem "Silkscreen",monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--print-lo)}
+#s-progress .phd em{font-style:normal;margin-left:auto;font-size:0.6rem;letter-spacing:.15em;color:var(--lcd-lab)}
+#s-progress .pcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.6rem}#s-progress .pcols.two{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:1rem}
+#s-progress .pstat{min-width:0}#s-progress .pstat b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+#s-progress .pglass{position:relative;overflow:hidden;background:var(--glass);border:3px solid var(--ink);border-radius:12px;box-shadow:inset 0 6px 0 var(--inset),0 3px 0 var(--body-hi)}
+#s-progress .pglass::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px)}
+/* LED bar chart */
+#s-progress .pchart{position:relative;display:flex;align-items:flex-end;gap:4px;height:6.4rem;padding:6px 10px}
+#s-progress .pchart .col{flex:1;display:flex;flex-direction:column-reverse;gap:2px;height:100%;min-width:0}
+#s-progress .pchart i{flex:1;min-height:3px;background:var(--lcd-off);border:1px solid var(--ink)}
+#s-progress .pchart i.g{background:var(--lamp-g);box-shadow:0 0 5px var(--lamp-g)}#s-progress .pchart i.y{background:var(--clay);box-shadow:0 0 5px var(--clay)}#s-progress .pchart i.r{background:var(--lamp-r);box-shadow:0 0 5px var(--lamp-r)}
+#s-progress .pchart .now i.g,#s-progress .pchart .now i.y,#s-progress .pchart .now i.r{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+#s-progress .pchart .gl{position:absolute;left:10px;right:10px;border-top:2px dashed var(--lcd-dim);z-index:1;pointer-events:none}
+#s-progress .pchart .gl span{position:absolute;right:0;top:-13px;font:400 9px "Silkscreen",monospace;letter-spacing:2px;color:var(--lcd-lab)}
+#s-progress .pchart .none{margin:auto;font:400 0.7rem "Silkscreen",monospace;letter-spacing:.1em;color:var(--lcd-lab)}
+/* practice calendar */
+#s-progress .pcal{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:8px 10px}
+#s-progress .pcal i{height:1.15rem;background:var(--lcd-off);border:1px solid var(--ink)}
+#s-progress .pcal i.l1{background:var(--lcd-bg)}#s-progress .pcal i.l2{background:var(--lcd-dim)}#s-progress .pcal i.l3{background:var(--lcd-lab)}#s-progress .pcal i.l4{background:var(--lcd-fg);box-shadow:0 0 6px var(--lcd-glow)}#s-progress .pcal i.t{outline:2px solid var(--blue)}
+/* ear levels */
+#s-progress .plvl{display:grid;grid-template-columns:repeat(auto-fill,minmax(3.2rem,1fr));gap:6px;padding:8px 10px}
+#s-progress .plvl div{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 0;border:2px solid var(--ink);border-radius:6px;background:var(--lcd-off);color:var(--print-lo);font:400 0.75rem/1.2 "Silkscreen",monospace}
+#s-progress .plvl small{font-size:9px;letter-spacing:1px;color:var(--lcd-dim)}
+#s-progress .plvl .p{background:var(--lcd-bg);color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow)}#s-progress .plvl .p small{color:var(--lcd-fg)}
+#s-progress .plvl .cur{border-color:var(--blue);color:var(--blue);box-shadow:0 0 8px color-mix(in srgb,var(--blue) 40%,transparent)}
+/* lists: the app's .stat rows and issue cards, shown as LCD lines */
+#s-progress .stat,#s-progress #pIssues .card{display:flex;align-items:center;gap:0.6rem;margin:0 0 5px;padding:4px 10px;border:3px solid var(--ink);border-radius:8px;background:var(--lcd-bg);box-shadow:inset 0 4px 0 var(--inset);
+  font:400 0.72rem/1.4 "Silkscreen",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--lcd-lab)}
+#s-progress .stat>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow)}
+#s-progress .stat>b{flex:none;font-weight:400;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow)}
+#s-progress .stat .btn{min-height:1.7rem;padding:0 0.6rem;font:400 0.7rem "Silkscreen",monospace;color:var(--print);background:var(--teal);border:2px solid var(--ink);border-radius:6px}
+#s-progress #pIssues .card{flex-wrap:wrap;gap:0 0.6rem}#s-progress #pIssues .card .best{order:2;margin-left:auto;color:var(--lamp-r);font-size:0.65rem}#s-progress #pIssues .card .t{color:var(--lcd-fg);flex:1 1 60%}#s-progress #pIssues .card .small{flex:1 1 100%;font-size:0.6rem;color:var(--lcd-lab)}
+#s-progress .muted{font:400 0.68rem/1.45 "Silkscreen",monospace;letter-spacing:.06em;color:var(--print-lo);margin:0.2rem 0}
+#s-progress .pcrs .stars{letter-spacing:2px;color:var(--lcd-dim)}
+#s-progress .pbar{display:flex;gap:2px;height:0.8rem;flex:0 0 12rem}#s-progress .pbar i{flex:1;background:var(--lcd-off);border:1px solid var(--ink)}#s-progress .pbar i.on{background:var(--clay);box-shadow:0 0 5px var(--clay)}
+@media (max-width:760px){
+  #s-progress .setcase{padding:0.9rem 0.8rem 1.1rem;border-radius:26px}
+  #s-progress .setbody{grid-template-columns:minmax(0,1fr);gap:1rem}
+  #s-progress .setrail{flex-direction:row;flex-wrap:wrap}#s-progress .setrail h4{width:100%}
+  #s-progress .secbtn{flex:1 1 44%;font-size:0.6rem;letter-spacing:.04em;gap:0.45rem;padding:0.3rem 0.4rem}#s-progress .secbtn .lamp{display:none}
+  #s-progress .pcols,#s-progress .pcols.two{grid-template-columns:minmax(0,1fr)}#s-progress .pstat b{font-size:16px}
+  #s-progress .pcal i{height:0.7rem}
+}

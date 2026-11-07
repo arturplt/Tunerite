@@ -124,7 +124,7 @@ T.test('practice: Sing, Piano and Whistle, Exercises and Library', () => {
   const st = Store.data.settings; UI.show('train');
   st.trainMode = 'sing'; st.inst = 'voice'; st.prView = 'ex'; UI.refresh();
   T.eq($('#trSing').hidden, false); T.eq($('#trPiano').hidden, true); T.eq($('#trSingT').textContent, 'Singing');
-  st.inst = 'whistle'; UI.refresh(); T.eq($('#trSingT').textContent, 'Whistling'); T.ok($$('#trMode button').find(b => b.dataset.m === 'whistle').classList.contains('on'));
+  st.inst = 'whistle'; UI.refresh(); T.eq($('#trSingT').textContent, 'Whistling'); T.eq(PDev.mode(), 'whistle', 'the device shows the whistle source');
   st.trainMode = 'piano'; UI.refresh(); T.eq($('#trPiano').hidden, false); T.eq($('#trSing').hidden, true); T.eq(Lib.f.kind, 'piano');
   st.trainMode = 'sing'; st.prView = 'lib'; UI.refresh(); T.eq($('#trLib').hidden, false); T.eq($('#trEx').hidden, true); T.eq(Lib.f.kind, 'sing'); T.ok($$('#libList .card').length > 0, 'the library lists exercises');
   st.prView = 'ex'; UI.show('tuner');
@@ -434,8 +434,7 @@ T.test('ear training: every level makes valid questions, stars and unlocking fol
 T.test('ear training: the Ear mode lists the course, a drill scores, and passing opens the next level', async () => {
   await audio(); const st = Store.data.settings, keep = { m: st.trainMode, e: JSON.stringify(Store.data.ear), l: JSON.stringify(Store.data.earLog) }; Store.data.ear = { levels: {} }; Store.data.earLog = [];
   try {
-    st.trainMode = 'ear'; UI.show('train'); UI.refresh(); T.ok(!$('#trEar').hidden && $('#trEx').hidden, 'the Ear zone replaces the exercises'); T.eq($$('#earMap .earlvl').length, EAR.LEVELS.length, 'a row for every level');
-    T.eq($$('#earMap .earlvl:not(.locked)').length, 1, 'only the first level is open');
+    st.trainMode = 'ear'; UI.show('train'); UI.refresh(); T.ok(!$('#trDevice').hidden && $('#trEx').hidden, 'the Practice device replaces the exercises'); { const a = PDev.api('ear'); T.eq(a.levels.length, EAR.LEVELS.length, 'every level is on the map'); T.eq(a.levels.filter(l => a.unlocked(l.id)).length, 1, 'only the first level is open'); }
     Ear.open('u1l1'); T.ok($('#o-ear').classList.contains('on'), 'the drill opens'); T.eq($$('#earOpts .earopt').length, 2);
     for (let i = 0; i < 10; i++) { T.ok(!Ear.locked, 'ready for question ' + (i + 1)); const right = Ear.q.answer, b = $('#earOpts [data-id="' + right + '"]'); b.click(); T.ok(b.classList.contains('ok'), 'the right answer lights up'); Ear.advance(); }
     T.ok(!$('#earRes').hidden, 'results show'); const rec = Store.data.ear.levels.u1l1; T.ok(rec && rec.stars === 3 && rec.best === 1, 'ten right earn three stars: ' + JSON.stringify(rec)); T.ok(EAR.unlocked(Ear.prog(), 'u1l2'), 'the next level is open'); T.eq(Store.data.earLog.length, 1, 'the session is logged for the streak');
@@ -504,7 +503,7 @@ T.test('courses: the Course view lists the levels, a piano level scores and pass
   try {
     for (const [mode, inst] of [['sing', 'voice'], ['whistle', 'whistle'], ['piano', 'voice']]) {
       st.trainMode = mode === 'piano' ? 'piano' : 'sing'; st.inst = inst; st.prView = 'course'; UI.show('train'); UI.refresh();
-      T.ok(!$('#trCourse').hidden && $('#trEx').hidden, mode + ': the course replaces the exercise list'); T.eq($$('#courseMap .earlvl').length, COURSE.LEVELS[mode].length, mode + ': a row for every level'); T.eq($$('#courseMap .earlvl:not(.locked)').length, 1, mode + ': only the first level is open');
+      T.ok(!$('#trDevice').hidden && $('#trEx').hidden, mode + ': the device replaces the exercise list'); { const a = PDev.api(mode); T.eq(PDev.mode(), mode, mode + ': the device shows this source'); T.eq(a.levels.length, COURSE.LEVELS[mode].length, mode + ': every level is on the map'); T.eq(a.levels.filter(l => a.unlocked(l.id)).length, 1, mode + ': only the first level is open'); T.eq(PDev.current(a).id, COURSE.LEVELS[mode][0].id, mode + ': the first level is picked'); }
     }
     const lv = COURSE.LEVELS.piano[0]; Course.start('piano', lv.id); T.ok(PX.on && PX.course && PX.course.id === lv.id, 'the piano level opens');
     while (!PX.finished) { const s = PX.step(); PX.good(); if (PX.advanceAt) PX.advance(); } 
@@ -516,6 +515,81 @@ T.test('courses: the Course view lists the levels, a piano level scores and pass
     Course.sessionDone(fake); T.eq(Store.data.course.sing[sl.id].stars, 2, 'a score of 88 earns two stars'); T.eq(fake.course.next, COURSE.LEVELS.sing[1].id, 'and offers the next level'); T.ok(!$('#rCourse').hidden && !$('#rNext').hidden, 'the result shows the course line');
     Course.sessionDone({ course: { kind: 'sing', id: COURSE.LEVELS.sing[1].id }, practice: true, result: { agg: { score: 99 } } }); T.ok(!Store.data.course.sing[COURSE.LEVELS.sing[1].id], 'a practice run is not saved'); T.ok($('#rCourse').hidden, 'and shows no course line');
   } finally { Engine.click = keep.click; PX.hear = keep.hear; PX.on && PX.close(); Store.data.course = JSON.parse(keep.c || 'null') || undefined; st.trainMode = keep.m; st.prView = keep.v; UI.show('tuner'); }
+});
+
+T.test('practice device: the map follows the course, the source keys switch kinds, PREV and NEXT pick levels, START opens the picked level', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, v: st.prView, i: st.inst, c: JSON.stringify(Store.data.course), e: JSON.stringify(Store.data.ear), sel: PDev.sel, up: PDev.unitPick, click: Engine.click, hear: PX.hear };
+  Store.data.course = {}; Store.data.ear = { levels: {} }; PDev.sel = {}; PDev.unitPick = {}; Engine.click = () => {}; PX.hear = () => {};
+  try {
+    st.trainMode = 'piano'; st.prView = 'course'; UI.show('train'); UI.refresh(); T.ok(!$('#trDevice').hidden && !$('#trMode') && !$('#prView'), 'the device replaces the old source and view buttons'); PDev.ts = 1000; PDev.draw();
+    T.ok(PDev.hits.length >= 4, 'the map has levels and a START button to press'); T.eq($('#pdStars').textContent, '★ 0', 'no stars yet');
+    const a = PDev.api('piano'); T.eq(PDev.current(a).id, COURSE.LEVELS.piano[0].id, 'the next level to play is picked');
+    PDev.move(1); T.eq(PDev.current(a).id, COURSE.LEVELS.piano[1].id, 'NEXT picks the next level'); PDev.start(); T.ok(!PX.on, 'a locked level does not open'); PDev.move(-1); PDev.move(-1); T.eq(PDev.current(a).id, COURSE.LEVELS.piano[0].id, 'PREV stops at the first level');
+    PDev.start(); T.ok(PX.on && PX.course && PX.course.id === COURSE.LEVELS.piano[0].id, 'START opens the picked level'); PX.close();
+    T.ok(!$('#pdEx'), 'there is no Exercises key'); T.ok(!document.querySelector('#trDevice .more'), 'there is no MORE panel'); T.ok($('#pdSrc').contains($('#pdRange')), 'RANGE sits with the sound source');
+    $('#pdLib').click(); T.eq(st.prView, 'lib'); T.ok(!$('#trLib').hidden && $('#trEx').hidden && $$('#libList .card').length > 0, 'the Library shows inside the screen'); $('#pdLib').click(); T.eq(st.prView, 'course', 'pressing the key again goes back'); T.ok($('#pdPane').hidden, 'the screen shows the map again');
+    $('#pdLib').click(); $('#pdMap').click(); T.eq(st.prView, 'course', 'MAP goes back to the level map'); T.ok($('#pdPane').hidden);
+    $('#pdLabels button[data-m="ear"]').click(); T.eq(st.trainMode, 'ear', 'the Ear key switches to Ear'); T.eq(PDev.mode(), 'ear'); T.ok(!$('#trDevice').hidden, 'Ear shows the device even in the exercise view'); PDev.draw();
+    $('#pdLabels button[data-m="whistle"]').click(); T.eq(PDev.mode(), 'whistle', 'the Whistle key switches the voice to whistling'); T.eq(st.inst, 'whistle');
+    $('#pdLabels button[data-m="sing"]').click(); T.eq(PDev.mode(), 'sing'); T.eq(st.inst, 'voice'); PDev.draw();
+  } finally { Engine.click = keep.click; PX.hear = keep.hear; PX.on && PX.close(); Store.data.course = JSON.parse(keep.c || 'null') || undefined; Store.data.ear = JSON.parse(keep.e || 'null') || undefined; PDev.sel = keep.sel; PDev.unitPick = keep.up; st.trainMode = keep.m; st.prView = keep.v; st.inst = keep.i; UI.show('tuner'); }
+});
+T.test('practice device: a finished course level shows its result on the device; REPEAT, NEXT LEVEL and MAP work', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, v: st.prView, i: st.inst, c: JSON.stringify(Store.data.course), e: JSON.stringify(Store.data.ear), l: JSON.stringify(Store.data.earLog), click: Engine.click, hear: PX.hear };
+  Store.data.course = {}; Store.data.ear = { levels: {} }; Store.data.earLog = []; Engine.click = () => {}; PX.hear = () => {};
+  const shown = () => { PDev.draw(); PDev.res.t = PDev.ts - 9000; PDev.draw(); };
+  try {
+    st.trainMode = 'piano'; st.prView = 'course'; UI.show('train'); UI.refresh(); const lv = COURSE.LEVELS.piano[0];
+    Course.start('piano', lv.id); while (!PX.finished) { PX.step(); PX.good(); if (PX.advanceAt) PX.advance(); }
+    T.eq(PDev.state, 'result', 'the device shows the result'); T.ok(!PX.on, 'the piano screen closed'); T.eq(PDev.res.r.stars, 3); T.eq(PDev.res.rank, 'S', 'a clean run is rank S'); T.ok(PDev.res.strip.length > 0 && PDev.res.strip.every(v => v === 1), 'every step was right first time');
+    T.ok(!$('#trDevice').hidden && $('#tr-sess').hidden && $('#tr-res').hidden, 'the device is on screen'); shown(); T.ok(PDev.hits.length >= 2, 'REPEAT and NEXT LEVEL can be pressed'); T.eq($('#pdGoLbl').textContent, 'NEXT LEVEL');
+    $('#pdGo').click(); T.ok(PX.on && PX.course && PX.course.id === COURSE.LEVELS.piano[1].id, 'the big key opens the next level'); PX.close();
+    Course.start('piano', lv.id); PX.skip(); while (!PX.finished) PX.skip(); T.eq(PDev.res.r.stars, 0); T.eq(PDev.res.rank, 'D'); shown(); T.eq($('#pdGoLbl').textContent, 'REPEAT', 'a failed level offers REPEAT');
+    $('#pdGo').click(); T.ok(PX.on && PX.course.id === lv.id, 'REPEAT opens the same level'); PX.close();
+    $('#pdMap').click(); T.eq(PDev.state, 'map', 'MAP leaves the result');
+    st.trainMode = 'sing'; st.inst = 'voice'; UI.show('train'); const sl = COURSE.LEVELS.sing[0];
+    Course.sessionDone({ course: { kind: 'sing', id: sl.id }, practice: false, result: { agg: { score: 88, acc: 0.9, sd: 12 }, per: [{ accuracy: 0.9 }, { accuracy: 0.5 }] } });
+    T.eq(PDev.state, 'result'); T.eq(PDev.res.kind, 'sing'); T.eq(PDev.res.r.stars, 2); T.eq(PDev.res.strip.length, 2, 'a bar for every note'); T.ok(typeof PDev.res.details === 'function', 'the full results stay one key away'); shown(); $('#pdMap').click();
+    st.trainMode = 'ear'; UI.show('train'); UI.refresh(); Ear.open('u1l1'); for (let i = 0; i < 10; i++) { $('#earOpts [data-id="' + Ear.q.answer + '"]').click(); Ear.advance(); }
+    T.eq(PDev.state, 'result'); T.eq(PDev.res.kind, 'ear'); T.eq(PDev.res.r.stars, 3); T.eq(PDev.res.strip.length, 10, 'a bar for every question'); T.ok(!Ear.on, 'the drill screen closed'); shown(); T.ok(PDev.hits.length >= 2);
+  } finally { Engine.click = keep.click; PX.hear = keep.hear; PX.on && PX.close(); Ear.on && Ear.close(); PDev.state = 'map'; PDev.res = null; Store.data.course = JSON.parse(keep.c || 'null') || undefined; Store.data.ear = JSON.parse(keep.e || 'null') || undefined; Store.data.earLog = JSON.parse(keep.l || 'null') || undefined; st.trainMode = keep.m; st.prView = keep.v; st.inst = keep.i; UI.show('tuner'); }
+});
+
+T.test('practice device: the exercise, the piano exercise and the ear drill play inside the screen', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, v: st.prView, i: st.inst, c: JSON.stringify(Store.data.course), e: JSON.stringify(Store.data.ear), l: JSON.stringify(Store.data.earLog), click: Engine.click, hear: PX.hear };
+  Store.data.course = {}; Store.data.ear = { levels: {} }; Store.data.earLog = []; Engine.click = () => {}; PX.hear = () => {};
+  try {
+    st.trainMode = 'sing'; st.inst = 'voice'; st.prView = 'course'; UI.show('train'); UI.refresh(); const pane = $('#pdPane');
+    T.ok(pane.hidden, 'the map shows when nothing is playing');
+    UI.trainView('sess'); T.ok(!pane.hidden && pane.contains($('#tr-sess')) && !$('#tr-sess').hidden, 'an exercise runs inside the screen'); UI.trainView('res'); T.ok(!pane.hidden && pane.contains($('#tr-res')), 'its results too'); UI.trainView('menu'); T.ok(pane.hidden, 'and the map comes back');
+    st.trainMode = 'piano'; UI.refresh(); Course.start('piano', COURSE.LEVELS.piano[0].id); T.ok(PX.on && !pane.hidden && pane.contains($('#o-pex')) && $('#o-pex').classList.contains('on'), 'a piano exercise plays inside the screen'); PX.close(); T.ok(pane.hidden, 'closing it brings the map back');
+    st.trainMode = 'ear'; UI.refresh(); Ear.open('u1l1'); T.ok(!pane.hidden && pane.contains($('#o-ear')) && $('#o-ear').classList.contains('on'), 'the ear drill plays inside the screen'); Ear.close(); T.ok(pane.hidden, 'closing it brings the map back');
+    UI.show('tuner'); RangeFinder.open(false); T.eq(UI.screen, 'train', 'the range finder opens on the Practice screen'); T.ok(!pane.hidden && pane.contains($('#o-range')) && $('#o-range').classList.contains('on'), 'and runs inside the screen'); RangeFinder.close(); T.ok(pane.hidden, 'closing the range finder brings the map back');
+  } finally { Engine.click = keep.click; PX.hear = keep.hear; PX.on && PX.close(); Ear.on && Ear.close(); RangeFinder.active && RangeFinder.close(); UI.trainView('menu'); Store.data.course = JSON.parse(keep.c || 'null') || undefined; Store.data.ear = JSON.parse(keep.e || 'null') || undefined; Store.data.earLog = JSON.parse(keep.l || 'null') || undefined; st.trainMode = keep.m; st.prView = keep.v; st.inst = keep.i; UI.show('tuner'); }
+});
+
+T.test('piano Reset: effects, Transpose and Fine tune all go back to zero', async () => {
+  await audio(); const st = Store.data.settings, keep = { t: st.transpose, f: st.fineTune, k: JSON.stringify(st.fxK) };
+  try {
+    st.transpose = 7; st.fineTune = 20; st.fxK = { reverb: 0.6 }; Knobs.reset();
+    T.eq(st.transpose, 0, 'Transpose is back at 0'); T.eq(st.fineTune, 0, 'Fine tune is back at 0'); T.eq(Object.keys(st.fxK).length, 0, 'the effect knobs are back too');
+    st.transpose = 5; $('#synReset').click(); T.eq(st.transpose, 0, 'the Reset key on the Piano tab does it too');
+  } finally { st.transpose = keep.t; st.fineTune = keep.f; st.fxK = JSON.parse(keep.k || '{}'); Knobs.paintLow && Knobs.paintLow(); }
+});
+
+T.test('exercise details: the graph is drawn when the details are opened from the device result', async () => {
+  await audio(); let drawn = 0; const keep = UI.drawRes; try {
+    UI.drawRes = () => { drawn++; }; UI.trainView('sess'); UI.trainView('res'); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); T.ok(drawn >= 1, 'the graph is drawn when the details show'); UI.trainView('menu'); const n = drawn; UI.trainView('res'); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); T.ok(drawn > n, 'and again when they are opened a second time');
+  } finally { UI.drawRes = keep; UI.trainView('menu'); }
+});
+
+T.test('practice device: on the details page the big key repeats the exercise with a repeat symbol', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, v: st.prView, i: st.inst, again: Session.again }; let again = 0;
+  try {
+    Session.again = () => { again++; }; st.trainMode = 'sing'; st.inst = 'voice'; st.prView = 'course'; UI.show('train'); UI.refresh(); T.eq($('#pdGoLbl').textContent, 'START'); T.eq($('#pdGo').dataset.ico, 'play');
+    UI.trainView('res'); T.eq($('#pdGoLbl').textContent, 'REPEAT', 'the key says REPEAT on the details page'); T.eq($('#pdGo').dataset.ico, 'rep', 'with a repeat symbol'); $('#pdGo').click(); T.eq(again, 1, 'and pressing it repeats the exercise');
+    UI.trainView('menu'); T.eq($('#pdGoLbl').textContent, 'START'); T.eq($('#pdGo').dataset.ico, 'play', 'back to the play symbol');
+  } finally { Session.again = keep.again; UI.trainView('menu'); st.trainMode = keep.m; st.prView = keep.v; st.inst = keep.i; UI.show('tuner'); }
 });
 
 T.test('mic gate slider: the cap sets the gate, the LED bar shows the live level', async () => {
@@ -544,3 +618,34 @@ T.test('settings: rockers, key groups, faders and steppers drive the same settin
     T.ok($('.stp[data-for="pfSel"] b').textContent.length > 1, 'the profile screen names the profile: "' + $('.stp[data-for="pfSel"] b').textContent + '"');
   } finally { const k = JSON.parse(keep); Object.assign(st, k); Store.save(); UI.refresh(); UI.show('tuner'); }
 });
+
+/* ---- Sand display view ---- */
+T.test('sand view: a Display button shows the sand pane, a played key pours into it, turn and shake work, the pane is saved', async () => {
+  await audio(); UI.show('piano'); const st = Store.data.settings, keep = st.specView, an0 = Engine.analyser, frames = async n => { for (let i = 0; i < n; i++) { Spec.draw(); await new Promise(r => setTimeout(r, 16)); } };
+  try {
+    if (!Engine.analyser) Engine.analyser = Engine.ctx.createAnalyser(); Sand.clear(); const btn = $('.dv[data-v="sand"]'); T.ok(btn, 'the Display view has a Sand button'); btn.click(); T.eq(st.specView, 'sand', 'the button selects the Sand view'); T.eq(btn.getAttribute('aria-pressed'), 'true');
+    await frames(3); T.ok(!$('#sandCtl').hidden, 'turn, shake and empty show in the Sand view');
+    Midi.msg([0x90, 60, 90], true); await frames(60); Midi.msg([0x80, 60, 0], true); T.ok(Sand.count() > 200, 'a played key pours sand: ' + Sand.count() + ' grains');
+    for (const n of [62, 64, 65]) { Midi.msg([0x90, n, 90], true); await frames(4); Midi.msg([0x80, n, 0], true); await frames(4); } await frames(90); T.ok(Sand.water() > 100, 'four keys in a row make it rain: ' + Sand.water() + ' water cells');
+    { const vk = VKeys.used, tm = Tuner.midi, lv = Tuner.lastVoiced; VKeys.used = true; Sand.clear(); await frames(2); for (let i = 0; i < 70; i++) { Tuner.onFrame({ midi: 64.05 + Math.sin(i / 5) * 0.2, f: 330 }); Spec.draw(); await new Promise(r => setTimeout(r, 16)); } await frames(30); T.ok(Sand.count() > 40, 'a sung note trickles in at once, even after on-screen keys were used: ' + Sand.count() + ' grains'); VKeys.used = vk; Tuner.midi = tm; Tuner.lastVoiced = lv; }
+    await frames(120); const n0 = Sand.count(); Sand.turn(); await frames(80); Sand.shake(); await frames(70); T.near(Sand.count(), n0, 40, 'turning and shaking keep every grain');
+    Sand.save(); T.ok(localStorage.getItem('tunerite.sand.v2').length > 20, 'the pane is saved'); Sand.clear(); await frames(2); T.eq(Sand.count(), 0, 'Empty clears the pane');
+    st.specView = 'water'; Spec.draw(); T.ok($('#sandCtl').hidden, 'the controls hide in the other views');
+  } finally { st.specView = keep; Engine.analyser = an0; Sand.clear(); Midi.panic && Midi.panic(); UI.show('tuner'); }
+});
+
+T.test('sand view: motion sensors shake the pane, turn it over when the phone is upside down, and lean the sand when it is tilted', async () => {
+  await audio(); UI.show('piano'); const st = Store.data.settings, keep = st.specView, an0 = Engine.analyser, frames = async n => { for (let i = 0; i < n; i++) { Spec.draw(); await new Promise(r => setTimeout(r, 16)); } };
+  const ev = (g, lin) => window.dispatchEvent(new DeviceMotionEvent('devicemotion', { accelerationIncludingGravity: g, acceleration: lin || { x: 0, y: 0, z: 0 } }));
+  try {
+    if (!Engine.analyser) Engine.analyser = Engine.ctx.createAnalyser(); st.specView = 'sand'; Sand.clear();
+    for (const n of [60, 64, 67, 62]) { Midi.msg([0x90, n, 90], true); await frames(3); Midi.msg([0x80, n, 0], true); await frames(8); } await frames(200);
+    await Sand.motion(); T.ok(Sand.motionState().on, 'the Motion button switches the sensors on'); T.eq($('#sandCtl [data-s="motion"]').getAttribute('aria-pressed'), 'true');
+    ev({ x: 0, y: 9.8, z: 0 }, { x: 22, y: 0, z: 0 }); T.ok(Sand.motionState().shaking, 'a sharp spike of acceleration shakes the pane'); await frames(80);
+    const r0 = Sand.motionState().right; ev({ x: -5, y: 8.4, z: 0 }); T.near(Sand.motionState().lean, 0.6, 0.05, 'tilting the phone sets how far the sand leans'); await frames(150);
+    T.ok(Sand.motionState().right > r0 + 0.04, 'tilted to the right, the sand moves to the right: ' + r0.toFixed(2) + ' to ' + Sand.motionState().right.toFixed(2));
+    ev({ x: 0, y: 9.8, z: 0 }); T.eq(Sand.motionState().lean, 0, 'held upright, nothing leans'); const top0 = Sand.motionState().top; ev({ x: 0, y: -9.8, z: 0 }); { const m = Sand.motionState(); T.ok(m.inverted && m.gravityUp, 'turned upside down, gravity points up on the screen'); T.ok(!m.squashed, 'the screen does not flip: the phone is doing that'); T.near(m.top, top0, 0.02, 'and the picture stays where it is: ' + top0.toFixed(2) + ' of the sand in the top half before, ' + m.top.toFixed(2) + ' after'); } await frames(150); T.ok(Sand.motionState().top > top0 + 0.1, 'then the sand falls toward the top: ' + Sand.motionState().top.toFixed(2)); Sand.turn(); T.ok(Sand.motionState().squashed, 'the Turn button still flips the screen');
+    await Sand.motion(); T.ok(!Sand.motionState().on, 'the Motion button switches them off again');
+  } finally { st.specView = keep; Engine.analyser = an0; Sand.clear(); localStorage.removeItem('tunerite.sandmotion'); UI.show('tuner'); }
+});
+

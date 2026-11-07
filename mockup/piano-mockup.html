@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite piano mockup</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Bold.ttf) format("truetype");font-weight:700}
+:root{--dp:1px}
+/* ================= THEMES: every colour in the tuner comes from these variables ================= */
+:root,[data-theme="utility"]{   /* dark, matte, black plastic, white print */
+  --wall:#18181a;--wall-sh:#0d0d0e;--ink:#050506;--print:#e2ded2;--print-lo:#8c897e;
+  --body:#2b2c2f;--body-hi:#3d3e42;--body-lo:#212225;--lip:#141415;--clay:#e07a33;--sun:#e0922f;
+  --teal:#54565c;--teal-lo:#3b3c40;--teal-hi:#6b6d74;--glass:#0f100c;--inset:#000;--groove:#222326;--dotc:#3b3c40;
+  --lcd-bg:#2a1d0a;--lcd-fg:#ffc65e;--lcd-lab:#f0b650;--lcd-dim:#6b4f1f;--lcd-off:#0f100c;--lcd-sh:#08090a;--lcd-on:#2a1b05;--lcd-glow:rgba(255,170,50,.6);
+  --lamp-r0:#3a2420;--lamp-g0:#22332a;--lamp-r:#d9704a;--lamp-g:#8fcf7a;--pwr0:#4a2a22;--pwr:#e8693a;
+  --dface:#1c1d1f;--dface2:#151617;--dprint:#e2ded2;--dprint2:#8c897e;--dacc:#e07a33;--dzone:#e07a33;
+  --dsh:#000;--dshop:.7;--dshield:#050506;--dshield2:#3d3e42;--dtop:#000;--dtopo:.6}
+[data-theme="solar"]{--note:#6d6650;          /* light sage, cel-shaded, solarpunk */
+  --wall:#d9d1bb;--wall-sh:#bdb59e;--ink:#262d20;--print:#262d20;--print-lo:#4a5640;
+  --body:#8c9b7c;--body-hi:#a4b293;--body-lo:#76866a;--lip:#55644b;--clay:#b4623e;--sun:#cfa84a;
+  --teal:#6f968c;--teal-lo:#587b72;--teal-hi:#8db3a8;--glass:#1d2418;--inset:#161b11;--groove:#3c4733;--dotc:#59664d;
+  --lcd-bg:#232a17;--lcd-fg:#e9d56b;--lcd-lab:#c9b552;--lcd-dim:#6b6430;--lcd-off:#1d2418;--lcd-sh:#151b11;--lcd-on:#262208;--lcd-glow:rgba(230,211,106,.5);
+  --lamp-r0:#5b4337;--lamp-g0:#3b5a45;--lamp-r:#d9704a;--lamp-g:#8fcf7a;--pwr0:#6a4a38;--pwr:#e08a4e;
+  --dface:#e8dfc4;--dface2:#d8cda9;--dprint:#262d20;--dprint2:#6b6650;--dacc:#b4623e;--dzone:#5d8a6a;
+  --dsh:#1a2014;--dshop:.26;--dshield:#262d20;--dshield2:#4d5a42;--dtop:#1a2014;--dtopo:.32}
+[data-theme="tu12"]{--note:#6d6a5c;            /* olive-grey case, orange dial, red LEDs: after the Boss TU-12 */
+  --wall:#cfcabb;--wall-sh:#aaa597;--ink:#14130f;--print:#efeadb;--print-lo:#c5c0ae;
+  --body:#6f7566;--body-hi:#868c7c;--body-lo:#5a6052;--lip:#3a3e33;--clay:#f08a3a;--sun:#e0922f;
+  --teal:#4f9a96;--teal-lo:#3a7774;--teal-hi:#6cb8b3;--glass:#120605;--inset:#000;--groove:#2a2c24;--dotc:#3b3c34;
+  --lcd-bg:#2a0d0b;--lcd-fg:#ff5a4a;--lcd-lab:#d9483a;--lcd-dim:#6b2a24;--lcd-off:#1a0907;--lcd-sh:#120605;--lcd-on:#2a0705;--lcd-glow:rgba(255,80,60,.55);
+  --lamp-r0:#4a2a22;--lamp-g0:#22332a;--lamp-r:#ff6a4a;--lamp-g:#8fe07a;--pwr0:#4a2a22;--pwr:#ff7a3a;
+  --dface:#e89b3d;--dface2:#d98a2e;--dprint:#1b1409;--dprint2:#5a3a14;--dacc:#8a1f12;--dzone:#1b1409;
+  --dsh:#5a2f00;--dshop:.45;--dshield:#14130f;--dshield2:#3a3e33;--dtop:#3a1d00;--dtopo:.35}
+[data-theme="phosphor"]{        /* green phosphor on black, workshop instrument */
+  --wall:#0b0f0b;--wall-sh:#060806;--ink:#020402;--print:#b8e0b0;--print-lo:#6e9a68;
+  --body:#1a211a;--body-hi:#2a342a;--body-lo:#121812;--lip:#0b0f0b;--clay:#c8f04a;--sun:#8fd46a;
+  --teal:#2f4a33;--teal-lo:#223825;--teal-hi:#3f6544;--glass:#040a04;--inset:#000;--groove:#172017;--dotc:#263326;
+  --lcd-bg:#071207;--lcd-fg:#6dff7a;--lcd-lab:#3fbf55;--lcd-dim:#1f5a2a;--lcd-off:#040a04;--lcd-sh:#030603;--lcd-on:#031004;--lcd-glow:rgba(80,255,110,.5);
+  --lamp-r0:#3a2420;--lamp-g0:#14281a;--lamp-r:#ff7a50;--lamp-g:#6dff7a;--pwr0:#1f3a22;--pwr:#6dff7a;
+  --dface:#071007;--dface2:#050a05;--dprint:#9fe8a0;--dprint2:#4f7f52;--dacc:#d4f04a;--dzone:#6dff7a;
+  --dsh:#000;--dshop:.6;--dshield:#020402;--dshield2:#223825;--dtop:#000;--dtopo:.6}
+/* a quick power-cycle flicker when the theme changes */
+.stage.swap .device{animation:swap .28s steps(4)}
+@keyframes swap{0%{opacity:.25}50%{opacity:.8}100%{opacity:1}}
+
+/* theme manager */
+.head{position:relative;z-index:6}
+.themewrap{margin-left:auto;position:relative}
+.themewrap+.bloomsw{margin-left:20px}
+.themebtn{display:flex;align-items:center;gap:10px;background:var(--body-lo);border:3px solid var(--ink);border-radius:10px;padding:5px 12px;cursor:pointer;color:var(--print-lo);
+  font:400 10px "Silkscreen",monospace;letter-spacing:3px;box-shadow:inset 0 3px 0 var(--lip),0 3px 0 var(--ink)}
+.themebtn b{font-weight:400;color:var(--clay)}
+.themebtn:hover{color:var(--print)}
+.themebtn:active{transform:translateY(2px);box-shadow:inset 0 3px 0 var(--lip),0 1px 0 var(--ink)}
+.themebtn:focus-visible,.topt:focus-visible{outline:3px solid var(--clay);outline-offset:3px}
+.themepop{position:absolute;top:calc(100% + 14px);right:0;width:330px;padding:10px;background:var(--body);border:4px solid var(--ink);border-radius:14px;
+  box-shadow:inset 0 5px 0 var(--body-hi),0 8px 0 var(--ink),0 22px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}
+.themepop[hidden]{display:none}
+.themepop h4{margin:2px 6px 0;font:400 10px "Silkscreen",monospace;letter-spacing:3px;color:var(--print-lo)}
+.topt{display:flex;align-items:center;gap:14px;padding-right:34px!important;text-align:left;width:100%;padding:8px 10px;background:var(--body-lo);border:3px solid var(--ink);border-radius:10px;cursor:pointer;
+  color:var(--print);font:400 12px "Silkscreen",monospace;letter-spacing:2px;box-shadow:inset 0 3px 0 var(--lip);position:relative}
+.topt small{display:block;margin-top:5px;font-size:9px;letter-spacing:1px;color:var(--print-lo)}
+.topt:hover{background:var(--body-hi)}
+.topt.on{box-shadow:inset 0 3px 0 var(--lip),0 0 0 3px var(--clay)}
+.topt.on::after{content:"";position:absolute;right:12px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--clay);border:2px solid var(--ink)}
+.sw{display:grid;grid-template-columns:repeat(4,16px);gap:0;border:3px solid var(--ink);border-radius:4px;overflow:hidden;flex:none}
+.sw i{height:26px}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--wall);font-family:"Silkscreen",ui-monospace,monospace;color:var(--print);
+  overflow:hidden;user-select:none;-webkit-user-select:none}
+.stage{position:absolute;left:50%;top:50%;width:var(--sw,1280px);height:var(--sh,720px);margin:calc(var(--sh,720px)/-2) 0 0 calc(var(--sw,1280px)/-2);transform:scale(var(--s,1))}
+
+/* ---------- case ---------- */
+.device{position:relative;background:var(--body);border:4px solid var(--ink);border-radius:30px;padding:22px 24px 26px;
+  box-shadow:
+    inset 0 10px 0 var(--body-hi),      /* lit top edge */
+    inset 0 -16px 0 var(--body-lo),     /* shaded underside */
+    0 12px 0 var(--ink),                /* case thickness */
+    0 14px 0 var(--lip),
+    0 40px 0 var(--wall-sh);            /* hard shadow on the wall, light from above */
+  display:flex;flex-direction:column;gap:16px}
+.screw{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--body-lo);border:3px solid var(--ink);box-shadow:inset 0 3px 0 var(--body-hi)}
+.screw::after{content:"";position:absolute;left:1px;right:1px;top:3px;height:2px;background:var(--ink);transform:rotate(35deg)}
+.screw.a{left:12px;top:12px}.screw.b{right:12px;top:12px}.screw.c{left:12px;bottom:16px}.screw.d{right:12px;bottom:16px}
+
+.head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 14px 0 10px}
+.brand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1}
+.brand small{display:block;font-weight:400;font-size:10px;letter-spacing:3px;margin-top:6px;color:var(--print-lo)}
+.solar{display:none!important}.nosprout .sprout{display:none}.solar{flex:1;max-width:210px;height:26px;display:grid;grid-template-columns:repeat(6,1fr);gap:3px;padding:3px;background:var(--ink);border-radius:6px;position:relative;overflow:hidden;
+  box-shadow:0 3px 0 var(--lip)}
+.solar i{background:#34493f;border-radius:2px;box-shadow:inset 0 3px 0 #46634f}
+.solar::after{content:"";position:absolute;top:0;bottom:0;width:26px;left:-40px;background:rgba(255,255,255,.14);transform:skewX(-20deg);animation:sheen 4.5s linear infinite}
+@keyframes sheen{to{left:calc(100% + 20px)}}
+.pwr{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:3px}
+.pwr i{width:14px;height:14px;border-radius:50%;background:var(--pwr0);border:3px solid var(--ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.12);transition:.2s}
+.on .pwr i{background:var(--pwr);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 10px var(--pwr)}
+
+/* ---------- meter bezels: recessed, top edge casts a shadow inside ---------- */
+.bezel{background:var(--ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 var(--inset),0 4px 0 var(--body-hi),0 6px 0 var(--ink)}
+.bezel svg{display:block;width:100%;height:auto;border-radius:10px}
+
+/* ---------- LCD ---------- */
+.readouts{display:grid;grid-template-columns:1.15fr 1fr 1.45fr;gap:12px}
+.lcd{position:relative;background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;padding:12px calc(var(--dp)*12) calc(var(--dp)*6);overflow:hidden;
+  box-shadow:inset 0 6px 0 var(--inset),0 3px 0 var(--body-hi)}
+.lcd::after,.msg::after,.chrom div::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--gn))),repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--gn)))}
+.lcd,.msg,.chrom div{--gn:2}
+.lcd small{display:block;font-size:var(--f2);line-height:24px;letter-spacing:calc(var(--dp)*2);color:var(--lcd-lab);text-shadow:calc(var(--dp)*-1) 0 rgba(255,50,50,.5),var(--dp) 0 rgba(60,170,255,.4)}
+.dg{position:relative;color:var(--lcd-fg);white-space:nowrap}
+.dg .g{position:absolute;left:0;top:0;opacity:.14}
+.dg .v{position:relative;text-shadow:calc(var(--dp)*-1) 0 rgba(255,50,50,.6),var(--dp) 0 rgba(60,170,255,.5),0 0 6px var(--lcd-fg),0 0 18px var(--lcd-glow)}
+.off .dg .v,.off .msg{opacity:0}
+.sgn{position:relative;display:inline-block}.sgn i{visibility:hidden;font-style:normal}.sgn b{position:absolute;left:0;top:0;font-weight:400}
+.msg{text-align:center;margin:-2px 0 0;font-size:var(--f4);letter-spacing:calc(var(--dp)*2);color:var(--lcd-fg);text-shadow:calc(var(--dp)*-1) 0 rgba(255,50,50,.5),var(--dp) 0 rgba(60,170,255,.4);line-height:40px;padding:8px 12px;
+  background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;box-shadow:inset 0 6px 0 var(--inset),0 3px 0 var(--body-hi);position:relative;overflow:hidden;text-transform:uppercase;transition:opacity .2s}
+
+/* ---------- chromatic strip ---------- */
+.well{background:var(--body-lo);border:3px solid var(--ink);border-radius:12px;padding:10px 12px;box-shadow:inset 0 5px 0 var(--lip),0 3px 0 var(--body-hi)}
+.chrom{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+.chrom div{height:56px;border-radius:5px;background:var(--lcd-off);border:2px solid var(--ink);box-shadow:inset 0 4px 0 var(--inset);
+  position:relative;overflow:hidden;font-size:var(--f4);line-height:48px;padding-top:0;text-align:center;color:var(--lcd-dim);transition:background .08s,color .08s,box-shadow .08s}
+.chrom div.sh{background:var(--lcd-sh)}
+.chrom div.lit{background:var(--lcd-fg);color:var(--lcd-on);box-shadow:inset 0 4px 0 rgba(0,0,0,.25),0 0 12px var(--lcd-glow)}
+.lamps{display:flex;justify-content:space-between;align-items:center;padding:8px 18px}
+.lamps>div{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:2px;color:var(--print)}
+.lamp{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);background:var(--lamp-r0);box-shadow:inset 0 3px 0 rgba(0,0,0,.35);transition:.08s}
+.lamp.g{background:var(--lamp-g0)}
+.lamp.r.lit{background:var(--lamp-r);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 0 14px var(--lamp-r)}
+.lamp.g.lit{background:var(--lamp-g);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 16px var(--lamp-g)}
+.lamp.big{width:26px;height:26px}
+
+/* ---------- controls row ---------- */
+.ctl{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;align-items:end;padding:4px 8px 4px}
+.slot{position:relative}
+.slabels{display:flex;justify-content:space-between;font-size:11px;letter-spacing:2px;margin-bottom:8px;padding:0 4px}
+.slabels b{font-weight:400;cursor:pointer;position:relative;padding:2px 4px;transition:color .2s}
+.slabels b.on{color:var(--clay)}
+.slabels b::after{content:"";position:absolute;left:50%;bottom:-8px;width:3px;height:6px;background:var(--ink);transform:translateX(-50%)}
+.track{background:var(--lcd-off);--p:.5;--kw:92px;position:relative;height:62px;background:var(--glass);border:3px solid var(--ink);border-radius:12px;
+  box-shadow:inset 0 8px 0 var(--inset),0 3px 0 var(--body-hi);touch-action:none;cursor:grab}
+.track::before{content:"";position:absolute;left:49px;right:49px;top:50%;height:4px;margin-top:-2px;background:var(--groove);border-radius:2px}
+.knob{--slab:var(--ink);--slab2:color-mix(in srgb,var(--ink) 65%,var(--body-hi));position:absolute;top:3px;bottom:3px;width:var(--kw);left:calc(3px + var(--p)*(100% - var(--kw) - 6px));
+  background:repeating-linear-gradient(90deg,var(--slab) 0 5px,var(--slab2) 5px 7px);
+  border:3px solid var(--ink);border-radius:6px;
+  box-shadow:0 7px 0 rgba(20,26,16,.55);          /* hard cast shadow falls down onto the panel */
+  transition:left .1s ease-out}
+/* split cap: two ribbed slabs with a gap showing the slot, an accent line in the middle of each pair */
+.knob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-5px;background:var(--lcd-off);border-left:3px solid var(--ink);border-right:3px solid var(--ink)}
+.knob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--clay);z-index:1}
+.dot{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--dotc)}
+
+.caps{display:flex;justify-content:space-between;gap:12px}
+.cap{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:2px}
+.cap button{--lift:8px;width:62px;height:56px;border-radius:16px;border:3px solid var(--ink);cursor:pointer;
+  background:linear-gradient(180deg,var(--teal-hi) 0 22%,var(--teal) 22%);
+  box-shadow:0 var(--lift) 0 var(--ink),0 calc(var(--lift) + 8px) 0 rgba(20,26,16,.28);
+  transition:transform .06s,box-shadow .06s;position:relative;top:0}
+.cap button:active,.cap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(20,26,16,.28)}
+.cap button:focus-visible{outline:3px solid var(--clay);outline-offset:3px}
+
+/* ---------- sprout on top of the case ---------- */
+.sprout{position:absolute;right:150px;top:-4px;width:70px;height:78px;pointer-events:none;overflow:visible}
+.sprout .sway{transform-origin:35px 72px;animation:sway 5s ease-in-out infinite}
+@keyframes sway{50%{transform:rotate(3deg)}0%,100%{transform:rotate(-3deg)}}
+.sprout .lf{transform-box:fill-box;transform-origin:0% 100%;transition:transform .7s cubic-bezier(.3,1.6,.5,1)}
+.sprout .lf.r{transform-origin:100% 100%}
+.sprout .lf{transform:scale(.55)}
+.bloom .sprout .lf{transform:scale(1)}
+.sprout .bud{transform-box:fill-box;transform-origin:50% 100%;transform:scale(.0);transition:transform .6s cubic-bezier(.3,1.8,.5,1) .25s}
+.bloom .sprout .bud{transform:scale(1)}
+
+/* off: everything goes quiet */
+.off .chrom div.lit,.off .lamp.lit{background:inherit;box-shadow:none}
+.note{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:10px;letter-spacing:2px;color:var(--note,var(--print-lo))}
+
+/* sprout switch: a little rocker like the app's Settings */
+.bloomsw{margin-left:auto;margin-right:22px;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;cursor:pointer;font:400 10px "Silkscreen",monospace;letter-spacing:3px;color:var(--print-lo)}
+.bloomsw i{position:relative;width:38px;height:20px;border-radius:10px;background:var(--lcd-off);border:3px solid var(--ink);box-shadow:inset 0 4px 0 var(--inset),0 3px 0 var(--body-hi)}
+.bloomsw i::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--teal);border:2px solid var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.5);transition:left .1s ease-out}
+.bloomsw.on i::after{left:19px;background:var(--clay)}
+.bloomsw:focus-visible{outline:3px solid var(--clay);outline-offset:4px}
+/* ================= PIANO TAB ================= */
+.device{position:absolute;left:20px;right:20px;top:22px;bottom:52px;padding:16px 24px 20px;display:grid;grid-template-columns:740px 1fr;grid-template-rows:auto 1fr;gap:14px 24px}
+.head{grid-column:1/-1;position:relative;z-index:6}
+.themewrap{margin-left:auto}.pwr{margin-left:22px}
+.pleft{display:flex;flex-direction:column;gap:12px;min-height:0}
+.pright{display:flex;flex-direction:column;gap:10px;min-height:0}
+.note{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:10px;letter-spacing:2px;color:var(--note,var(--print-lo))}
+
+/* selector rows: arrow key, LCD, arrow key (preset, soundfont, instrument; key, scale, chords) */
+.psel{display:flex;flex-direction:column;gap:8px}
+.sel{display:flex;align-items:center;gap:10px}
+.akey{flex:none;width:46px;height:42px;padding:0;border-radius:11px;border:3px solid var(--ink);cursor:pointer;position:relative;
+  background:linear-gradient(180deg,var(--teal-hi) 0 22%,var(--teal) 22%,var(--teal-lo));box-shadow:0 5px 0 var(--ink),0 10px 0 rgba(0,0,0,.25);transition:transform .06s,box-shadow .06s}
+.akey:active,.akey.press{transform:translateY(4px);box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.25)}
+.akey i{position:absolute;left:50%;top:50%;width:0;height:0;margin:-8px 0 0 -6px;border-top:8px solid transparent;border-bottom:8px solid transparent}
+.akey.l i{border-right:13px solid var(--lamp-g)}.akey.r i{border-left:13px solid var(--lamp-g);margin-left:-7px}
+.akey.u i{border-bottom:13px solid var(--lamp-g);border-top:0;border-left:8px solid transparent;border-right:8px solid transparent;margin:-7px 0 0 -8px}
+.akey.d i{border-top:13px solid var(--lamp-g);border-bottom:0;border-left:8px solid transparent;border-right:8px solid transparent;margin:-6px 0 0 -8px}
+.akey:focus-visible,.ptab:focus-visible,.pcap button:focus-visible,.pk:focus-visible{outline:3px solid var(--clay);outline-offset:3px}
+.sellcd{flex:1;min-width:0;padding:6px calc(var(--dp)*12) 2px}
+.sellcd .selv{font-size:var(--f4);line-height:30px;color:var(--lcd-fg);white-space:nowrap;overflow:hidden;text-overflow:clip;text-transform:uppercase;position:relative;
+  text-shadow:calc(var(--dp)*-1) 0 rgba(255,50,50,.6),var(--dp) 0 rgba(60,170,255,.5),0 0 6px var(--lcd-fg),0 0 18px var(--lcd-glow)}
+.sellcd small{margin-top:-2px}
+
+/* the screen: tabs along the top, then the spectrogram or a list; the keys sit right under it so each column falls from its own key */
+.pscreen{flex:1;min-height:0;display:flex;flex-direction:column}
+.pscreen .bezel{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 10px 10px}
+.ptabs2{display:flex;background:var(--lcd-bg);border:3px solid var(--ink);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden;position:relative}
+.ptabs2 button{--gn:2;position:relative;flex:1;min-width:0;background:none;border:0;border-right:2px solid var(--ink);padding:0;height:34px;cursor:pointer;color:var(--lcd-dim);font:400 var(--f2) "Silkscreen",monospace;letter-spacing:calc(var(--dp)*2);text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.ptabs2 button:last-child{border-right:0}
+.ptabs2 button i{width:8px;height:8px;background:var(--lcd-dim)}
+.ptabs2 button.on{color:var(--lcd-fg);background:rgba(255,255,255,.06);text-shadow:0 0 6px var(--lcd-fg)}
+.ptabs2 button.on i{background:var(--lcd-fg);box-shadow:0 0 8px var(--lcd-fg)}
+.ptabs2 button.on::before{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--lcd-fg)}
+.pane{position:relative;flex:1;min-height:0;background:var(--lcd-off);border:3px solid var(--ink);border-top:0;overflow:hidden;box-shadow:inset 0 6px 0 #000}
+.pane canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;display:block}
+.pane::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 var(--dp),transparent var(--dp) calc(var(--dp)*3)),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 var(--dp),transparent var(--dp) calc(var(--dp)*3)),radial-gradient(120% 100% at 50% 50%,transparent 60%,rgba(0,0,0,.4))}
+.plist{position:absolute;inset:0;padding:6px 0;overflow:hidden;display:none;flex-direction:column}
+.plist.on{display:flex}
+.plist .row{display:flex;justify-content:space-between;align-items:center;height:36px;padding:0 16px;font-size:var(--f2);letter-spacing:calc(var(--dp)*2);color:var(--lcd-dim);text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.plist .row b{font-weight:400;color:var(--lcd-lab)}
+.plist .row.on{color:var(--lcd-on);background:var(--lcd-fg);text-shadow:none}
+.plist .row.on b{color:var(--lcd-on)}
+.chip{position:absolute;z-index:3;bottom:8px;display:flex;gap:6px;left:12px;font-size:var(--f2);letter-spacing:calc(var(--dp)*2);color:var(--lcd-lab)}
+.chip span{padding:3px 8px;border:2px solid currentColor;background:rgba(0,0,0,.45)}.chip .bl{color:#6cb0ff}
+
+/* keyboard: an SVG, so it stays sharp at any scale */
+.pkeys{flex:none;background:var(--ink);border-radius:14px;padding:8px 8px 10px;box-shadow:inset 0 5px 0 #000,0 4px 0 var(--body-hi),0 6px 0 var(--ink)}
+.pkeys svg{display:block;width:100%;height:auto;border-radius:6px;touch-action:none}
+.pk{cursor:pointer}
+.wk rect.f{fill:#e6e0cf}.wk rect.s{fill:rgba(0,0,0,.13)}
+.bk rect.f{fill:#1d1e21}.bk rect.s{fill:rgba(255,255,255,.1)}
+.wk.on rect.f{fill:#7db8ff}.wk.on rect.s{fill:rgba(0,40,120,.35)}.bk.on rect.f{fill:#3f82d6}.bk.on rect.s{fill:rgba(255,255,255,.2)}
+.wk.on,.bk.on{transform:translateY(3px)}
+.wk,.bk{transition:transform .05s}
+.wk.out rect.f{fill:#a9a595}.bk.out rect.f{fill:#3a3b3f}
+.pkeyrow{display:flex;gap:12px}.pkeyrow .sel{flex:1;min-width:0}
+.pkeyrow .akey{width:36px;height:42px}.pkeyrow .sellcd .selv{font-size:var(--f2);line-height:28px}
+.pkeyrow .sellcd{padding:6px calc(var(--dp)*8) 2px}
+
+/* pages of knobs */
+.ptabs{display:flex;gap:8px}
+.ptab{flex:1;height:40px;padding:0;border-radius:9px;border:3px solid var(--ink);cursor:pointer;color:var(--print);font:400 11px "Silkscreen",monospace;letter-spacing:2px;position:relative;
+  background:linear-gradient(180deg,var(--teal-hi) 0 22%,var(--teal) 22%,var(--teal-lo));box-shadow:0 5px 0 var(--ink),0 9px 0 rgba(0,0,0,.25);transition:transform .06s,box-shadow .06s}
+.ptab::after{content:"";position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--lamp-g0);border:2px solid var(--ink)}
+.ptab.on{transform:translateY(4px);box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.25);color:var(--clay)}
+.ptab.on::after{background:var(--lamp-g);box-shadow:0 0 8px var(--lamp-g)}
+.kpanel{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:6px 4px;padding:12px 8px 10px;background:var(--body-lo);border:3px solid var(--ink);border-radius:12px;box-shadow:inset 0 5px 0 var(--lip),0 3px 0 var(--body-hi);transition:opacity .2s}
+.kpanel.byp{opacity:.5}
+.kpanel.swap{animation:swap .28s steps(4)}
+.knb{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:0;cursor:ns-resize;touch-action:none}
+.knb svg{width:62px;height:62px;overflow:visible;flex:none}
+.knb b{font-weight:400;font-size:9px;letter-spacing:1px;color:var(--print);text-transform:uppercase;white-space:nowrap}
+.pbot{display:flex;gap:12px;align-items:flex-end;padding:0 2px}
+.pcap{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:9px;letter-spacing:1px;color:var(--print)}
+.pcap button{--lift:7px;width:56px;height:50px;padding:0;border-radius:14px;border:3px solid var(--ink);cursor:pointer;color:var(--print);
+  background:linear-gradient(180deg,var(--teal-hi) 0 22%,var(--teal) 22%,var(--teal-lo));box-shadow:0 var(--lift) 0 var(--ink),0 calc(var(--lift) + 7px) 0 rgba(0,0,0,.25);transition:transform .06s,box-shadow .06s}
+.pcap button:active,.pcap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.25)}
+.pcap button.latched{transform:translateY(5px);box-shadow:0 2px 0 var(--ink)}
+.pcap svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.pcap button.latched svg{stroke:var(--clay)}
+.nowlcd{flex:1;min-width:0;align-self:stretch;padding:6px calc(var(--dp)*12) 2px}
+.nowlcd .dg{font-size:var(--f4);line-height:36px}
+
+/* ---------- portrait / phone: the same parts in one column, playing surface first ---------- */
+.portrait .device{left:14px;right:14px;top:18px;bottom:50px;padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px}
+.portrait .pleft,.portrait .pright{display:contents}
+.portrait .head{order:1;gap:6px;padding:0 4px}
+.portrait .brand{font-size:19px;letter-spacing:3px}.portrait .brand small{display:none}
+.portrait .themebtn{padding:5px 9px;letter-spacing:2px}.portrait .pwr{margin-left:14px}.portrait .themepop{width:300px}
+.portrait .psel{order:2}
+.portrait .pscreen{order:3;flex:none}.portrait .pane{height:225px;flex:none}
+.portrait .pkeys{order:4}
+.portrait .pkeyrow{order:5;flex-direction:column;gap:8px}.portrait .pkeyrow .akey{width:46px}.portrait .pkeyrow .sellcd .selv{font-size:var(--f2);line-height:28px}
+.portrait .ptabs{order:6}
+.portrait .kpanel{order:7;flex:none;height:250px}
+.portrait .pbot{order:8}
+.portrait .note{padding:0 12px;line-height:1.5;font-size:9px;letter-spacing:1px}
+.portrait .sellcd .selv{font-size:var(--f4)}
+
+</style>
+</head>
+<body>
+<div class="stage on" id="stage">
+  <div class="device">
+    <span class="screw a"></span><span class="screw b"></span><span class="screw c"></span><span class="screw d"></span>
+    <div class="head">
+      <div class="brand">TUNERITE<small>PIANO · SOUND ENGINE</small></div>
+      <div class="themewrap"><button class="themebtn" id="themeBtn" type="button" aria-haspopup="listbox" aria-expanded="false">THEME <b id="themeName">UTILITY</b></button>
+        <div class="themepop" id="themePop" role="listbox" aria-label="Theme" hidden><h4>THEMES</h4></div></div>
+      <div class="pwr">POWER<i></i></div>
+    </div>
+    <div class="pleft">
+      <div class="pscreen"><div class="bezel">
+        <div class="ptabs2" id="stabs"><button type="button" class="on" data-t="spec"><i></i>Spectrum</button><button type="button" data-t="banks"><i></i>Banks</button><button type="button" data-t="patch"><i></i>Instruments</button><button type="button" data-t="user"><i></i>Presets</button></div>
+        <div class="pane" id="pane"><canvas id="spec"></canvas>
+          <div class="plist" id="lbanks"></div><div class="plist" id="lpatch"></div><div class="plist" id="luser"></div>
+          <div class="chip" id="chip"><span class="bl">PLAYED</span><span>HEARD</span></div></div>
+      </div></div>
+      <div class="pkeys"><svg id="kb" viewBox="0 0 700 130" role="img" aria-label="Piano keyboard"></svg></div>
+      <div class="pkeyrow" id="keyrow"></div>
+    </div>
+    <div class="pright">
+      <div class="psel" id="psel"></div>
+      <div class="ptabs" id="ptabs"><button type="button" class="ptab on" data-p="0">SOUND</button><button type="button" class="ptab" data-p="1">FILTER</button><button type="button" class="ptab" data-p="2">SPACE</button><button type="button" class="ptab" data-p="3">DYN</button></div>
+      <div class="kpanel" id="kpanel"></div>
+      <div class="pbot">
+        <div class="pcap"><button type="button" id="bBypass" aria-label="Bypass"><svg viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></svg></button>BYPASS</div>
+        <div class="pcap"><button type="button" id="bPanic" aria-label="Panic"><svg viewBox="0 0 24 24"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5"/><path d="M12 16.5v.1"/></svg></button>PANIC</div>
+        <div class="pcap"><button type="button" id="bReset" aria-label="Reset"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg></button>RESET</div>
+        <div class="lcd nowlcd"><small>NOW</small><div class="dg"><span class="g">88888</span><span class="v" id="now">Cmaj7</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="note">MOCKUP · animation only · click the keys, drag the knobs, T cycles themes</div>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const stage=$('stage');
+/* ---------- fit to the window; portrait stacks ---------- */
+let cvDirty=true;
+const fit=()=>{const r=document.documentElement.style,dpr=window.devicePixelRatio||1,portrait=innerWidth/innerHeight<1,
+  DW=portrait?560:1280,DH=portrait?1400:720,sc=Math.min(innerWidth/DW,innerHeight/DH);
+  r.setProperty('--sw',DW+'px');r.setProperty('--sh',DH+'px');stage.classList.toggle('portrait',portrait);
+  r.setProperty('--s',sc.toFixed(4));r.setProperty('--dp',(1/(dpr*sc)).toFixed(4)+'px');
+  for(const p of [2,4,8]){const v=p*sc*dpr,q=v>=3.5?2*Math.floor(v/2):Math.max(1,Math.round(v));r.setProperty('--f'+p,(q*8/(dpr*sc)).toFixed(3)+'px')}
+  cvDirty=true};
+fit();addEventListener('resize',fit);
+
+/* ---------- selector rows: arrow key, LCD, arrow key ---------- */
+const sels={};
+function selRow(host,id,label,items,vert,onchg){
+  const row=document.createElement('div');row.className='sel';
+  row.innerHTML=`<button class="akey ${vert?'u':'l'}" type="button" aria-label="Previous ${label}"><i></i></button><div class="lcd sellcd"><small>${label}</small><div class="selv"></div></div><button class="akey ${vert?'d':'r'}" type="button" aria-label="Next ${label}"><i></i></button>`;
+  host.appendChild(row);
+  const o={i:0,items,el:row.querySelector('.selv'),set(i){this.i=(i+items.length)%items.length;this.el.textContent=items[this.i];onchg&&onchg(this.i)}};
+  const [a,b]=row.querySelectorAll('.akey');a.onclick=()=>o.set(o.i-1);b.onclick=()=>o.set(o.i+1);sels[id]=o;o.set(0);return o;
+}
+const PRESETS=['Init','Concert Hall','Late Night','Tape Echo','Glass Pad','Dusty Upright'];
+const BANKS=['Built-in sound','FluidR3 GM','Salamander Grand','Upright Kit'];
+const INSTR=['Soft','Grand Piano','Electric Piano','Strings','Choir','Warm Pad','Marimba','Music Box'];
+const psel=$('psel');
+const lists={banks:$('lbanks'),patch:$('lpatch'),user:$('luser')};
+function fillList(host,items,tag,get,set){host.innerHTML=items.map((n,i)=>`<div class="row" data-i="${i}"><span>${n}</span><b>${tag(i)}</b></div>`).join('');
+  host.onclick=e=>{const r=e.target.closest('.row');if(r)set(+r.dataset.i)};}
+const mark=(host,i)=>[...host.children].forEach((r,k)=>r.classList.toggle('on',k===i));
+selRow(psel,'preset','PRESET',PRESETS,false,i=>mark(lists.user,i));
+selRow(psel,'bank','SOUNDFONT',BANKS,true,i=>mark(lists.banks,i));
+selRow(psel,'inst','INSTRUMENT',INSTR,false,i=>mark(lists.patch,i));
+fillList(lists.user,PRESETS,i=>'U'+String(i+1).padStart(2,'0'),0,i=>sels.preset.set(i));
+fillList(lists.banks,BANKS,i=>(i?'SF2':'BUILT-IN'),0,i=>sels.bank.set(i));
+fillList(lists.patch,INSTR,i=>'GM '+String(i*8+1).padStart(3,'0'),0,i=>sels.inst.set(i));
+mark(lists.user,0);mark(lists.banks,0);mark(lists.patch,0);
+$('stabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;[...$('stabs').children].forEach(x=>x.classList.toggle('on',x===b));
+  $('spec').style.visibility=b.dataset.t==='spec'?'visible':'hidden';$('chip').style.display=b.dataset.t==='spec'?'flex':'none';
+  for(const k in lists)lists[k].classList.toggle('on',k===b.dataset.t)};
+
+/* ---------- keyboard (SVG) ---------- */
+const M0=36,M1=95,KW=20,WH=[0,2,4,5,7,9,11],BS={1:-1.5,3:1.5,6:-2,8:0,10:2};
+const isW=m=>WH.includes(m%12);
+const wIdx=m=>{let n=0;for(let k=M0;k<m;k++)if(isW(k))n++;return n};
+const cx=m=>isW(m)?(wIdx(m)+.5)*KW:(wIdx(m))*KW+BS[m%12];   // x of a key's middle: a black key sits on the line between the whites before it and after it
+const xs=m=>{const a=Math.floor(m),f=m-a;if(a<M0)return cx(M0);if(a>=M1)return cx(M1);return cx(a)+(cx(a+1)-cx(a))*f};
+let kb='';
+for(let m=M0;m<=M1;m++)if(isW(m)){const x=wIdx(m)*KW;kb+=`<g class="wk pk" data-m="${m}"><rect class="f" x="${x+.75}" y="1" width="${KW-1.5}" height="128" rx="2.5" stroke="var(--ink)" stroke-width="1.5"/><rect class="s" x="${x+2}" y="100" width="${KW-4}" height="26" rx="1.5"/>${m%12===0?`<text x="${x+KW/2}" y="122" text-anchor="middle" font-family="Silkscreen,monospace" font-size="8" fill="#000" opacity=".5">C${m/12-1}</text>`:''}</g>`}
+for(let m=M0;m<=M1;m++)if(!isW(m)){const x=cx(m)-6;kb+=`<g class="bk pk" data-m="${m}"><rect class="f" x="${x}" y="0" width="12" height="80" rx="2" stroke="var(--ink)" stroke-width="2"/><rect class="s" x="${x+2}" y="64" width="8" height="10" rx="1"/></g>`}
+$('kb').innerHTML=kb;
+const kEl={};$('kb').querySelectorAll('.pk').forEach(g=>kEl[+g.dataset.m]=g);
+
+/* notes that are sounding: midi -> {t0, until (null while held)} */
+const on=new Map();
+const noteOn=(m,dur)=>{on.set(m,{t0:performance.now(),until:dur?performance.now()+dur:null});kEl[m]&&kEl[m].classList.add('on')};
+const noteOff=m=>{if(on.has(m)){on.delete(m);kEl[m]&&kEl[m].classList.remove('on')}};
+let held=null;
+$('kb').addEventListener('pointerdown',e=>{const g=e.target.closest('.pk');if(!g)return;held=+g.dataset.m;noteOn(held);$('kb').setPointerCapture(e.pointerId)});
+$('kb').addEventListener('pointermove',e=>{if(held==null)return;const el=document.elementFromPoint(e.clientX,e.clientY),g=el&&el.closest&&el.closest('.pk');if(g&&+g.dataset.m!==held){noteOff(held);held=+g.dataset.m;noteOn(held)}});
+const rel=()=>{if(held!=null){noteOff(held);held=null}};$('kb').addEventListener('pointerup',rel);$('kb').addEventListener('pointercancel',rel);
+
+/* key, scale, chords: out-of-scale keys grey out */
+const KEYN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'],SCALES={OFF:null,MAJOR:[0,2,4,5,7,9,11],MINOR:[0,2,3,5,7,8,10],PENTATONIC:[0,2,4,7,9],BLUES:[0,3,5,6,7,10]};
+const keyrow=$('keyrow');
+const paintScale=()=>{if(!sels.key||!sels.scale)return;const k=sels.key.i,sc=SCALES[sels.scale.items[sels.scale.i]];for(const m in kEl)kEl[m].classList.toggle('out',!!sc&&!sc.includes(((m-k)%12+12)%12))};
+selRow(keyrow,'key','KEY',KEYN,false,paintScale);selRow(keyrow,'scale','SCALE',Object.keys(SCALES),false,paintScale);selRow(keyrow,'chords','CHORDS',['SINGLE','TRIADS','SEVENTHS','POWER'],false);
+
+/* ---------- knob pages ---------- */
+const PAGES=[
+ [['DRIVE',.22],['TONE',.5],['CHORUS',.35],['TREMOLO',.15],['VIBRATO',.3],['PHASER',.2],['WIDTH',.6],['UNISON',.1]],
+ [['CUTOFF',.7,1],['RESO',.3],['SWEEP',.45,1],['SWEEP RATE',.55],['LOW CUT',.12],['HIGH CUT',.8],['MID',.5],['MID FREQ',.62]],
+ [['REVERB',.4],['TYPE',.33],['SIZE',.55,1],['ECHO',.25],['ECHO TIME',.5],['FEEDBACK',.35],['GLIDE',.05],['BEND',.5]],
+ [['GATE',.1],['COMPRESS',.4],['DE-ESS',.25],['TRANSPOSE',.5],['FINE TUNE',.5],['OCTAVE',.5],['HUMANIZE',.2,1],['LO-FI',0]]];
+const base=PAGES.map(p=>p.map(k=>k[1]));
+let page=0;
+const kp=$('kpanel'),knobs=[];
+for(let i=0;i<8;i++){
+  const d=document.createElement('div');d.className='knb';
+  let t='';for(let k=0;k<21;k++){const a=(-135+k*13.5)*Math.PI/180,c=Math.cos(a),s=Math.sin(a);t+=`<line x1="${(s*26).toFixed(2)}" y1="${(-c*26).toFixed(2)}" x2="${(s*31).toFixed(2)}" y2="${(-c*31).toFixed(2)}" stroke-width="3" stroke-linecap="round"/>`}
+  d.innerHTML=`<svg viewBox="-34 -34 68 68"><g class="tk">${t}</g><circle cx="0" cy="4" r="21" fill="#000" opacity=".4"/><circle r="21" fill="color-mix(in srgb,var(--ink) 55%,var(--body))" stroke="var(--ink)" stroke-width="3"/><path d="M-19.4 -8A21 21 0 0 1 19.4 -8Z" fill="#fff" opacity=".1"/><g class="ind"><line x1="0" y1="-6" x2="0" y2="-16" stroke="var(--clay)" stroke-width="3.2" stroke-linecap="round"/></g></svg><b></b>`;
+  kp.appendChild(d);
+  const o={el:d,ticks:[...d.querySelectorAll('.tk line')],ind:d.querySelector('.ind'),lab:d.querySelector('b'),v:.5,lit:-1,drag:null};knobs.push(o);
+  d.addEventListener('pointerdown',e=>{o.drag={y:e.clientY,v:base[page][i]};d.setPointerCapture(e.pointerId);e.preventDefault()});
+  d.addEventListener('pointermove',e=>{if(o.drag){base[page][i]=Math.max(0,Math.min(1,o.drag.v+(o.drag.y-e.clientY)/(160*(+getComputedStyle(document.documentElement).getPropertyValue('--s')||1))))}});
+  d.addEventListener('pointerup',()=>{o.drag=null});d.addEventListener('pointercancel',()=>{o.drag=null});
+  d.addEventListener('dblclick',()=>{base[page][i]=PAGES[page][i][1]});
+  d.addEventListener('wheel',e=>{e.preventDefault();base[page][i]=Math.max(0,Math.min(1,base[page][i]-Math.sign(e.deltaY)*.04))},{passive:false});
+}
+function setPage(p){page=p;[...$('ptabs').children].forEach((b,i)=>b.classList.toggle('on',i===p));knobs.forEach((o,i)=>{o.lab.textContent=PAGES[p][i][0]});kp.classList.remove('swap');void kp.offsetWidth;kp.classList.add('swap')}
+$('ptabs').onclick=e=>{const b=e.target.closest('.ptab');if(b)setPage(+b.dataset.p)};setPage(0);
+knobs.forEach((o,i)=>{o.v=base[0][i]});
+
+/* ---------- bypass, panic, reset ---------- */
+const press=b=>{b.classList.add('press');setTimeout(()=>b.classList.remove('press'),130)};
+$('bBypass').onclick=e=>{const l=e.currentTarget.classList.toggle('latched');kp.classList.toggle('byp',l)};
+$('bPanic').onclick=e=>{press(e.currentTarget);[...on.keys()].forEach(noteOff);cvDirty=true};
+$('bReset').onclick=e=>{press(e.currentTarget);PAGES.forEach((p,pi)=>p.forEach((k,i)=>base[pi][i]=k[1]))};
+
+/* ---------- spectrogram: frequency across (each column over its own key), time falling toward the keys ---------- */
+const cv=$('spec'),cx2=cv.getContext('2d'),pane=$('pane');
+let CW=700,CH=200,cols={fg:'#ffc65e',bg:'#0f100c'};
+function readCols(){const cs=getComputedStyle(document.documentElement);cols.fg=cs.getPropertyValue('--lcd-fg').trim()||'#ffc65e';cols.bg=cs.getPropertyValue('--lcd-off').trim()||'#0f100c'}
+function sizeCv(){const w=pane.offsetWidth,h=pane.offsetHeight;if(!w||!h)return;CW=700;CH=Math.max(60,Math.round(700*h/w));cv.width=CW;cv.height=CH;readCols();cx2.fillStyle=cols.bg;cx2.fillRect(0,0,CW,CH);cvDirty=false}
+const partial=(m,amp,color)=>{for(let n=1;n<=7;n++){const mm=m+12*Math.log2(n),a=amp/Math.pow(n,1.15);if(mm>M1+1||a<.06)continue;const x=xs(mm);cx2.globalAlpha=Math.min(1,a);cx2.fillStyle=color;cx2.fillRect(x-1.5,CH-2,3,2);if(n===1){cx2.globalAlpha=Math.min(1,a)*.5;cx2.fillRect(x-3,CH-2,6,2)}}cx2.globalAlpha=1};
+let sing={m:57,to:57,amp:0,t:0};
+function drawSpec(now){
+  if(cvDirty||cv.width!==CW)sizeCv();
+  cx2.globalAlpha=1;cx2.drawImage(cv,0,-2);cx2.fillStyle=cols.bg;cx2.fillRect(0,CH-2,CW,2);
+  // a faint line at each C, like the keys' octave marks
+  cx2.globalAlpha=.1;cx2.fillStyle=cols.fg;for(let m=M0;m<=M1;m+=12)cx2.fillRect(wIdx(m)*KW,CH-2,1,2);cx2.globalAlpha=1;
+  for(const [m,s] of on){const age=(now-s.t0)/1000,amp=Math.exp(-age/1.2)*Math.min(1,age*30+.2);partial(m,amp+.15*(s.until?0:1),'#6cb0ff')}
+  // a "heard" voice drifting between notes, in the theme's LCD colour
+  sing.t+=1;if(sing.t>150){sing.t=0;sing.to=52+Math.floor(Math.random()*20)}
+  sing.m+=(sing.to-sing.m)*.06;const ph=sing.t/150,env=Math.sin(Math.PI*Math.min(1,ph*1.05));
+  partial(sing.m+Math.sin(now/90)*.18,env*.9,cols.fg);
+}
+
+/* ---------- demo player: arpeggios over four chords ---------- */
+const CH_=[['Cmaj7',[48,52,55,59]],['Am7',[45,48,52,55]],['Fmaj7',[41,45,48,52]],['G7',[43,47,50,53]]],PAT=[0,1,2,3,2,1];
+let st=0,lastStep=0;
+function demo(now){
+  for(const [m,s] of [...on])if(s.until&&now>s.until)noteOff(m);
+  if(now-lastStep>260){lastStep=now;const ci=Math.floor(st/6)%4,[nm,ch]=CH_[ci],k=st%6;
+    if(k===0){noteOn(ch[0]-12,900);$('now').textContent=nm}
+    noteOn(ch[PAT[k]]+(k%2?12:0),460);st++}
+}
+
+/* ---------- knob animation ---------- */
+function drawKnobs(t){
+  knobs.forEach((o,i)=>{const def=PAGES[page][i],b=base[page][i],target=def[2]?Math.max(0,Math.min(1,b+.2*Math.sin(t/1100+i))):b;
+    o.v+=(target-o.v)*.25;const lit=Math.round(o.v*20);
+    if(lit!==o.lit){o.lit=lit;o.ticks.forEach((l,k)=>l.setAttribute('opacity',k<=lit&&(o.v>.004||k===0)?1:.45)),o.ticks.forEach((l,k)=>l.setAttribute('stroke',k<=lit&&(o.v>.004||k===0)?'var(--lcd-fg)':'var(--lcd-dim)'))}
+    o.ind.setAttribute('transform','rotate('+(-135+o.v*270).toFixed(1)+')')});
+}
+
+/* ---------- theme manager (same as the tuner) ---------- */
+const THEMES=[
+ {id:'utility', name:'UTILITY', note:'Black matte plastic, amber LCD',   sw:['#2b2c2f','#1c1d1f','#2a1d0a','#e07a33']},
+ {id:'solar',   name:'SOLAR',   note:'Sage cel-shaded, plant on top',    sw:['#8c9b7c','#e8dfc4','#232a17','#b4623e']},
+ {id:'tu12',    name:'TU-12',   note:'Olive case, orange dial, red LEDs',sw:['#6f7566','#e89b3d','#2a0d0b','#ff5a4a']},
+ {id:'phosphor',name:'PHOSPHOR',note:'Green on black, workshop scope',   sw:['#1a211a','#071007','#071207','#6dff7a']}];
+const themeBtn=$('themeBtn'),themePop=$('themePop');let themeId='utility';
+try{const t=localStorage.getItem('tunerite-theme');if(THEMES.some(x=>x.id===t))themeId=t}catch(e){}
+const qt=new URLSearchParams(location.search).get('theme');if(THEMES.some(x=>x.id===qt))themeId=qt;
+themePop.insertAdjacentHTML('beforeend',THEMES.map(t=>`<button class="topt" role="option" type="button" data-id="${t.id}"><span class="sw">${t.sw.map(c=>`<i style="background:${c}"></i>`).join('')}</span><span>${t.name}<small>${t.note}</small></span></button>`).join(''));
+function applyTheme(id,flash){
+  const t=THEMES.find(x=>x.id===id)||THEMES[0];themeId=t.id;document.documentElement.dataset.theme=t.id;$('themeName').textContent=t.name;
+  [...themePop.querySelectorAll('.topt')].forEach(b=>{const o=b.dataset.id===t.id;b.classList.toggle('on',o);b.setAttribute('aria-selected',o)});
+  try{localStorage.setItem('tunerite-theme',t.id)}catch(e){}
+  cvDirty=true;if(flash){stage.classList.remove('swap');void stage.offsetWidth;stage.classList.add('swap')}
+}
+const openPop=o=>{themePop.hidden=!o;themeBtn.setAttribute('aria-expanded',o)};
+themeBtn.onclick=e=>{e.stopPropagation();openPop(themePop.hidden)};
+themePop.onclick=e=>{const b=e.target.closest('.topt');if(b){applyTheme(b.dataset.id,true);openPop(false)}e.stopPropagation()};
+document.addEventListener('click',()=>openPop(false));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')openPop(false);if((e.key==='t'||e.key==='T')&&!e.ctrlKey&&!e.metaKey)applyTheme(THEMES[(THEMES.findIndex(x=>x.id===themeId)+1)%THEMES.length].id,true)});
+applyTheme(themeId,false);
+
+/* ---------- loop ---------- */
+let lastSpec=0;
+function loop(now){
+  demo(now);drawKnobs(now);
+  if(now-lastSpec>22){lastSpec=now;drawSpec(now)}
+  requestAnimationFrame(loop);
+}
+document.fonts.ready.then(()=>{cvDirty=true;requestAnimationFrame(loop)});
+})();
+</script>
+</body>
+</html>

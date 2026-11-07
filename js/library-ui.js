@@ -78,7 +78,7 @@ const PX = {
     fill($('#pxO1'), this.def.o1); fill($('#pxO2'), this.def.o2); key.value = 0;
     if (preset) { if (preset.o1) $('#pxO1').value = preset.o1; if (preset.o2) $('#pxO2').value = preset.o2; if (preset.key != null) key.value = preset.key; } key.parentNode.hidden = !!this.def.noKey;
     if (!Midi.inputCount() && st.inst !== 'piano') { setInst('piano'); toast('No keyboard connected. Play on the on-screen keys or your computer keyboard, or play a real piano and I will listen through the microphone.', 6000); }
-    $('#o-pex').classList.add('on'); this.start();
+    $('#o-pex').classList.add('on'); PDev.sync(); this.start();
   },
   close() { this.on = false; this.course = null; clearInterval(this.timer); $('#o-pex').classList.remove('on'); VKeys.releaseAll(); UI.refresh(); },
   start() {
@@ -166,6 +166,7 @@ const PX = {
     mk('Again', cr && cr.passed && cr.nxt ? '' : 'primary', () => this.start());
     if (!this.def.noKey && !this.course) mk('Next key (up a fifth)', '', () => { $('#pxKey').value = (this.pc + 7) % 12; this.start(); });
     mk('Done', '', () => this.close()); box.appendChild(row);
+    if (cr) { PDev.showResult({ kind: 'piano', id: this.course.id, pct: sm.firstTryPct, r: cr, rows: [['FIRST TRY', sm.firstTryPct + '%'], ['STEPS', sm.firstTry + ' OF ' + sm.steps], ['MISTAKES', String(sm.mistakes)]], strip: this.rec.map(r => r.wrong.length ? 0 : 1), stripLabel: 'STEP BY STEP', details: null }); this.close(); }
   },
   /* keyboard: target keys amber (when "show keys" is on), pressed keys blue, wrong presses flash red */
   draw(now) {

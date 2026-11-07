@@ -5,10 +5,13 @@ function setDevicePixel() { document.documentElement.style.setProperty('--dp', (
 setDevicePixel(); window.addEventListener('resize', setDevicePixel);
 function bind() {
   $$('#nav button').forEach(b => b.onclick = () => UI.show(b.dataset.s));
-  $$('#menuDiff button').forEach(b => b.onclick = () => { Store.data.settings.diff = b.dataset.d; Store.save(); UI.refresh(); });
+  $$('#menuDiff button').forEach(b => b.onclick = () => { Store.data.settings.diff = b.dataset.d; Store.save(); if (Session.s) Session.s.tol = TOLERANCE[b.dataset.d]; UI.refresh(); });
   SetUI.init();
+  { const sec = $$('#s-progress .secbtn'), show = k => { $('#s-progress').dataset.sec = k; sec.forEach(b => b.setAttribute('aria-pressed', b.dataset.sec === k ? 'true' : 'false')); }; sec.forEach(b => b.addEventListener('click', () => show(b.dataset.sec))); show('ov'); }
+  /* the Practice device's source slider: Sing, Piano, Whistle or Ear */
+  window.setTrainMode = m => { const st = Store.data.settings; st.trainMode = m === 'piano' || m === 'ear' ? m : 'sing'; Store.save(); if (m === 'sing' && st.inst !== 'voice') setInst('voice'); else if (m === 'whistle' && st.inst !== 'whistle') setInst('whistle'); else UI.refresh(); };
   const set = (id, key, get) => $(id).onchange = $(id).oninput = e => { Store.data.settings[key] = get(e.target); Store.save(); Engine.applySettings(); if (key === 'gateDb') UI.refresh(); };
-  set('#setDiff', 'diff', e => e.value); set('#setHear', 'hear', e => e.checked); set('#setDrone', 'drone', e => e.checked);
+  set('#setDiff', 'diff', e => { const d = e.value; if (Session.s) Session.s.tol = TOLERANCE[d]; return d; }); set('#setHear', 'hear', e => e.checked); set('#setDrone', 'drone', e => e.checked);
   set('#setCues', 'cues', e => e.checked); set('#setWait', 'wait', e => e.checked); set('#setFind', 'find', e => +e.value); set('#setGuide', 'guide', e => e.value); set('#setVol', 'vol', e => +e.value);
   const vz = $('#volZone'), vp = $('#volPop'); let vHide = 0;
   const setVolFrom = x => { const v = Math.round(clamp(x / innerWidth, 0, 1) * 20) / 20, st = Store.data.settings; st.vol = clamp(v, 0.1, 1); $('#setVol').value = st.vol; $('#volFill').style.width = (st.vol - 0.1) / 0.9 * 100 + '%'; $('#volNum').textContent = Math.round(st.vol * 100) + '%'; Engine.applySettings(); };
@@ -59,7 +62,7 @@ function bind() {
   $('#sqTempo').oninput = e => { $('#sqTempoOut').textContent = e.target.value + '%'; }; $('#sqTempo').onchange = e => Seq.setTempo(e.target.value / 100);
   { const cv = $('#seqCv'); cv.onpointerdown = e => Seq.ovDown(e); cv.onpointermove = e => Seq.ovMove(e); cv.onpointerup = () => Seq.ovUp(); cv.onpointercancel = () => { Seq.ovDrag = null; Seq.ovMode = null; Seq.ovReg = null; }; }
   $('#sqSeek').oninput = e => { Seq.drag = true; $('#sqTime').textContent = Seq.fmt(+e.target.value) + ' / ' + Seq.fmt(Seq.length); }; $('#sqSeek').onchange = e => { Seq.drag = false; Seq.seek(+e.target.value); };
-  Ed.init(); Knobs.init(); Scale.mount(); Ear.init(); Synth.init(); Vox.init(); PianoUI.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
+  Ed.init(); Knobs.init(); Scale.mount(); Ear.init(); Synth.init(); Vox.init(); PianoUI.init(); PDev.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
   TunerDial.init(); Themes.apply(Store.data.settings.theme);
   $('#instHintBtn').onclick = () => { if (Tuner.hint.want) setInst(Tuner.hint.want); $('#instHint').hidden = true; };
   $('#instHintNo').onclick = () => { Tuner.hint.dismissed[Tuner.hint.want] = true; $('#instHint').hidden = true; };
@@ -87,11 +90,6 @@ function bind() {
   $('#libSearch').oninput = e => { Lib.f.q = e.target.value; Lib.render(); };
   $('#libLevel').onchange = e => { Lib.f.level = +e.target.value; Lib.render(); }; $('#libCat').onchange = e => { Lib.f.cat = e.target.value; Lib.render(); };
   $('#libFav').onclick = () => { Lib.f.fav = !Lib.f.fav; Lib.render(); };
-  $$('#trMode button').forEach(b => b.onclick = () => {
-    const m = b.dataset.m, st = Store.data.settings; st.trainMode = m === 'piano' || m === 'ear' ? m : 'sing'; Store.save();
-    if (m === 'sing' && st.inst !== 'voice') setInst('voice'); else if (m === 'whistle' && st.inst !== 'whistle') setInst('whistle'); else UI.refresh();
-  });
-  $$('#prView button').forEach(b => b.onclick = () => { Store.data.settings.prView = b.dataset.v; Store.save(); UI.refresh(); });
   $('#sStop').onclick = () => Session.stop();
   $('#btnMidi').onclick = () => $('#midiFile').click();
   $('#midiFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) loadMidiFile(f); };
@@ -211,4 +209,8 @@ bind();
 Steps.init(); Meta.init(); Mark.init();
 UI.refresh();
 frameLoop();
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+/* register only once the page has finished loading, so the worker's ~60 cache downloads do not compete with the page's own files on a slow first visit */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  const reg = () => setTimeout(() => navigator.serviceWorker.register('sw.js').catch(() => {}), 1500);
+  if (document.readyState === 'complete') reg(); else window.addEventListener('load', reg, { once: true });
+}

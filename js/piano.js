@@ -53,9 +53,10 @@ const VKeys = {
   /* Pointer handling for a keyboard canvas: several fingers at once, and sliding from key to key. */
   attach(cv) {
     cv.style.touchAction = 'none';
+    const scrolls = () => cv.id === 'specCv' && !!cv.closest('#s-piano');      // on the Piano tab a finger on the graph scrolls the page; full screen, it plays
     const at = e => { const r = cv.getBoundingClientRect(); return kbHit(cv, e.clientX - r.left, e.clientY - r.top); };
     const vel = e => e.pointerType === 'touch' && e.pressure > 0 && e.pressure !== 0.5 ? clamp(Math.round(40 + e.pressure * 87), 40, 127) : this.vel;
-    cv.addEventListener('pointerdown', e => { const n = at(e); if (n == null) return; try { cv.setPointerCapture(e.pointerId); } catch (x) {} this.ptr.set(e.pointerId, n); this.press(n, vel(e)); e.preventDefault(); });
+    cv.addEventListener('pointerdown', e => { if (e.pointerType === 'touch' && scrolls()) return; const n = at(e); if (n == null) return; try { cv.setPointerCapture(e.pointerId); } catch (x) {} this.ptr.set(e.pointerId, n); this.press(n, vel(e)); e.preventDefault(); });
     cv.addEventListener('pointermove', e => { if (!this.ptr.has(e.pointerId)) return; const n = at(e), old = this.ptr.get(e.pointerId); if (n != null && n !== old) { this.release(old); this.ptr.set(e.pointerId, n); this.press(n, vel(e)); } });
     const up = e => { if (!this.ptr.has(e.pointerId)) return; this.release(this.ptr.get(e.pointerId)); this.ptr.delete(e.pointerId); };
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => cv.addEventListener(t, up));

@@ -1,0 +1,226 @@
+/* ---- Practice tab: the course as a device with a screen. It reads the same --tn-* colours as the Tuner and the Piano tab, so every theme restyles it.
+   The whole device is drawn at a fixed design size (1240 wide, or 430 on a phone) and scaled to fit by PDev.fit (js/practice-device.js). ---- */
+.pdev{--wall:var(--tn-wall,var(--bg));--ink:var(--tn-edge,#0a0a0c);--print:var(--tn-printh,#cfc8b8);--print-lo:var(--tn-print,#8f9096);
+  --body:var(--tn-p1,#2b2c31);--body-lo:var(--tn-p3,#141518);--body-hi:color-mix(in srgb,var(--body) 86%,#fff);--lip:color-mix(in srgb,var(--ink) 60%,var(--body-lo));--wall-sh:color-mix(in srgb,var(--wall) 55%,#000);
+  --clay:var(--tn-hot,var(--tn-fg,#ffb347));--teal:var(--tn-key1,#3a3b40);--teal-lo:var(--tn-key2,#2a2b2f);--teal-hi:var(--tn-key1h,#44454b);
+  --glass:var(--tn-lcd2,#0e0905);--inset:#000;--groove:color-mix(in srgb,var(--tn-lcd2,#0e0905) 70%,var(--body));--dotc:var(--groove);
+  --lcd-bg:var(--tn-lcd,#1a120a);--lcd-fg:var(--tn-fg,#ffb347);--lcd-lab:var(--tn-lab,#c98a3a);--lcd-dim:var(--tn-dim,#6b4a22);--lcd-off:var(--tn-lcd2,#0e0905);--lcd-sh:var(--tn-lcd2,#0e0905);--lcd-on:var(--tn-on,#2a1604);--lcd-glow:var(--tn-glow,rgba(255,170,50,.5));
+  --lamp-r0:var(--tn-red0,#2a1a16);--lamp-g0:var(--tn-grn0,#18261a);--lamp-r:var(--tn-red,#ff5a36);--lamp-g:var(--tn-grn,#7ee05a);--pwr:var(--tn-red,#ff5a36);--dp:1px;
+  font-family:"Silkscreen",ui-monospace,monospace;color:var(--print);user-select:none;-webkit-user-select:none;padding:0}
+.pdev .stage{position:relative;width:var(--dw,1240px);zoom:var(--s,1);margin:0 auto}
+.pdev .device{position:relative;margin:0 4px 4px;background:var(--body);border:4px solid var(--ink);border-radius:30px;padding:12px 18px 16px;
+  box-shadow:inset 0 10px 0 var(--body-hi),inset 0 -16px 0 var(--body-lo);
+  display:grid;grid-template-columns:minmax(0,1fr) 402px;grid-template-rows:auto 1fr;gap:14px 24px}
+.pdev .head{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 14px 0 10px}
+.pdev .brand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1}
+.pdev .brand small{display:block;font-weight:400;font-size:12px;letter-spacing:3px;margin-top:6px;color:var(--print-lo)}
+.pdev .chips{display:flex;gap:10px;margin-left:34px}
+.pdev .chip{background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;padding:4px 12px 5px;box-shadow:inset 0 4px 0 var(--inset);position:relative;overflow:hidden;min-width:96px}
+.pdev .chip::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3))),repeating-linear-gradient(90deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3)))}
+.pdev .chip small{display:block;font-size:11px;letter-spacing:2px;color:var(--lcd-lab)}
+.pdev .chip b{display:block;font-weight:400;font-size:16px;letter-spacing:2px;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow);margin-top:2px}
+.pdev .chip .xp{height:6px;margin-top:4px;background:var(--lcd-off);border:1px solid var(--ink);position:relative}
+.pdev .chip .xp i{position:absolute;left:0;top:0;bottom:0;background:var(--lcd-fg);box-shadow:0 0 6px var(--lcd-glow);transition:width .6s}
+.pdev .themebtn{margin-left:auto;display:flex;align-items:center;gap:10px;background:var(--body-lo);border:3px solid var(--ink);border-radius:10px;padding:5px 12px;cursor:pointer;color:var(--print-lo);font:400 12px "Silkscreen",monospace;letter-spacing:3px;box-shadow:inset 0 3px 0 var(--lip),0 3px 0 var(--ink)}
+.pdev .themebtn b{font-weight:400;color:var(--clay)}
+.pdev .themebtn:active{transform:translateY(2px)}
+.pdev .pwr{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:3px;margin-left:12px}
+.pdev .pwr i{width:14px;height:14px;border-radius:50%;background:var(--pwr);border:3px solid var(--ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 10px var(--pwr)}
+/* the screen: a big recessed LCD, the whole game lives here */
+.pdev .pleft{display:flex;flex-direction:column;gap:12px;min-height:0}
+.pdev .bezel{background:var(--ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 var(--inset),0 4px 0 var(--body-hi),0 6px 0 var(--ink)}
+.pdev .scr{position:relative;border-radius:8px;overflow:hidden;background:var(--lcd-off);line-height:0}
+.pdev .scr canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.pdev .scr::after{content:"";position:absolute;inset:0;pointer-events:none;--gn:3;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3))),repeating-linear-gradient(90deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3)))}
+.pdev .scr::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;box-shadow:inset 0 8px 0 rgba(0,0,0,.45),inset 0 0 40px rgba(0,0,0,.35)}
+.pdev .ticker{position:relative;background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;padding:8px 14px;box-shadow:inset 0 5px 0 var(--inset),0 3px 0 var(--body-hi);overflow:hidden;display:flex;align-items:center;gap:14px;height:44px}
+.pdev .ticker::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3))),repeating-linear-gradient(90deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3)))}
+.pdev .ticker span{font-size:14px;letter-spacing:2px;color:var(--lcd-fg);text-shadow:-1px 0 rgba(255,50,50,.5),1px 0 rgba(60,170,255,.4),0 0 8px var(--lcd-glow);white-space:nowrap;text-transform:uppercase}
+.pdev .lamps{margin-left:auto;display:flex;gap:16px;position:relative;z-index:2}
+.pdev .lamps div{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:2px;color:var(--lcd-lab)}
+.pdev .lamp{width:16px;height:16px;border-radius:50%;border:3px solid var(--ink);background:var(--lamp-r0);transition:.08s;box-shadow:inset 0 3px 0 rgba(0,0,0,.35)}
+.pdev .lamp.g{background:var(--lamp-g0)}
+.pdev .lamp.r.lit{background:var(--lamp-r);box-shadow:0 0 12px var(--lamp-r)}
+.pdev .lamp.g.lit{background:var(--lamp-g);box-shadow:0 0 12px var(--lamp-g)}
+/* the controls */
+.pdev .pright{display:flex;flex-direction:column;gap:14px;min-height:0}
+.pdev .well{background:var(--body-lo);border:3px solid var(--ink);border-radius:12px;padding:10px 12px 12px;box-shadow:inset 0 5px 0 var(--lip),0 3px 0 var(--body-hi);position:relative}
+.pdev .well h4{margin:0 0 10px;font:400 12px "Silkscreen",monospace;letter-spacing:3px;color:var(--print-lo)}
+.pdev .modes{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px}
+.pdev .mlabels{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:12px}
+.pdev .mlabels button{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:2px 0 8px;color:var(--print-lo);font:400 12px "Silkscreen",monospace;letter-spacing:2px;position:relative;transition:color .2s}
+.pdev .mlabels button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.pdev .mlabels button.on{color:var(--clay)}
+.pdev .mlabels button::after{content:"";position:absolute;left:50%;bottom:-4px;width:3px;height:6px;background:var(--ink);transform:translateX(-50%)}
+.pdev .mtrack{position:relative;height:56px;background:var(--glass);border:3px solid var(--ink);border-radius:12px;box-shadow:inset 0 8px 0 var(--inset),0 3px 0 var(--body-hi);touch-action:none;cursor:pointer;margin:0 2px}
+.pdev .mtrack::before{content:"";position:absolute;left:12.5%;right:12.5%;top:50%;height:4px;margin-top:-2px;background:var(--groove);border-radius:2px}
+.pdev .mtrack:focus-visible{outline:3px solid var(--clay);outline-offset:3px}
+.pdev .mdot{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--dotc)}
+.pdev .mknob{position:absolute;top:3px;bottom:3px;width:calc(25% - 6px);left:calc(var(--i,0)*25% + 3px);
+  background:repeating-linear-gradient(90deg,var(--teal-hi) 0 5px,var(--teal) 5px 7px);border:3px solid var(--ink);border-radius:6px;box-shadow:0 7px 0 rgba(0,0,0,.45);transition:left .12s ease-out}
+.pdev .mknob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-5px;background:var(--glass);border-left:3px solid var(--ink);border-right:3px solid var(--ink)}
+.pdev .mknob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--clay);z-index:1}
+.pdev .row{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.pdev .cap{display:flex;flex-direction:column;align-items:center;gap:20px;font-size:12px;letter-spacing:2px;color:var(--print)}
+.pdev .cap button{--lift:8px;width:62px;height:52px;padding:0;border-radius:16px;border:3px solid var(--ink);cursor:pointer;color:var(--print);display:grid;place-items:center;position:relative;
+  background:linear-gradient(180deg,var(--teal-hi) 0 22%,var(--teal) 22%,var(--teal-lo));box-shadow:0 var(--lift) 0 var(--ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28);transition:transform .06s,box-shadow .06s}
+.pdev .cap button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.pdev .cap button:active,.pdev .cap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.28)}
+.pdev .cap button:disabled{opacity:.4;cursor:default;transform:none}
+/* no corner lamps on the keys; a key that is switched on (Exercises, Library) stays pressed in instead */
+.pdev .cap.go button:not(.big){transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.28);color:var(--clay)}
+.pdev .big{width:110px!important;height:60px!important;border-radius:16px!important;background:linear-gradient(180deg,color-mix(in srgb,var(--clay) 65%,#fff) 0 22%,var(--clay) 22%,color-mix(in srgb,var(--clay) 62%,#000))!important;color:var(--ink)!important}
+.pdev .big svg{width:30px;height:30px}
+/* small keys in the header (Map, Library) and beside SOUND SOURCE (Range) */
+.pdev .chips{align-items:center}
+.pdev .cap.hk{flex-direction:row;gap:8px;font-size:10px;letter-spacing:1px}
+.pdev .cap.hk button{--lift:5px;width:44px;height:34px;border-radius:10px;margin-bottom:5px}
+.pdev .cap.hk button svg{width:20px;height:20px}
+.pdev .chips .cap.hk{flex-direction:column;gap:10px}
+.pdev .msrc{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center}.pdev .mcol,.pdev .msrc .cap.hk{display:contents}
+.pdev .msrc .cap.hk span{grid-column:2;grid-row:1;font:400 12px "Silkscreen",monospace;letter-spacing:2px;text-align:center;padding:2px 0 8px;color:var(--print-lo)}
+.pdev .msrc .cap.hk button{grid-column:2;grid-row:2;margin:0;justify-self:center}
+.pdev .mcol .mlabels{grid-column:1;grid-row:1}.pdev .mcol .mtrack{grid-column:1;grid-row:2}
+.pdev .screen-hint{font-size:11px;letter-spacing:2px;color:var(--print-lo);text-align:center;line-height:16px}
+/* ---- phone / portrait: a 430 wide device that scrolls, the screen on top, the controls under it ---- */
+.pdev.port .stage{width:430px}
+.pdev.port .device{margin:0 4px 4px;grid-template-columns:1fr;grid-template-rows:auto;gap:14px;padding:14px 14px 22px;border-radius:26px}
+.pdev.port .head{flex-wrap:wrap;row-gap:8px;padding:0 4px 0 14px;gap:8px}
+.pdev.port .brand{font-size:18px}
+.pdev.port .pwr{display:none}
+.pdev.port .themebtn{margin-left:auto;padding:4px 8px;font-size:10px}
+.pdev.port .chips{margin-left:0;order:3;width:100%;gap:6px}
+.pdev.port .chips .cap.hk{font-size:0;gap:0}.pdev.port .chips .cap.hk button{width:38px}
+.pdev.port .chip{flex:1;min-width:0;padding:3px 8px}
+.pdev.port .chip b{font-size:12px}
+.pdev.port .chip small{font-size:9px;letter-spacing:1px;white-space:nowrap}
+.pdev.port .pleft{gap:10px}
+.pdev.port .scr canvas{width:100%}
+.pdev.port .pright{gap:12px}
+.pdev.port .well{padding:8px 10px 12px}
+.pdev.port .cap button{width:56px;height:46px}
+.pdev.port .big{width:92px!important;height:54px!important}
+.pdev.port .screen-hint{display:none}
+.pdev.port .device>*,.pdev.port .pleft>*,.pdev.port .pright>*{min-width:0}
+.pdev.port .ticker span{overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.pdev.port .lamps{gap:8px;flex:none}
+.pdev.port .lamps div{font-size:10px;gap:4px}
+.pdev.port .ticker{height:38px;padding:6px 10px}
+.pdev.port .ticker span{font-size:12px}
+
+/* ---- Exercises and Library live inside the screen: the same lists as before, restyled as LCD text ---- */
+.pdev .pdpane{position:absolute;inset:0;overflow:auto;background:var(--lcd-bg);color:var(--lcd-fg);padding:12px 14px 18px;font:400 12px/1.5 "Silkscreen",ui-monospace,monospace;letter-spacing:.05em;text-align:left;line-height:1.5;scrollbar-width:thin;scrollbar-color:var(--lcd-dim) var(--lcd-off)}
+.pdev .pdpane[hidden]{display:none}
+.pdev .pdpane [hidden]{display:none!important}
+.pdev .pdpane *{box-sizing:border-box}
+.pdev .pdpane .muted,.pdev .pdpane .small{color:var(--lcd-lab);font-size:12px}
+.pdev .pdpane h1,.pdev .pdpane h2{font:400 14px "Silkscreen",monospace;color:var(--lcd-fg);margin:10px 0 6px;letter-spacing:.1em;text-shadow:0 0 6px var(--lcd-glow)}
+.pdev .pdpane b{font-weight:400;color:var(--lcd-fg)}
+.pdev .pdpane .zone{background:none;border:0;padding:0;margin:0 0 8px}
+.pdev .pdpane .zonehead{display:flex;gap:10px;align-items:flex-start;margin:0 0 8px}
+.pdev .pdpane .zonehead b{font-size:14px;text-shadow:0 0 6px var(--lcd-glow)}
+.pdev .pdpane .ico{font-size:16px}
+.pdev .pdpane .card,.pdev .pdpane .banner,.pdev .pdpane button.card{display:block;width:100%;text-align:left;background:var(--lcd-off);border:2px solid var(--lcd-dim);border-radius:0;box-shadow:none;padding:7px 10px;margin:6px 0;color:var(--lcd-fg);font:inherit;min-height:0;cursor:default}
+.pdev .pdpane button.card{cursor:pointer}.pdev .pdpane button.card:hover,.pdev .pdpane .card:hover{border-color:var(--lcd-fg)}
+.pdev .pdpane .card .t{font-size:14px;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow);margin-bottom:2px}
+.pdev .pdpane .best{float:right;color:var(--clay);font-size:12px}
+.pdev .pdpane .btn,.pdev .pdpane .seg button{min-height:30px!important;padding:3px 12px!important;background:var(--lcd-off);border:2px solid var(--lcd-dim);border-radius:0!important;color:var(--lcd-fg);font:inherit;text-transform:uppercase;cursor:pointer;box-shadow:none}
+.pdev .pdpane .btn:hover,.pdev .pdpane .seg button:hover{border-color:var(--lcd-fg)}
+.pdev .pdpane .btn.primary,.pdev .pdpane .seg button.on{background:var(--lcd-fg);color:var(--lcd-on);border-color:var(--lcd-fg)}
+.pdev .pdpane .btn:disabled{opacity:.4;cursor:default}
+.pdev .pdpane .seg{display:flex;gap:4px;margin:6px 0;background:none;border:0;padding:0}
+.pdev .pdpane .seg button{flex:1;color:var(--lcd-lab)}
+.pdev .pdpane .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0!important}
+.pdev .pdpane input,.pdev .pdpane select,.pdev .pdpane .lib-input{min-height:30px!important;background:var(--lcd-off)!important;color:var(--lcd-fg)!important;border:2px solid var(--lcd-dim)!important;border-radius:0!important;font:inherit!important;padding:2px 8px!important;margin:4px 0;width:auto;max-width:100%}
+.pdev .pdpane .lib-input{width:100%}
+.pdev .pdpane input::placeholder{color:var(--lcd-dim)}
+.pdev .pdpane details.fold{border:0;background:none;margin:6px 0;padding:0}
+.pdev .pdpane details.fold>summary{cursor:pointer;color:var(--lcd-fg);padding:6px 4px;border-bottom:2px solid var(--lcd-dim);text-transform:uppercase;font-size:13px;list-style:none}
+.pdev .pdpane details.fold>summary::-webkit-details-marker{display:none}
+.pdev .pdpane details.fold>summary::before{content:"▸ ";color:var(--clay)}.pdev .pdpane details.fold[open]>summary::before{content:"▾ "}
+.pdev .pdpane .tag{display:inline-block;background:var(--lcd-off);border:1px solid var(--lcd-dim);color:var(--lcd-lab);padding:0 6px;margin:2px 4px 2px 0;font-size:11px}
+.pdev .pdpane .star{background:none;border:0;color:var(--clay);font-size:16px;cursor:pointer;min-width:0;min-height:0}
+.pdev .pdpane .lc-top{display:flex;align-items:center;gap:8px}.pdev .pdpane .lc-name{flex:1}
+.pdev .pdpane .stat{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--lcd-dim);padding:3px 0}
+.pdev .pdpane a{color:var(--clay)}
+.pdev .pdpane ::-webkit-scrollbar{width:8px}.pdev .pdpane ::-webkit-scrollbar-thumb{background:var(--lcd-dim)}.pdev .pdpane ::-webkit-scrollbar-track{background:var(--lcd-off)}
+
+/* ---- the exercise, its results, the piano exercise and the ear drill play inside the screen too ---- */
+.pdev .pdpane .overlay{position:absolute;inset:0;z-index:auto;background:var(--lcd-bg);color:var(--lcd-fg);border:0!important;padding:10px 14px;gap:8px;font:inherit;text-align:left;align-items:stretch;justify-content:flex-start;overflow:auto}
+.pdev .pdpane .sess{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;padding:8px 10px;height:auto}
+.pdev .pdpane .sess canvas{flex:1;min-height:0;width:100%;height:auto}
+.pdev .pdpane #tr-res{position:absolute;inset:0;overflow:auto;padding:10px 14px;background:var(--lcd-bg)}
+.pdev .pdpane .sbar,.pdev .pdpane .earbar{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;width:100%;justify-content:space-between}
+.pdev .pdpane .sbar .t,.pdev .pdpane .earbar b{flex:1;font-size:14px;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow);text-align:left}
+.pdev .pdpane .sread{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.pdev .pdpane .big{font-size:26px!important;color:var(--lcd-fg);text-shadow:0 0 8px var(--lcd-glow);line-height:1.2}
+.pdev .pdpane .stars,.pdev .pdpane .earstar{color:var(--clay);font-size:20px;letter-spacing:.2em}
+.pdev .pdpane .meter{background:var(--lcd-off);border:2px solid var(--lcd-dim);border-radius:0;height:10px!important;width:100%!important;max-width:none!important;overflow:hidden}
+.pdev .pdpane .meter>i{display:block;height:100%;background:var(--lcd-fg);box-shadow:0 0 6px var(--lcd-glow)}
+.pdev .pdpane .synbtn{background:var(--lcd-off);border:2px solid var(--lcd-dim);border-radius:0;box-shadow:none;color:var(--lcd-fg);font:inherit;text-transform:uppercase;min-height:30px;padding:3px 12px;cursor:pointer;transform:none}
+.pdev .pdpane .synbtn:hover{border-color:var(--lcd-fg)}
+.pdev .pdpane .synbtn.ok,.pdev .pdpane .earopt.ok{background:var(--lamp-g);color:var(--lcd-on);border-color:var(--lamp-g)}
+.pdev .pdpane .synbtn.bad,.pdev .pdpane .earopt.bad{background:var(--lamp-r);color:var(--lcd-on);border-color:var(--lamp-r)}
+.pdev .pdpane .earbody{display:flex;flex-direction:column;gap:8px;align-items:stretch;width:100%}
+.pdev .pdpane .earlcd{background:var(--lcd-off);border:2px solid var(--lcd-dim);padding:8px 10px}
+.pdev .pdpane .earlcd small{display:block;color:var(--lcd-lab);font-size:12px}.pdev .pdpane .earlcd b{font-size:15px;text-shadow:0 0 6px var(--lcd-glow)}
+.pdev .pdpane .earopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;width:100%}
+.pdev .pdpane .earopt{display:flex;gap:8px;align-items:center;justify-content:flex-start;text-align:left}.pdev .pdpane .earopt i{font-style:normal;color:var(--clay)}
+.pdev .pdpane .earfb{min-height:1.5em;font-size:12px}.pdev .pdpane .earfb.good{color:var(--lamp-g)}.pdev .pdpane .earfb.miss{color:var(--lamp-r)}
+.pdev .pdpane .earmel{display:flex;align-items:center;gap:8px}.pdev .pdpane #earMelRow{display:flex;gap:4px}.pdev .pdpane #earMelRow span{border:2px solid var(--lcd-dim);min-width:28px;text-align:center;padding:2px 4px}.pdev .pdpane #earMelRow span.on{background:var(--lcd-fg);color:var(--lcd-on)}
+.pdev .pdpane .earres{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.pdev .pdpane .earscore{font-size:30px;color:var(--lcd-fg);text-shadow:0 0 8px var(--lcd-glow)}
+.pdev .pdpane #pxCv{width:100%;height:120px;max-width:none}
+.pdev .pdpane #pxName{font-size:30px!important}
+.pdev .pdpane #pxMsg{min-height:1.4em;font-weight:400}
+.pdev .pdpane label{color:var(--lcd-lab);font-size:12px}
+.pdev .pdpane input[type=checkbox]{width:auto;min-height:0!important;accent-color:var(--lcd-fg)}
+.pdev .pdpane #pxRes{width:100%;max-width:none;text-align:left}
+.pdev .pdpane .big{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;min-width:0!important;text-align:left}
+.pdev .pdpane .stars{text-align:left}
+.pdev .pdpane .earopt{min-height:44px;font-size:14px}
+.pdev .pdpane #o-range{align-items:center;text-align:center;justify-content:center}
+.pdev .pdpane #o-range .big{font-size:48px!important;text-align:center;color:var(--lcd-fg)!important}
+
+/* the details of an exercise: the numbers first, then the coach and the notes, the graph last */
+.pdev .pdpane .reshead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 4px}
+.pdev .pdpane .reshead h1{flex:1;margin:0;min-width:0}
+.pdev .pdpane #resCv{display:block;width:100%;height:160px;margin:6px 0}
+.pdev .pdpane #rScore,.pdev .pdpane #sTarget,.pdev .pdpane #sNote{color:var(--lcd-fg)!important;font-family:"Silkscreen",monospace;text-shadow:0 0 8px var(--lcd-glow)}
+.pdev .pdpane #rScore{font-size:26px}
+
+/* the whole device fits the tab with no scrolling: on a phone the extras give way so the screen can stay big */
+#s-train.screen{overflow:hidden;padding:0.25rem}
+@media (max-width:760px){#s-train.screen{padding:0.15rem}}
+.pdev{padding:0!important}
+.pdev.port .brand{display:none}
+.pdev.port .head{padding:0 2px;gap:6px;row-gap:0}
+.pdev.port .device{margin:0 2px 42px;gap:8px;padding:10px 12px 14px;border-radius:22px}
+.pdev.port .pleft{gap:6px}.pdev.port .pright{gap:8px}
+.pdev.port .well{padding:6px 8px 8px}.pdev.port .well h4{margin:0 0 4px;font-size:10px}
+.pdev.port .mlabels{margin-bottom:6px}.pdev.port .mlabels button{gap:0;padding:0 0 6px}.pdev.port .mlabels svg{display:none}.pdev.port .mtrack{height:44px}
+.pdev.port .cap{gap:14px;font-size:10px}.pdev.port .cap button{width:48px;height:38px;border-radius:12px;--lift:6px}
+.pdev.port .big{width:76px!important;height:44px!important}.pdev.port .cap button svg{width:20px;height:20px}
+
+/* ---- a landscape phone: no header, a screen that fills the height, and the keys in a narrow column beside it ---- */
+.pdev.short .stage{width:var(--dw,800px);zoom:1}
+.pdev.short .device{grid-template-columns:minmax(0,1fr) 188px;grid-template-rows:auto;padding:6px 8px 10px;gap:6px;margin:0 0 6px;border-radius:18px;border-width:3px}
+.pdev.short .head{grid-column:1/-1;padding:0 4px;gap:6px}.pdev.short .brand,.pdev.short .pwr{display:none}.pdev.short .chips{margin:0;gap:6px;width:100%}.pdev.short .chip{flex:1;min-width:0;padding:1px 6px;border-width:2px}.pdev.short .chip small{font-size:8px}.pdev.short .chip b{font-size:11px;margin-top:0}.pdev.short .chip .xp{display:none}.pdev.short .chips .cap.hk{font-size:0;gap:0}.pdev.short .chips .cap.hk button{width:34px;height:26px;margin:0}
+.pdev.short .msrc .cap.hk span{font-size:0;padding:0 0 4px}.pdev.short .msrc .cap.hk span::before{content:"RNG";font-size:10px;letter-spacing:1px}.pdev.short .cap.hk button{width:34px;height:26px;margin:0}
+.pdev.short .pleft{gap:6px}.pdev.short .bezel{padding:6px;border-radius:12px}
+.pdev.short .ticker{height:30px;padding:4px 10px}.pdev.short .ticker span{font-size:11px;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.pdev.short .lamps{display:none}
+.pdev.short .pright{gap:6px;min-width:0}
+.pdev.short .well{padding:5px 7px 7px;border-width:2px}.pdev.short #pdSrc h4{display:none}
+.pdev.short .mlabels{margin-bottom:5px}.pdev.short .mlabels svg{display:none}.pdev.short .mlabels button{gap:0;padding:0 0 4px;font-size:10px;letter-spacing:1px}
+.pdev.short .mtrack{height:32px}
+.pdev.short .cap{gap:10px;font-size:9px;letter-spacing:1px}.pdev.short .cap button{width:40px;height:30px;border-radius:10px;--lift:5px}.pdev.short .cap button svg{width:18px;height:18px}
+.pdev.short .big{width:62px!important;height:36px!important}
+.pdev.short .pdpane{padding:6px 8px 10px;font-size:11px}
+.pdev.short .mlabels button{font-size:0;padding:0 0 4px}.pdev.short .mlabels svg{display:block;width:18px;height:18px}
+.pdev.short .row{flex-wrap:nowrap;gap:4px}.pdev.short .cap{gap:8px}.pdev.short .cap button{width:36px}.pdev.short .big{width:56px!important}.pdev.short .cap span,.pdev.short .cap{white-space:nowrap}
+/* the ear drill on a landscape phone: everything on screen at once */
+.pdev.short .pdpane #o-ear{padding:4px 8px;gap:4px}.pdev.short .pdpane .earmeter{display:none}
+.pdev.short .pdpane .earbody{gap:4px}.pdev.short .pdpane .earlcd{padding:3px 8px}.pdev.short .pdpane .earlcd small{font-size:10px}.pdev.short .pdpane .earlcd b{font-size:12px}
+.pdev.short .pdpane .earopts{grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:4px}.pdev.short .pdpane .earopt{min-height:28px;font-size:12px;padding:2px 8px}
+.pdev.short .pdpane .earplay{min-height:26px;padding:2px 8px}.pdev.short .pdpane .earfb{min-height:1.2em}

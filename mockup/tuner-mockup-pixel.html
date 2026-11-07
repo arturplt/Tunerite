@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite TU-12 pixel mockup</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+html,body{margin:0;height:100%;background:#18181a;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;user-select:none;-webkit-user-select:none;cursor:default}
+</style>
+</head>
+<body>
+<canvas id="c" width="640" height="360"></canvas>
+<script>
+(async()=>{
+/* The whole tuner is drawn into a 640x360 buffer with a fixed palette and shown at a whole-number zoom, so every dot is a real pixel. */
+const W=640,H=360;
+const C={wall:'#18181a',wsh:'#0d0d0e',ink:'#050506',body:'#2b2c2f',bhi:'#3d3e42',blo:'#212225',lip:'#141415',
+ pr:'#e2ded2',prlo:'#8c897e',or:'#e07a33',am:'#ffc65e',amd:'#9a7428',amg:'#3a2a10',lcd:'#2a1d0a',lcdd:'#1a1206',
+ face:'#1c1d1f',facelo:'#151617',facehi:'#2b2c2f',kn:'#54565c',knhi:'#6b6d74',knlo:'#3b3c40',
+ rd:'#d9704a',gn:'#8fcf7a',rdo:'#3a2420',gno:'#22332a',gl:'#0f100c',nsh:'#08080a',grv:'#222326'};
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+const mk=()=>{const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.imageSmoothingEnabled=false;return[c,x]};
+const pen=x=>({
+  x,
+  r(a,b,w,h,c){x.fillStyle=c;x.fillRect(a,b,w,h)},
+  p(a,b,c){x.fillStyle=c;x.fillRect(Math.round(a),Math.round(b),1,1)},
+  l(x0,y0,x1,y1,c){x0=Math.round(x0);y0=Math.round(y0);x1=Math.round(x1);y1=Math.round(y1);x.fillStyle=c;
+    const dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx+dy;
+    for(;;){x.fillRect(x0,y0,1,1);if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx}if(e2<=dx){e+=dx;y0+=sy}}},
+  rr(a,b,w,h,r,c){if(r<=0)return this.r(a,b,w,h,c);this.r(a,b+r,w,h-2*r,c);
+    for(let j=0;j<r;j++){const dy=r-j-.5,ins=Math.round(r-Math.sqrt(r*r-dy*dy));this.r(a+ins,b+j,w-2*ins,1,c);this.r(a+ins,b+h-1-j,w-2*ins,1,c)}},
+  box(a,b,w,h,r,f){this.rr(a,b,w,h,r,C.ink);this.rr(a+1,b+1,w-2,h-2,Math.max(0,r-1),f)},
+  arc(cx,cy,rad,a0,a1,c){for(let a=a0;a<=a1;a+=.07){const t=a*Math.PI/180;this.p(cx+rad*Math.sin(t),cy-rad*Math.cos(t),c)}}
+});
+
+/* ---- Silkscreen read through a threshold, so the font stays strictly pixel ---- */
+await document.fonts.load('8px Silkscreen');
+const [tc,tx]=mk();tc.width=320;tc.height=14;tx.font='8px Silkscreen';tx.textBaseline='top';
+const bm=new Map();
+function topOf(s){tx.clearRect(0,0,320,14);tx.fillStyle='#fff';tx.fillText(s,0,0);const d=tx.getImageData(0,0,320,14).data;
+  for(let y=0;y<14;y++)for(let x=0;x<320;x++)if(d[(y*320+x)*4+3]>96)return y;return 0}
+const capTop=topOf('H');
+function glyph(s){let g=bm.get(s);if(g)return g;tx.clearRect(0,0,320,14);tx.fillStyle='#fff';tx.fillText(s,0,0);
+  const d=tx.getImageData(0,0,320,14).data,pts=[];for(let y=0;y<14;y++)for(let x=0;x<320;x++)if(d[(y*320+x)*4+3]>96)pts.push([x,y-capTop]);
+  g={pts,w:Math.round(tx.measureText(s).width)};bm.set(s,g);return g}
+function st(P,s,x,y,c,sc=1,al){const g=glyph(s);x=Math.round(al==='c'?x-g.w*sc/2:al==='r'?x-g.w*sc:x);for(const[a,b]of g.pts)P.r(x+a*sc,y+b*sc,sc,sc,c);return g.w*sc}
+
+/* ---- geometry ---- */
+const FC={x:30,y:58,w:228,h:128},FV={x:30,y:202,w:228,h:84};   // dial faces
+const CX=144,CY=236,CR=152, VX=144,VY=320,VR=104;
+const VT=[[-20,-50],[-10,-28],[-5,-8],[0,24],[3,50]];
+const vuAng=db=>{db=Math.max(-20,Math.min(3,db));for(let i=1;i<VT.length;i++)if(db<=VT[i][0]){const[a,b]=[VT[i-1],VT[i]];return a[1]+(b[1]-a[1])*(db-a[0])/(b[0]-a[0])}return 50};
+const pt=(cx,cy,a,r)=>{const t=a*Math.PI/180;return[cx+r*Math.sin(t),cy-r*Math.cos(t)]};
+const LCDS=[{x:280,y:52,w:104,h:52},{x:390,y:52,w:104,h:52},{x:500,y:52,w:116,h:52}];
+const MSG={x:280,y:112,w:336,h:28};
+const CELL={x0:294,y:154,w:22,h:32,gap:4};
+const KX=[284,360,436],KC=[314,390,466];
+const BTN=[516,552,588];
+const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const SHARP=['01010','11111','01010','11111','01010'];
+const bits=(P,g,x,y,c,k=1)=>g.forEach((row,j)=>[...row].forEach((v,i)=>v==='1'&&P.r(x+i*k,y+j*k,k,k,c)));
+
+/* ---- static layers ---- */
+const [base,bx]=mk(),B=pen(bx), [over,ox]=mk(),O=pen(ox);
+function clipRect(x,r){x.save();x.beginPath();x.rect(r.x,r.y,r.w,r.h);x.clip()}
+(function build(){
+  B.r(0,0,W,H,C.wall);
+  // case
+  B.r(16,334,608,12,C.wsh);B.r(12,328,616,4,C.ink);B.r(14,332,612,2,C.lip);
+  B.box(8,16,624,314,9,C.body);B.r(18,20,604,3,C.bhi);B.r(18,316,604,6,C.blo);
+  for(const[sx,sy]of[[18,26],[617,26],[18,312],[617,312]]){B.r(sx,sy,5,5,C.ink);B.r(sx+1,sy+1,3,3,C.bhi);B.r(sx+2,sy+1,1,3,C.ink)}
+  // header
+  st(B,'TUNERITE',24,26,C.pr,2);st(B,'CHROMATIC TUNER · DIGITAL PROCESSING',24,42,C.prlo);
+  st(B,'POWER',588,29,C.prlo,1,'r');
+  // dial bezels and faces
+  for(const[f,by,bh]of[[FC,52,140],[FV,196,96]]){
+    B.box(24,by,240,bh,5,C.ink);B.r(f.x,f.y,f.w,f.h,C.face);const lo=Math.round(f.h*.62);B.r(f.x,f.y+lo,f.w,f.h-lo,C.facelo);
+    B.r(28,by+bh,232,2,C.bhi);
+  }
+  // cents dial
+  clipRect(bx,FC);
+  for(let r=CR+5;r<=CR+8;r++){B.arc(CX,CY,r,-45,45,C.prlo);B.arc(CX,CY,r,-4.5,4.5,C.or)}
+  B.arc(CX,CY,CR,-45,45,C.pr);B.arc(CX,CY,CR+1,-45,45,C.pr);
+  for(let c=-50;c<=50;c+=2.5){const a=c*.9,len=c%10===0?14:c%5===0?9:5,[x0,y0]=pt(CX,CY,a,CR),[x1,y1]=pt(CX,CY,a,CR-len);
+    B.l(x0,y0,x1,y1,C.pr);if(c%10===0){B.l(x0+1,y0,x1+1,y1,C.pr)}}
+  for(const c of[-50,-40,-30,-20,-10,0,10,20,30,40,50]){const[x,y]=pt(CX,CY,c*.9,CR-34);if(Math.abs(c)%20===0||c===50||c===-50)st(B,(c>0?'+':'')+c,x,y-3,Math.abs(c)>=50?C.or:C.pr,1,'c')}
+  st(B,'CENTS',CX,148,C.prlo,1,'c');
+  bits(B,['100','100','110','101','110'],40,160,C.pr,2);bits(B,['0101','1111','0101','1111','0101'],228,160,C.pr,2);
+  bx.restore();
+  // VU dial
+  clipRect(bx,FV);
+  for(let r=VR+5;r<=VR+8;r++)B.arc(VX,VY,r,vuAng(0),50,C.or);
+  B.arc(VX,VY,VR,-50,vuAng(0),C.pr);B.arc(VX,VY,VR+1,-50,vuAng(0),C.pr);B.arc(VX,VY,VR,vuAng(0),50,C.or);B.arc(VX,VY,VR+1,vuAng(0),50,C.or);
+  for(const d of[-20,-15,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3]){const maj=[-20,-10,-5,0,3].includes(d),a=vuAng(d),[x0,y0]=pt(VX,VY,a,VR),[x1,y1]=pt(VX,VY,a,VR-(maj?12:6));
+    B.l(x0,y0,x1,y1,d>0?C.or:C.pr);if(maj)B.l(x0+1,y0,x1+1,y1,d>0?C.or:C.pr)}
+  for(const d of[-20,-10,-5,0,3]){const[x,y]=pt(VX,VY,vuAng(d),VR-30);st(B,(d>0?'+':'')+d,x,y-3,d>0?C.or:C.pr,1,'c')}
+  st(B,'VU',VX,254,C.pr,3,'c');
+  bx.restore();
+  // LCD glass, message bar, chromatic strip, lamps
+  for(const l of LCDS)B.box(l.x,l.y,l.w,l.h,3,C.lcd);
+  B.box(MSG.x,MSG.y,MSG.w,MSG.h,3,C.lcd);
+  B.box(280,148,336,44,5,C.blo);B.r(284,150,328,2,C.lip);
+  B.box(280,200,336,28,5,C.blo);B.r(284,202,328,2,C.lip);
+  ['NOTE','CENTS','FREQ HZ'].forEach((t,i)=>st(B,t,LCDS[i].x+10,LCDS[i].y+8,'#c08a32'));
+  st(B,'< FLAT',312,211,C.pr);st(B,'IN TUNE',436,211,C.pr);st(B,'SHARP >',586,211,C.pr,1,'r');
+  // slider track
+  B.box(280,252,224,40,8,C.gl);B.r(292,271,200,2,C.grv);
+  for(const k of KC)B.r(k-1,271,3,2,C.knlo);
+  ['PIT','DWN','UP'].forEach((t,i)=>st(B,t,BTN[i]+14,301,C.prlo,1,'c'));
+
+  /* overlay: the bezel's top edge shades the glass, a stripe of glare, the needle shields, then the LCD mesh */
+  for(const f of[FC,FV]){clipRect(ox,f);
+    O.r(f.x,f.y,f.w,6,C.nsh);O.r(f.x,f.y+6,f.w,2,'#0f1011');
+    for(let y=f.y;y<f.y+f.h;y++)for(let x=f.x;x<f.x+f.w;x++){const u=x+(y-f.y)*.55,band=(u>196&&u<214)||(u>222&&u<228);if(band&&x%2===0&&y%2===0)O.p(x,y,C.facehi)}
+    ox.restore()}
+  O.rr(96,176,96,12,3,C.ink);O.r(104,172,80,4,C.ink);O.r(96,176,96,2,C.bhi);
+  O.rr(116,278,56,10,2,C.ink);O.r(124,274,40,4,C.ink);
+  const mesh=(x,y,w,h,pd)=>{ox.fillStyle='rgba(0,0,0,.28)';for(let j=pd-1;j<h;j+=pd)ox.fillRect(x,y+j,w,1);for(let i=pd-1;i<w;i+=pd)ox.fillRect(x+i,y,1,h)};
+  for(const l of LCDS)mesh(l.x+1,l.y+1,l.w-2,l.h-2,3);
+  mesh(MSG.x+1,MSG.y+1,MSG.w-2,MSG.h-2,3);
+  for(let i=0;i<12;i++)mesh(CELL.x0+i*(CELL.w+CELL.gap),CELL.y,CELL.w,CELL.h,2);
+})();
+
+/* ---- fake signal ---- */
+const SEQ=[[9,4],[1,4],[4,4],[7,3],[6,4],[2,5]];
+let ni=0,ts=0,startOff=0,pos=1,kx=KX[1];
+const newNote=t=>{ni=(ni+1)%SEQ.length;ts=t;startOff=(Math.random()<.5?-1:1)*(18+Math.random()*28)};newNote(0);
+const sp={c:{x:-45,v:0,k:150,d:15},u:{x:-50,v:0,k:85,d:11}};
+const step=(o,t,dt)=>{o.v+=(o.k*(t-o.x)-o.d*o.v)*dt;o.x+=o.v*dt};
+const down=[0,0,0],hold=[0,0,0];
+let msg='LISTENING',vals={note:'--',sign:'',cents:'--',hz:'---',pc:-1,flat:0,sharp:0,tune:0};
+const msgFor=()=>pos===2?'REFERENCE A 440':vals.pc<0?'SING A NOTE':vals.tune?'IN TUNE':vals.sign==='-'?'A LITTLE FLAT':'A LITTLE SHARP';
+
+/* ---- input ---- */
+const toPx=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]};
+let drag=false;
+const snap=e=>{const[x]=toPx(e);let best=0;KC.forEach((k,i)=>{if(Math.abs(x-k)<Math.abs(x-KC[best]))best=i});pos=best};
+cv.addEventListener('pointerdown',e=>{const[x,y]=toPx(e);
+  if(x>=276&&x<=508&&y>=232&&y<=296){drag=true;cv.setPointerCapture(e.pointerId);snap(e)}
+  BTN.forEach((b,i)=>{if(x>=b&&x<=b+28&&y>=256&&y<=290)hold[i]=1})});
+cv.addEventListener('pointermove',e=>{if(drag)snap(e)});
+const up=()=>{drag=false;for(let i=0;i<3;i++)if(hold[i]){hold[i]=0;down[i]=performance.now()+110}};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H),z=s>=2?Math.floor(s):s;cv.style.width=W*z+'px';cv.style.height=H*z+'px'}
+fit();addEventListener('resize',fit);
+
+/* ---- frame ---- */
+const M=pen(ctx);
+let last=performance.now(),tick=0;
+function needle(f,cx,cy,a,len,tipLen,dx){
+  clipRect(ctx,f);
+  const[ex,ey]=pt(cx,cy,a,len);
+  for(const o of[0,1])M.l(cx+dx+o,cy+5,ex+dx+o,ey+5,C.nsh);
+  for(const o of[0,1])M.l(cx+o,cy,ex+o,ey,C.pr);
+  if(tipLen){const[tx2,ty2]=pt(cx,cy,a,len-tipLen);for(const o of[0,1])M.l(tx2+o,ty2,ex+o,ey,C.or)}
+  ctx.restore();
+}
+function frame(now){
+  const dt=Math.min(.033,(now-last)/1000);last=now;const t=now/1000,on=pos>0;
+  let cents=0,live=false,db=-20,note=SEQ[ni];
+  if(on){
+    if(pos===2){live=true;note=[9,4];cents=Math.sin(t*9)*.6;db=-6+Math.sin(t*3)*.8}
+    else{const age=t-ts;if(age>5.2)newNote(t);live=age<4.4;
+      cents=startOff*Math.exp(-age/1.5)+Math.sin(t*6.3)*2.2*Math.exp(-age/3)+Math.sin(t*1.7)*1.2;
+      const atk=Math.min(1,age/.08),dec=Math.exp(-age/2.6);db=live?-4-12*(1-atk*dec)+Math.sin(t*5.5)*1.2:-20}
+  }
+  step(sp.c,live?Math.max(-50,Math.min(50,cents))*.9:(on?0:-45),dt);
+  step(sp.u,on?vuAng(db):-50,dt);
+  kx+=(KX[pos]-kx)*(1-Math.exp(-dt*45));if(Math.abs(KX[pos]-kx)<.4)kx=KX[pos];
+
+  if(now-tick>66){tick=now;const[pc,oc]=note,ok=on&&live;
+    vals.pc=ok?pc:-1;vals.sign=ok?(cents<0?'-':'+'):'';
+    vals.note=ok?NAMES[pc]+oc:'--';
+    vals.cents=ok?String(Math.min(99,Math.round(Math.abs(cents)))).padStart(2,'0'):'--';
+    vals.hz=ok?(440*Math.pow(2,((pc+12*(oc+1))-69)/12+cents/1200)).toFixed(1):'---';
+    vals.flat=ok&&cents<-4;vals.sharp=ok&&cents>4;vals.tune=ok&&Math.abs(cents)<=4;
+    msg=on?msgFor():'';}
+
+  ctx.drawImage(base,0,0);
+  M.box(600,24,13,13,4,on?C.or:'#4a2a22');if(on)M.r(603,27,3,3,'#f4b080');
+  // LCD readouts: ghost segments, then the value (glyph pixels sit on the mesh)
+  const gx=[LCDS[0].x+10,LCDS[1].x+10,LCDS[2].x+7],ty=LCDS[0].y+25,sw=glyph('+').w*3;
+  st(M,'888',gx[0],ty,C.amg,3);st(M,'+88',gx[1],ty,C.amg,3);st(M,'888.8',gx[2],ty,C.amg,3);
+  if(on){st(M,vals.note,gx[0],ty,C.am,3);
+    if(vals.sign)st(M,vals.sign,gx[1],ty,C.am,3);
+    st(M,vals.cents,gx[1]+sw,ty,C.am,3);st(M,vals.hz,gx[2],ty,C.am,3);
+    st(M,msg,MSG.x+MSG.w/2,MSG.y+7,C.am,3,'c')}
+  // chromatic strip: note name at double size, sharps with a raised sharp sign
+  for(let i=0;i<12;i++){const x=CELL.x0+i*(CELL.w+CELL.gap),sh=NAMES[i].length>1,lit=on&&vals.pc===i,col=lit?'#2a1b05':C.amd;
+    M.rr(x-1,CELL.y-1,CELL.w+2,CELL.h+2,3,C.ink);M.r(x,CELL.y,CELL.w,CELL.h,lit?C.am:sh?C.lcdd:C.lcd);
+    const lw=glyph(NAMES[i][0]).w*2,tw=sh?lw+6:lw,x0=x+Math.round((CELL.w-tw)/2);
+    st(M,NAMES[i][0],x0,CELL.y+11,col,2);if(sh)bits(M,SHARP,x0+lw+1,CELL.y+8,col)}
+  // lamps
+  const lamp=(x,y,s,c)=>M.box(x,y,s,s,s/2|0,c);
+  lamp(292,206,13,vals.flat?C.rd:C.rdo);lamp(412,205,15,vals.tune?C.gn:C.gno);lamp(596,206,13,vals.sharp?C.rd:C.rdo);
+  // slider labels, knob
+  ['OFF','TUNE','REF A'].forEach((s,i)=>st(M,s,KC[i],237,i===pos?C.or:C.prlo,2,'c'));
+  clipRect(ctx,{x:282,y:254,w:220,h:36});
+  const k=Math.round(kx);M.rr(k+2,256+6,60,32,5,C.nsh);
+  M.rr(k,256,60,32,5,C.ink);M.r(k+2,258,56,28,C.kn);M.r(k+2,258,56,6,C.knhi);M.r(k+2,278,56,8,C.knlo);
+  for(let i=10;i<52;i+=4)M.r(k+i,266,1,16,C.knlo);M.r(k+29,260,2,24,C.ink);
+  ctx.restore();
+  // buttons
+  for(let i=0;i<3;i++){const p=hold[i]||now<down[i],y=p?260:256;
+    M.r(BTN[i]+2,288,28,4,C.nsh);
+    M.rr(BTN[i],y,28,p?28:32,5,C.ink);M.rr(BTN[i]+2,y+2,24,p?20:22,3,C.kn);M.r(BTN[i]+3,y+2,22,4,C.knhi)}
+  // needles
+  needle(FC,CX,CY,sp.c.x,CR+6,26,sp.c.x*.1);
+  needle(FV,VX,VY,sp.u.x,VR+4,0,sp.u.x*.1);
+  ctx.drawImage(over,0,0);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -88,15 +88,24 @@ function drawRoll(cv, o) {
   });
   g.textAlign = 'start';
   if (!o.static) { g.setLineDash([4, 5]); g.strokeStyle = '#8d99b5'; g.beginPath(); g.moveTo(nowX, 0); g.lineTo(nowX, h); g.stroke(); g.setLineDash([]); }
-  const fr = o.frames || [];
-  g.lineWidth = 4; g.lineCap = 'round'; g.shadowBlur = 10;
+  /* Your pitch: a thin line, with a marker at the NOW line showing exactly where you are. In tune it is green AND glows, with a filled marker and a ring; out of tune it is red, flat, with only a hollow ring,
+     so the difference does not depend on telling green from red. */
+  const fr = o.frames || [], IN = '#7dffb0', OUT = '#ff4d4d'; let last = null;
+  g.lineWidth = 2.5; g.lineCap = 'round'; g.lineJoin = 'round';
   for (let i = 1; i < fr.length; i++) {
     const a = fr[i - 1], b = fr[i];
     if (a.m == null || b.m == null || b.t - a.t > 0.08) continue;
     if (!o.static && b.t > o.rel + 0.05) break;
-    const tv = targetAt(o.events, b.t), col = tv == null ? '#8d99b5' : (Math.abs(b.m - tv) * 100 <= tol ? '#9ccc65' : '#ffb020');
-    g.strokeStyle = col; g.shadowColor = col;
-    g.beginPath(); g.moveTo(x(a.t), y(a.m)); g.lineTo(x(b.t), y(b.m)); g.stroke();
+    const tv = targetAt(o.events, b.t), inT = tv != null && Math.abs(b.m - tv) * 100 <= tol, col = tv == null ? '#8d99b5' : inT ? IN : OUT;
+    g.strokeStyle = col; g.shadowColor = col; g.shadowBlur = inT ? 12 : 0;
+    g.beginPath(); g.moveTo(x(a.t), y(a.m)); g.lineTo(x(b.t), y(b.m)); g.stroke(); last = { b, tv, inT };
+  }
+  g.shadowBlur = 0;
+  if (!o.static && last && o.rel - last.b.t < 0.2) {
+    const mx = x(last.b.t), my = y(last.b.m);
+    if (last.tv == null) { g.strokeStyle = '#8d99b5'; g.lineWidth = 1.5; g.beginPath(); g.arc(mx, my, 4, 0, 6.283); g.stroke(); }
+    else if (last.inT) { g.shadowColor = IN; g.shadowBlur = 18; g.fillStyle = IN; g.beginPath(); g.arc(mx, my, 4.5, 0, 6.283); g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#fff'; g.beginPath(); g.arc(mx, my, 8, 0, 6.283); g.stroke(); g.shadowBlur = 0; }
+    else { g.lineWidth = 2; g.strokeStyle = OUT; g.beginPath(); g.arc(mx, my, 5, 0, 6.283); g.stroke(); }
   }
   g.restore();
 }

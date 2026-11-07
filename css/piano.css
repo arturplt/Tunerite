@@ -155,3 +155,82 @@
 
 /* the NOW screen is gone: the played notes are drawn on the graph */
 #s-piano .synnow[hidden]{display:none!important}
+
+/* ---- No scroll bar on the Piano tab; it still scrolls. ---- */
+#s-piano.screen,#s-piano .pnpages,#s-piano .lcdrows{scrollbar-width:none}
+#s-piano.screen::-webkit-scrollbar,#s-piano .pnpages::-webkit-scrollbar,#s-piano .lcdrows::-webkit-scrollbar{display:none}
+
+/* Touch: a finger on the spectrogram scrolls the page; the keyboard, the tabs and the lists keep their own gestures. */
+#s-piano #specCv{touch-action:pan-y}
+#s-piano #pianoCv{touch-action:none}
+#s-piano .syntabs{touch-action:pan-x}
+#s-piano .lcdrows{touch-action:pan-y;overscroll-behavior:contain}
+
+/* ---- The sound selectors and the key readout live on the LCD itself: Preset, SoundFont and Instrument top left, the key / scale / chord readout bottom left (hidden while it is C, no scale, single notes) ---- */
+#s-piano .pnhud{position:absolute;z-index:3;left:0.4rem;top:0.4rem;width:min(13.5rem,72%);display:flex;flex-direction:column;gap:0.25rem;pointer-events:none}
+#s-piano .pnhud .synlcd{flex:none;display:flex;align-items:center;gap:0.25rem;width:100%;pointer-events:auto}
+#s-piano .pnhud .synbtn{flex:none;width:1.7rem;height:1.7rem;min-width:0;min-height:0;padding:0;font-size:0.65rem;border-radius:0.45rem;box-shadow:0 0.15rem 0 var(--c-ink)}
+#s-piano .pnhud .synbtn:active{transform:translateY(0.12rem);box-shadow:0 0.03rem 0 var(--c-ink)}
+#s-piano .pnhud .lcd{flex:1;min-width:0;flex-direction:row;align-items:baseline;gap:0.4rem;padding:0.2rem 0.4rem;background:rgba(10,6,2,.72);box-shadow:none;border-width:0.1rem}
+#s-piano .pnhud .lcd small{flex:none;font-size:0.5rem;letter-spacing:.1em;width:2.1rem}
+#s-piano .pnhud .lcd b{flex:1;min-width:0;font-size:0.8rem}
+#s-piano .pnkeyhud{position:absolute;z-index:3;left:0.4rem;bottom:0.35rem;max-width:calc(100% - 0.8rem);padding:0.2rem 0.45rem;border-radius:0.3rem;pointer-events:none;background:rgba(10,6,2,.72);color:var(--tn-fg,#ffb347);text-shadow:0 0 0.3rem var(--tn-glow,rgba(255,170,50,.5));
+  font:400 0.6rem "Silkscreen",ui-monospace,monospace;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#s-piano .pnkeyhud[hidden]{display:none}
+#s-piano .synhead .synhbtns{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:0.4rem;width:100%}
+#s-piano .synhead .synhbtns .bigjack{flex:none;width:2.3rem;height:2.3rem;min-width:0;border-radius:0.6rem}
+#s-piano .synhead .synhbtns .synbyp{display:contents}
+#s-piano .synhead .synhbtns .bypcell{display:contents}
+#s-piano .synhead .synhbtns .bypcell b{display:none}
+
+/* the key strip: four caps that open their menu on the LCD */
+#s-piano #pnKey.synknobarea{padding:0.4rem 0.5rem}
+#s-piano .keycaps{display:flex;gap:0.5rem}
+#s-piano .kycap{flex:1;min-width:0;min-height:0;height:2.1rem;padding:0;font:400 0.55rem "Silkscreen",ui-monospace,monospace;letter-spacing:0.03em;text-transform:uppercase;border-radius:0.5rem}
+#s-piano .kycap:disabled{opacity:.4;pointer-events:none}
+#s-piano .pkhead{flex:none;display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.6rem;border-bottom:1px solid var(--tn-ledoff,#3a2a10);font:400 0.6rem "Silkscreen",ui-monospace,monospace;letter-spacing:.1em;color:var(--tn-dim,#a8731f);text-transform:uppercase}
+#s-piano .pkhead b{flex:1}
+#s-piano .pkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.3rem;padding:0.4rem 0.6rem}
+#s-piano .pkgrid .lcdrow{justify-content:center;padding:0.3rem 0;border:0.1rem solid var(--tn-ledoff,#3a2a10);border-radius:0.3rem;min-height:2rem}
+#s-piano .pkgrid .lcdrow span{flex:none}
+#s-piano #pkDeg{flex:none;margin:0.3rem 0.5rem}
+
+/* the LCD readout is display only: the arrow keys are gone from it (the Banks, Instruments and Presets tabs pick the sound) */
+#s-piano .pnhud .synbtn{display:none}
+#s-piano .pnhud .synlcd{pointer-events:none}
+
+/* same look as the key readout: small pixel-type pills, one per line */
+#s-piano .pnhud{gap:0.2rem;align-items:flex-start;width:auto;max-width:calc(100% - 0.8rem)}
+#s-piano .pnhud .synlcd{width:auto;max-width:100%;min-width:0;display:block}
+#s-piano .pnhud .lcd{display:block;padding:0.2rem 0.45rem;border:0;border-radius:0.3rem;background:rgba(10,6,2,.72);box-shadow:none}
+#s-piano .pnhud .lcd small{display:none}
+#s-piano .pnhud .lcd b{display:block;font:400 0.6rem "Silkscreen",ui-monospace,monospace;letter-spacing:0.06em;text-transform:uppercase;color:var(--tn-fg,#ffb347);text-shadow:0 0 0.3rem var(--tn-glow,rgba(255,170,50,.5));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* one box, one line: Preset · SoundFont · Instrument */
+#s-piano .pnhud{flex-direction:row;flex-wrap:nowrap;align-items:center;gap:0.4rem;width:auto;max-width:calc(100% - 0.8rem);padding:0.2rem 0.45rem;border-radius:0.3rem;background:rgba(10,6,2,.72)}
+#s-piano .pnhud .synlcd{flex:0 1 auto;min-width:0}
+#s-piano .pnhud .synlcd+.synlcd::before{content:"·";margin-right:0.4rem;color:var(--tn-fg,#ffb347);font:400 0.6rem "Silkscreen",ui-monospace,monospace}
+#s-piano .pnhud .synlcd{display:flex;align-items:center}
+#s-piano .pnhud .lcd{padding:0;background:none}
+
+/* a plain label: one slim line, not a field */
+#s-piano .pnhud,#s-piano .pnhud *{pointer-events:none}
+#s-piano .pnhud{padding:0.15rem 0.45rem;line-height:1}
+#s-piano .pnhud .synlcd,#s-piano .pnhud .lcd{height:auto;min-height:0;margin:0;padding:0;border:0;border-radius:0;box-shadow:none;background:none;display:block;line-height:1}
+#s-piano .pnhud .lcd b{line-height:1;padding:0;margin:0;text-shadow:0 0 0.3rem var(--tn-glow,rgba(255,170,50,.5))}
+#s-piano .pnhud .synlcd{display:flex;align-items:center}
+#s-piano .pnhud .lcd::before,#s-piano .pnhud .lcd::after{display:none}
+
+/* a finger on the LCD (spectrogram, scope, chroma, lists) scrolls the page; the keyboard keeps its touches */
+#s-piano .synglass,#s-piano .synpane,#s-piano .synpane canvas{touch-action:pan-y}
+#s-piano #specCv{touch-action:pan-y!important}
+#s-piano #pianoCv{touch-action:none!important}
+/* the Sand display view: turn, shake and empty sit in the corner of the display, only while that view is on */
+.sandctl{position:absolute;right:6px;top:6px;display:flex;gap:6px;z-index:4}
+.sandctl[hidden]{display:none}
+.sandctl .synbtn[aria-pressed="true"]{color:#ffb347;box-shadow:0 0 0 2px #ffb347 inset}
+.synpane[data-p="spec"].sandview::after{display:none}      /* the Sand view is fine grained, so the display's coarse mesh stays off it */
+.sandctl .synbtn{min-height:0;height:1.7rem;padding:0 .7rem;font:400 .7rem "Silkscreen",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
+
+/* the case's shadow ends exactly where the bottom bar starts */
+#s-piano.screen{padding-bottom:calc(0.4rem + 2px)!important}

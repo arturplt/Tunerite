@@ -1,0 +1,25 @@
+/* ---- Welcome screen: a small device in the same style as the Tuner and Practice, with a message on its LCD and one big key. Colours come from the --tn-* theme variables. ---- */
+#o-start{justify-content:center;align-items:center;padding:1rem;background:var(--tn-wall,var(--bg));
+  --ink:var(--tn-edge,#0a0a0c);--body:var(--tn-p1,#2b2c31);--body-lo:var(--tn-p3,#141518);--body-hi:color-mix(in srgb,var(--body) 86%,#fff);--print:var(--tn-printh,#cfc8b8);--print-lo:var(--tn-print,#8f9096);
+  --lcd:var(--tn-lcd,#1a120a);--lcd-fg:var(--tn-fg,#ffb347);--lcd-lab:var(--tn-lab,#c98a3a);--glow:var(--tn-glow,rgba(255,170,50,.5));--clay:var(--tn-hot,var(--tn-fg,#ffb347));--on:var(--tn-on,#2a1604);
+  font-family:"Silkscreen",ui-monospace,monospace}
+#o-start .stcase{width:min(30rem,100%);background:var(--body);border:4px solid var(--ink);border-radius:30px;padding:18px 22px 26px;display:flex;flex-direction:column;gap:18px;color:var(--print);text-align:left;
+  box-shadow:inset 0 10px 0 var(--body-hi),inset 0 -16px 0 var(--body-lo),0 12px 0 var(--ink),0 14px 0 color-mix(in srgb,var(--ink) 60%,var(--body-lo)),0 40px 0 color-mix(in srgb,var(--tn-wall,var(--bg)) 55%,#000);position:relative;top:-18px}      /* centred by the auto margins in app.css; nudged up for the hard shadow under the case */
+#o-start .sthead{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+#o-start .stbrand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1;color:var(--print)}
+#o-start .stbrand small{display:block;font-weight:400;font-size:12px;letter-spacing:3px;margin-top:6px;color:var(--print-lo)}
+#o-start .stpwr{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:3px;color:var(--print-lo)}
+#o-start .stpwr i{width:14px;height:14px;border-radius:50%;background:var(--tn-red,#ff5a36);border:3px solid var(--ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 10px var(--tn-red,#ff5a36)}
+#o-start .stscr{position:relative;background:var(--lcd);border:3px solid var(--ink);border-radius:8px;padding:14px 18px 16px;overflow:hidden;box-shadow:inset 0 6px 0 #000,0 3px 0 var(--body-hi);text-transform:uppercase;letter-spacing:.06em}
+#o-start .stscr::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+#o-start .stscr small{display:block;font-size:12px;letter-spacing:3px;color:var(--lcd-lab);margin-bottom:10px}
+#o-start .stscr p{margin:0 0 10px;font-size:14px;line-height:1.7;color:var(--lcd-fg);text-shadow:0 0 6px var(--glow)}
+#o-start .stscr p:last-child{margin-bottom:0}
+#o-start .stscr .sterr{color:var(--tn-red,#ff5a36);text-shadow:0 0 6px var(--tn-redglow,rgba(255,90,54,.6));background:none;border:0;padding:0;text-align:left}
+#o-start .stscr .sterr[hidden]{display:none}
+#o-start .stgo{--lift:8px;display:flex;align-items:center;justify-content:center;gap:14px;height:64px;border:3px solid var(--ink);border-radius:16px;cursor:pointer;color:var(--on);font:400 18px "Silkscreen",monospace;letter-spacing:3px;text-transform:uppercase;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--clay) 65%,#fff) 0 22%,var(--clay) 22%,color-mix(in srgb,var(--clay) 62%,#000));box-shadow:0 var(--lift) 0 var(--ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28);transition:transform .06s,box-shadow .06s;margin-bottom:12px}
+#o-start .stgo svg{width:26px;height:26px}
+#o-start .stgo:active{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.28)}
+#o-start .stgo:focus-visible{outline:3px solid var(--clay);outline-offset:4px}
+@media (max-width:480px){#o-start .stbrand small{letter-spacing:1px;font-size:10px;white-space:nowrap}#o-start .stpwr{letter-spacing:1px}#o-start .stcase{padding:16px 16px 22px}}

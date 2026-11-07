@@ -12,17 +12,16 @@ const UI = {
     this.refresh();
   },
   trainView(v) {
-    $('#tr-menu').hidden = v !== 'menu'; $('#tr-sess').hidden = v !== 'sess'; $('#tr-res').hidden = v !== 'res';
-    $('#s-train').classList.toggle('full', v === 'sess');
-    if (v === 'menu') this.refresh();
+    $('#tr-sess').hidden = v !== 'sess'; $('#tr-res').hidden = v !== 'res';
+    if (v === 'res' && this.drawRes) requestAnimationFrame(this.drawRes);
+    if (v === 'menu') this.refresh(); else PDev.sync();
   },
   refresh() {
     const S = Store.data, st = S.settings;
-    const mode = st.trainMode === 'ear' ? 'ear' : st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing', whistle = mode === 'whistle', view = st.prView === 'lib' ? 'lib' : st.prView === 'ex' ? 'ex' : 'course', course = view === 'course' && mode !== 'ear';
+    const mode = st.trainMode === 'ear' ? 'ear' : st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing', whistle = mode === 'whistle', view = st.prView === 'lib' ? 'lib' : st.prView === 'ex' ? 'ex' : 'course';
     $('#defaultRangeBanner').hidden = whistle ? !!S.rangeWhistle : !!S.range; $('#drbTxt').textContent = whistle ? 'Using a default whistle range.' : 'Using a default range.'; $('#btnFindRange2').textContent = whistle ? 'Find my whistle range' : 'Find my range';
     $('#trSingI').textContent = whistle ? '😗' : '🎤'; $('#trSingT').textContent = whistle ? 'Whistling' : 'Singing'; $('#trSingD').textContent = whistle ? 'The app listens to your whistle (400 Hz and up) and shows how close each note is.' : 'The app listens to your voice and shows how close each note is.';
-    $('#trCourse').hidden = !course; if (course) Course.renderMap(mode); $('#trEx').hidden = view !== 'ex' || mode === 'ear'; $('#trLib').hidden = view !== 'lib' || mode === 'ear'; $('#trSing').hidden = mode === 'piano' || mode === 'ear'; $('#trPiano').hidden = mode !== 'piano'; $('#trEar').hidden = mode !== 'ear'; $('#prView').hidden = mode === 'ear'; if (mode === 'ear') Ear.renderMap();
-    $$('#trMode button').forEach(b => b.classList.toggle('on', b.dataset.m === mode)); $$('#prView button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
+    $('#trEx').hidden = view !== 'ex' || mode === 'ear'; $('#trLib').hidden = view !== 'lib' || mode === 'ear'; $('#trSing').hidden = mode === 'piano' || mode === 'ear'; $('#trPiano').hidden = mode !== 'piano'; PDev.refresh();
     Lib.f.kind = mode === 'piano' ? 'piano' : 'sing';
     const names = Midi.inputNames(), pin = $('#pxInput');
     pin.innerHTML = ''; const pt = document.createElement('div'); pt.textContent = names.length ? '🎹 Keyboard connected: ' + names.join(', ') : '🎤 No keyboard connected. I will listen through the microphone in Piano mode. Single notes work best, and chords need a quiet room.'; pin.appendChild(pt);
@@ -82,7 +81,14 @@ const UI = {
     });
     if (!iss.children.length) iss.innerHTML = '<p class="muted">' + (log.length < 3 ? 'Do a few exercises and the coach will start spotting habits.' : 'Nothing recurring. Nice.') + '</p>';
     { const P = Ear.prog(), el = S.earLog || []; $('#pEar').textContent = EAR.LEVELS.filter(l => P[l.id] && P[l.id].stars >= 1).length + ' / ' + EAR.LEVELS.length; $('#pEarStars').textContent = EAR.LEVELS.reduce((a, l) => a + (P[l.id] ? P[l.id].stars : 0), 0) + ' / ' + EAR.LEVELS.length * 3; $('#pEarPct').textContent = el.length ? Math.round(100 * el.reduce((a, e) => a + e.ok, 0) / Math.max(1, el.reduce((a, e) => a + e.n, 0))) + '%' : '–'; }
-    { const cb = $('#pCourse'); cb.textContent = ''; Object.keys(COURSE.KINDS).forEach(k => { const m = COURSE.summary(k, Course.prog(k)), r = document.createElement('div'); r.className = 'stat'; r.innerHTML = '<span></span><b></b>'; r.children[0].textContent = COURSE.KINDS[k].ico + ' ' + COURSE.KINDS[k].name; r.children[1].textContent = m.passed + ' / ' + m.total + ' levels · ' + m.stars + ' ★'; cb.appendChild(r); }); cb.lastChild.style.border = '0'; }
+    { const P = Ear.prog(), lv = $('#pLvl'); lv.textContent = ''; const nx = EAR.LEVELS.findIndex(l => !(P[l.id] && P[l.id].stars >= 1)); EAR.LEVELS.forEach((l, i) => { const st = P[l.id] ? P[l.id].stars : 0, d = document.createElement('div'); d.className = st >= 1 ? 'p' : i === nx ? 'cur' : ''; d.innerHTML = i + 1 + '<small></small>'; d.lastChild.textContent = st ? '★'.repeat(st) : '–'; lv.appendChild(d); }); }
+    { // practice calendar and this week, from every log that counts for the streak
+      const acts = H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || []), per = {}; acts.forEach(a => { const k = dayKey(a.ts); per[k] = (per[k] || 0) + 1; });
+      const cal = $('#pCal'); cal.textContent = ''; const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - 97);
+      for (let i = 0; i < 98; i++, d.setDate(d.getDate() + 1)) { const n = per[dayKey(d)] || 0, c = document.createElement('i'); c.className = (n ? 'l' + (n >= 5 ? 4 : n >= 3 ? 3 : n) : '') + (i === 97 ? ' t' : ''); c.title = d.toLocaleDateString() + (n ? ' · ' + n : ''); cal.appendChild(c); }
+      const wk = Date.now() - 7 * 864e5, W = acts.filter(a => a.ts >= wk), WH = H.filter(h => h.ts >= wk);
+      $('#pwN').textContent = W.length; $('#pwDays').textContent = new Set(W.map(a => dayKey(a.ts))).size; $('#pwAcc').textContent = WH.length ? Math.round(100 * WH.reduce((a, h) => a + h.acc, 0) / WH.length) + '%' : '–'; }
+    { const cb = $('#pCourse'); cb.textContent = ''; Object.keys(COURSE.KINDS).forEach(k => { const m = COURSE.summary(k, Course.prog(k)), r = document.createElement('div'); r.className = 'stat pcrs'; r.innerHTML = '<span></span><div class="pbar"></div><b></b>'; r.children[0].textContent = COURSE.KINDS[k].ico + ' ' + COURSE.KINDS[k].name; for (let i = 0; i < 12; i++) r.children[1].appendChild(document.createElement('i')).className = i < Math.round(12 * m.passed / Math.max(1, m.total)) ? 'on' : ''; r.children[2].textContent = m.passed + ' / ' + m.total + ' · ' + m.stars + ' ★'; cb.appendChild(r); }); }
     const pl = S.pianoLog || []; $('#pPiano').textContent = pl.length;
     $('#pPianoPct').textContent = pl.length ? Math.round(100 * pl.reduce((a, p) => a + p.firstTry, 0) / Math.max(1, pl.reduce((a, p) => a + p.steps, 0))) + '%' : '–';
     const pb = $('#pPianoBest'); pb.textContent = '';
@@ -111,13 +117,11 @@ const UI = {
     if (!box.children.length) box.innerHTML = '<p class="muted">No sessions yet.</p>';
   },
   drawChart() {
-    const { g, w, h } = fitCanvas($('#chartCv')), H = Store.data.history.slice(-30);
-    g.clearRect(0, 0, w, h); g.strokeStyle = '#26314f'; g.fillStyle = '#8d99b5'; g.font = (11 * UIK) + 'px sans-serif'; g.lineWidth = 1;
-    [0, 50, 100].forEach(v => { const y = 10 + (h - 30) * (1 - v / 100); g.beginPath(); g.moveTo(30, y); g.lineTo(w, y); g.stroke(); g.fillText(v + '%', 0, y + 4); });
-    if (H.length < 2) { g.fillText('Complete two sessions to see a trend', 40, h / 2); return; }
-    g.strokeStyle = '#ffb347'; g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath();
-    H.forEach((e, i) => { const x = 30 + (w - 40) * i / (H.length - 1), y = 10 + (h - 30) * (1 - e.acc); i ? g.lineTo(x, y) : g.moveTo(x, y); });
-    g.stroke();
+    const box = $('#pChart'), H = Store.data.history.slice(-30), N = 12; box.textContent = '';
+    if (H.length < 2) { box.innerHTML = '<span class="none">Complete two sessions to see a trend</span>'; return; }
+    const gl = document.createElement('div'); gl.className = 'gl'; gl.style.bottom = 'calc(6px + (100% - 12px) * .8)'; gl.innerHTML = '<span>80%</span>'; box.appendChild(gl);
+    H.forEach((e, n) => { const c = document.createElement('div'); c.className = 'col' + (n === H.length - 1 ? ' now' : ''); const lit = Math.round(e.acc * N);
+      for (let i = 0; i < N; i++) { const l = document.createElement('i'); if (i < lit) l.className = e.acc >= .8 ? 'g' : e.acc >= .65 ? 'y' : 'r'; c.appendChild(l); } box.appendChild(c); });
   },
   showResults(s) {
     const r = s.result, tol = s.tol;
@@ -165,7 +169,8 @@ const UI = {
     $('#rAgain').textContent = 'Try again (space)';
     const nt = Routine.nextTitle(); $('#rNext').hidden = !Routine.active; $('#rNext').textContent = nt ? 'Next: ' + nt + ' ▶' : 'Finish ✔';
     this.trainView('res');
-    requestAnimationFrame(() => drawRoll($('#resCv'), { events: s.ex.events, lo: s.ex.lo, hi: s.ex.hi, tol, frames: r.frames, static: true, total: s.ex.total, flags }));
+    this.drawRes = () => drawRoll($('#resCv'), { events: s.ex.events, lo: s.ex.lo, hi: s.ex.hi, tol, frames: r.frames, static: true, total: s.ex.total, flags });      // kept, so the graph is drawn again whenever the details are opened (the device may be showing its own result first)
+    requestAnimationFrame(this.drawRes);
     this.curSession = s;
   },
   enableReplay(take) { $('#rReplay').disabled = false; $('#rReplay').onclick = () => replay(take); },

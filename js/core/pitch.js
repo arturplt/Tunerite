@@ -80,7 +80,7 @@ class PitchTracker {
     if (this.last !== null && Math.abs(m - this.last) > 2.5) {         // too big for a glide: hold the old note until the new one persists
       const d = Math.abs(m - this.last), overtone = [12, 19, 24, 28, 31].some(h => Math.abs(d - h) < 0.9);   // octave, fifth, ... = a pick of an overtone
       this.pend = this.pendNote !== null && Math.abs(m - this.pendNote) < 1 ? this.pend + 1 : 1; this.pendNote = m;
-      if (this.pend < (overtone ? 6 : 3)) return this.last;
+      if (this.pend < (overtone ? 10 : 3)) return this.last;
       this.recent = [];
     } else { this.pend = 0; this.pendNote = null; }
     this.recent.push(m);

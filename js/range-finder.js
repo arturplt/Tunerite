@@ -6,9 +6,10 @@ const RangeFinder = {
   open(whistle, onTuner) {
     if (whistle != null) this.whistle = !!whistle;
     this.active = true; this.onTuner = !!onTuner; this.step = 0; this.best = [null, null]; this.buf = [];
-    if (!this.onTuner) $('#o-range').classList.add('on'); this.render();
+    if (!this.onTuner) { $('#o-range').classList.add('on'); if (UI.screen !== 'train') UI.show('train'); if (typeof PDev !== 'undefined') PDev.sync(); }      // the range finder runs inside the Practice screen
+    this.render();
   },
-  close() { this.active = false; this.onTuner = false; $('#o-range').classList.remove('on'); },
+  close() { this.active = false; this.onTuner = false; $('#o-range').classList.remove('on'); if (typeof PDev !== 'undefined') PDev.sync(); },
   render() {
     const v = this.whistle ? 'whistle' : 'sing';
     $('#rgStep').textContent = this.step === 0 ? 'Step 1 of 2: ' + v + ' down to your LOWEST comfortable note and hold it.' : 'Step 2 of 2: now ' + v + ' up to your HIGHEST comfortable note and hold it.';
