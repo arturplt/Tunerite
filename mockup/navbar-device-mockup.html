@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite device frame mockup</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Bold.ttf) format("truetype");font-weight:700}
+:root{
+  --wall:#18181a;--ink:#050506;--print:#e2ded2;--print-lo:#8c897e;
+  --body:#2b2c2f;--body-hi:#3d3e42;--body-lo:#212225;--lip:#141415;--clay:#e07a33;
+  --groove:#222326;--glass:#0f100c;--inset:#000;
+  --lcd-bg:#2a1d0a;--lcd-fg:#ffc65e;--lcd-dim:#6b4f1f;--lcd-off:#0f100c;--lcd-glow:rgba(255,170,50,.6);
+  --lamp0:#3a2420;--lamp:#d9704a}
+*{box-sizing:border-box;margin:0}
+body{background:var(--wall);color:var(--print);font-family:"Silkscreen",monospace;padding:20px 12px 40px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.note{max-width:375px;font-size:9px;letter-spacing:.06em;line-height:1.6;color:var(--print-lo);text-align:center}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+
+/* the device: top-level frame around the whole app */
+.dev{width:375px;height:760px;display:flex;flex-direction:column;border-radius:16px;padding:5px 5px 5px;position:relative;
+  background:linear-gradient(160deg,var(--body-hi),var(--body) 30%,var(--body-lo));
+  box-shadow:0 0 0 2px var(--lip),0 18px 40px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,255,255,.12),inset 0 -3px 0 rgba(0,0,0,.35)}
+
+/* top strip: model plate + power lamp */
+.plate{display:flex;align-items:center;gap:12px;padding:2px 14px 5px 6px;font-size:9px;letter-spacing:.18em}
+.plate b{color:var(--print);font-weight:700}
+.volw{flex:1;display:flex;align-items:center;gap:7px;color:var(--print-lo);font-size:8px;letter-spacing:.12em}
+.vol{--p:.7;--kw:26px;flex:1;position:relative;height:26px;touch-action:none;cursor:pointer;outline:0;background:#0e0905;border:2px solid #0a0a0c;border-radius:8px;box-shadow:inset 0 4px 0 #000,0 2px 0 #44454b}
+.vol:focus-visible{outline:2px solid #c0321c;outline-offset:2px}
+.vol::before{content:"";position:absolute;left:18px;right:18px;top:50%;height:3px;margin-top:-1.5px;background:#2e2a26;border-radius:2px}
+.vol .dot{position:absolute;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#2e2a26}
+.vol u{position:absolute;top:2px;bottom:2px;width:var(--kw);left:calc(2px + var(--p)*(100% - var(--kw) - 4px));
+  background:repeating-linear-gradient(90deg,#44454b 0 4px,#2a2b2f 4px 6px);border:2px solid #0a0a0c;border-radius:4px;box-shadow:0 4px 0 rgba(0,0,0,.45)}
+.vol u::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:7px;margin-left:-6px;background:#0e0905;border-left:2px solid #0a0a0c;border-right:2px solid #0a0a0c}
+.vol u::before{content:"";position:absolute;left:50%;top:4px;bottom:4px;width:2px;margin-left:-1px;background:#c0321c;z-index:1}
+.vread{min-width:22px;text-align:right;color:var(--lcd-fg);text-shadow:0 0 5px var(--lcd-glow);font-size:9px}
+.muted .vread{color:var(--lcd-dim);text-shadow:none}
+
+.rec{position:absolute;top:6px;right:7px;width:5px;height:5px;padding:0;border-radius:50%;background:#2a1412;z-index:2}
+.rec.on{background:#5dff7a;box-shadow:0 0 4px #5dff7a}
+
+/* glass: all tab content lives here */
+.glass{flex:1;min-height:0;border-radius:10px;background:var(--glass);position:relative;overflow:hidden;
+  box-shadow:inset 0 3px 10px #000,0 0 0 2px var(--lip),0 1px 0 2px rgba(255,255,255,.08);display:flex;flex-direction:column}
+.glass::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.05),transparent 32%)}
+.head{display:flex;justify-content:space-between;align-items:center;padding:5px 8px 5px 10px;border-bottom:1px solid #1b1c18;font-size:10px;letter-spacing:.16em;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow)}
+.hm{font-size:10px;letter-spacing:.16em;color:var(--lcd-dim);padding:2px 6px;border-radius:3px;box-shadow:inset 0 0 0 1px #2a2b22}.hm:active{color:var(--lcd-fg)}
+.content{flex:1;min-height:0;padding:8px;font-size:9px;letter-spacing:.1em;color:#5a5b50;display:flex;flex-direction:column;gap:8px}
+.big{flex:1;border-radius:6px;background:#0a0b08;box-shadow:inset 0 2px 6px #000;display:flex;align-items:center;justify-content:center;color:var(--lcd-fg);font-size:34px;letter-spacing:.1em;text-shadow:0 0 14px var(--lcd-glow);transition:opacity .15s}
+.row{display:flex;gap:8px}
+.row div{flex:1;border-radius:5px;background:#0a0b08;box-shadow:inset 0 2px 4px #000;padding:8px;text-align:center;min-height:44px}
+.row div b{display:block;color:var(--lcd-fg);font-size:12px;margin-top:4px}
+.log{text-align:center;color:var(--lcd-dim);height:12px}
+
+/* control deck */
+.deck{flex:none;margin-top:5px;padding:5px;border-radius:10px;background:linear-gradient(#232427,#1a1b1d);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.08)}
+.mode{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;font-size:8px;letter-spacing:.14em;color:var(--print-lo)}
+.rock{display:flex;border-radius:5px;background:#000;padding:2px;box-shadow:inset 0 1px 3px #000,0 1px 0 rgba(255,255,255,.08)}
+.rock button{padding:5px 12px;border-radius:3px;font-size:8px;letter-spacing:.12em;color:var(--print-lo)}
+.rock button.on{background:linear-gradient(var(--body-hi),var(--body));color:var(--print);box-shadow:0 1px 0 #000,inset 0 1px 0 rgba(255,255,255,.15)}
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.key{display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px 3px 5px;border-radius:5px;background:linear-gradient(var(--body-hi),var(--body));
+  box-shadow:0 3px 0 #0a0a0b,inset 0 1px 0 rgba(255,255,255,.14);transition:transform .05s,box-shadow .05s}
+.key:active,.key.on{transform:translateY(2px);box-shadow:0 1px 0 #0a0a0b,inset 0 2px 4px rgba(0,0,0,.5);background:linear-gradient(var(--body-lo),var(--body))}
+.klcd{width:100%;height:26px;border-radius:3px;background:var(--lcd-off);box-shadow:inset 0 1px 3px #000;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;font-size:7px;line-height:1;letter-spacing:.06em;color:var(--lcd-dim);overflow:hidden;white-space:nowrap}
+.klcd b{font-weight:400;font-size:9px;letter-spacing:.04em}
+.key.on .klcd{background:var(--lcd-bg);color:var(--lcd-fg);text-shadow:0 0 5px var(--lcd-glow)}
+.lamp{width:16px;height:4px;border-radius:2px;background:var(--lamp0);box-shadow:inset 0 1px 1px #000;transition:all .1s}
+.key.on .lamp{background:var(--clay);box-shadow:0 0 6px rgba(224,122,51,.6)}
+.foot{margin-top:7px;text-align:center;font-size:7px;letter-spacing:.2em;color:#4b4c52}
+</style>
+</head>
+<body>
+<div class="note">Mockup: the whole app lives inside one device. Tight version. Tap NAV/FUNC in the screen header to swap what the six keys do. Top bar: tiny mic-on dot in the top right corner like the Android indicator (tap to toggle), volume slider in the top bar.</div>
+
+<div class="dev" id="dev">
+  <button class="rec on" id="rec" aria-label="Mic on"></button>
+  <div class="plate"><b>TUNERITE</b><div class="volw" id="volw">VOL<div class="vol" id="vol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70"><i class="dot" style="left:9%"></i><i class="dot" style="left:30%"></i><i class="dot" style="left:50%"></i><i class="dot" style="left:70%"></i><i class="dot" style="left:91%"></i><u></u></div><span class="vread" id="vread">70</span></div></div>
+
+  <div class="glass">
+    <div class="head"><span id="hTitle">TUNER</span><button id="hMode" class="hm">NAV</button></div>
+    <div class="content" id="content"></div>
+  </div>
+
+  <div class="deck">
+    <div class="keys" id="keys"></div>
+  </div>
+</div>
+
+<script>
+// per tab: nav label + six function keys [top, bottom, latching?]
+const TABS=[
+ {id:'tuner',nav:['TUNER','1'],big:'A 4',a:['REF','440'],b:['CENTS','+2'],fn:[['HOLD','',1],['REF','440'],['RANGE','FIND'],['MIC','AUTO',1],['THEME','NEXT'],['LOCK','',1]]},
+ {id:'piano',nav:['PIANO','2'],big:'C 4',a:['OCT','4'],b:['KEYS','3'],fn:[['OCT','-'],['OCT','+'],['SUSTN','',1],['SOUND','NEXT'],['REC','',1],['CLEAR','']]},
+ {id:'train',nav:['DRILL','3'],big:'87%',a:['STREAK','12'],b:['LEVEL','3'],fn:[['START','',1],['SKIP',''],['HINT',''],['LEVEL','+'],['LEVEL','-'],['STATS','']]},
+ {id:'seq',nav:['MAKE','4'],big:'120',a:['BPM','120'],b:['BAR','1/4'],fn:[['PLAY','',1],['REC','',1],['LOOP','',1],['TEMPO','TAP'],['UNDO',''],['SAVE','']]},
+ {id:'progress',nav:['STATS','5'],big:'14d',a:['DAYS','14'],b:['BEST','92%'],fn:[['DAY',''],['WEEK',''],['MONTH',''],['ALL',''],['SHARE',''],['RESET','']]},
+ {id:'settings',nav:['SETUP','6'],big:'SET',a:['MIC','OK'],b:['THEME','UTIL'],fn:[['MIC','GATE'],['A4','440'],['THEME','NEXT'],['KEYS','3'],['RESET',''],['ABOUT','']]}
+];
+const NAMES={tuner:'TUNER',piano:'PIANO',train:'PRACTICE',seq:'COMPOSE',progress:'PROGRESS',settings:'SETTINGS'};
+let tab=0,mode='nav',latched={},flash=null,log='';
+const $=id=>document.getElementById(id);
+
+function render(){
+  const t=TABS[tab];
+  $('hTitle').textContent=NAMES[t.id];
+  $('hMode').textContent=mode==='nav'?'NAV ▸ FUNC':'FUNC ▸ NAV';
+  $('content').innerHTML=`<div class="big">${t.big}</div>
+    <div class="row"><div>${t.a[0]}<b>${t.a[1]}</b></div><div>${t.b[0]}<b>${t.b[1]}</b></div></div>
+    <div class="log">${log}</div>`;
+    $('keys').innerHTML=(mode==='nav'?TABS.map((x,i)=>({top:x.nav[0],bot:'TAB '+x.nav[1],on:i===tab})):
+    t.fn.map((f,i)=>({top:f[0],bot:f[2]?(latched[tab+'-'+i]?'ON':'OFF'):(f[1]||'·'),on:f[2]?!!latched[tab+'-'+i]:flash===i}))
+  ).map((k,i)=>`<button class="key ${k.on?'on':''}" data-i="${i}"><div class="klcd"><b>${k.top}</b><span>${k.bot}</span></div><i class="lamp"></i></button>`).join('');
+}
+$('keys').onclick=e=>{
+  const k=e.target.closest('.key');if(!k)return;const i=+k.dataset.i;
+  if(mode==='nav'){tab=i;log='';}
+  else{const f=TABS[tab].fn[i];
+    if(f[2]){const key=tab+'-'+i;latched[key]=!latched[key];log=f[0]+' '+(latched[key]?'ON':'OFF');}
+    else{flash=i;log=f[0]+' '+(f[1]||'');setTimeout(()=>{flash=null;render()},180);}}
+  render();
+};
+$('hMode').onclick=()=>{mode=mode==='nav'?'func':'nav';log='';render();};
+let vol=70;
+const setVol=v=>{vol=Math.max(0,Math.min(100,Math.round(v)));const e=$('vol');
+  e.style.setProperty('--p',vol/100);
+  e.setAttribute('aria-valuenow',vol);$('vread').textContent=vol?vol:'MUTE';$('volw').classList.toggle('muted',!vol);};
+const fromX=x=>{const r=$('vol').getBoundingClientRect();return (x-r.left)/r.width*100};
+$('vol').onpointerdown=e=>{$('vol').setPointerCapture(e.pointerId);setVol(fromX(e.clientX))};
+$('vol').onpointermove=e=>{if($('vol').hasPointerCapture(e.pointerId))setVol(fromX(e.clientX))};
+$('vol').onkeydown=e=>{const d={ArrowRight:5,ArrowUp:5,ArrowLeft:-5,ArrowDown:-5}[e.key];
+  if(d){setVol(vol+d);e.preventDefault()}else if(e.key==='Home')setVol(0);else if(e.key==='End')setVol(100)};
+setVol(70);
+$('rec').onclick=()=>$('rec').classList.toggle('on');
+render();
+</script>
+</body>
+</html>

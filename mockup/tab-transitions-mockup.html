@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite tab transitions mockup</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Bold.ttf) format("truetype");font-weight:700}
+:root{--wall:#18181a;--body:#2b2c2f;--hi:#3d3e42;--lo:#212225;--print:#e2ded2;--lo-print:#8c897e;--clay:#e07a33;--lcd:#ffc65e}
+*{box-sizing:border-box;margin:0}
+body{background:var(--wall);color:var(--print);font-family:"Silkscreen",monospace;padding:20px 12px 40px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.note{max-width:390px;font-size:9px;letter-spacing:.06em;line-height:1.6;color:var(--lo-print);text-align:center}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-transform:uppercase}
+.opts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:390px}
+.opts button{font-size:9px;letter-spacing:.08em;padding:7px 9px;border-radius:4px;background:linear-gradient(var(--hi),var(--body));box-shadow:0 2px 0 #0a0a0b,inset 0 1px 0 rgba(255,255,255,.14);color:var(--lo-print)}
+.opts button.on{color:#fff0c4;background:linear-gradient(var(--lo),var(--body));transform:translateY(1px);box-shadow:0 1px 0 #0a0a0b,inset 0 2px 4px rgba(0,0,0,.5)}
+.opts button.on::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--clay);box-shadow:0 0 5px var(--clay);margin-right:6px}
+.desc{max-width:390px;min-height:36px;text-align:center;font-size:9px;letter-spacing:.06em;line-height:1.6;color:var(--lcd)}
+.dev{width:390px;height:640px;border-radius:16px;padding:5px;display:flex;flex-direction:column;background:linear-gradient(160deg,var(--hi),var(--body) 30%,var(--lo));box-shadow:0 0 0 2px #141415,0 18px 40px rgba(0,0,0,.6)}
+.top{display:flex;align-items:center;padding:4px 8px 8px;font-size:9px;letter-spacing:.18em;font-weight:700}
+.glass{flex:1;min-height:0;position:relative;overflow:hidden;border-radius:10px;background:#0f100c;box-shadow:inset 0 3px 10px #000,0 0 0 2px #141415}
+.pane{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;will-change:transform,opacity;backface-visibility:hidden}
+.pane h2{font-size:26px;letter-spacing:.14em;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.pane i{width:70%;height:12px;border-radius:6px;background:rgba(255,255,255,.22)}
+.pane i:nth-of-type(2){width:50%}.pane i:nth-of-type(3){width:62%}
+.deck{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:5px;padding:5px;border-radius:10px;background:linear-gradient(#232427,#1a1b1d);box-shadow:inset 0 2px 5px rgba(0,0,0,.6)}
+.key{display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px 3px 5px;border-radius:5px;background:linear-gradient(var(--hi),var(--body));box-shadow:0 3px 0 #0a0a0b,inset 0 1px 0 rgba(255,255,255,.14)}
+.key .l{width:100%;height:30px;border-radius:3px;background:#0f100c;box-shadow:inset 0 1px 3px #000;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#ffd58a}
+.key::after{content:"";width:16px;height:4px;border-radius:2px;background:#3a2420;box-shadow:inset 0 1px 1px #000}
+.key.on{transform:translateY(2px);box-shadow:0 1px 0 #0a0a0b,inset 0 2px 4px rgba(0,0,0,.5)}
+.key.on .l{background:#2a1d0a;color:#fff0c4;text-shadow:0 0 6px rgba(255,170,50,.6)}
+.key.on::after{background:var(--clay);box-shadow:0 0 6px rgba(224,122,51,.6)}
+.dur{display:flex;align-items:center;gap:8px;font-size:9px;color:var(--lo-print);letter-spacing:.08em}
+</style>
+</head>
+<body>
+<div class="note">Tap the keys. Both screens stay fully visible and simply travel: the one you leave moves off the glass, the one you pick moves in. Direction follows the key order.</div>
+<div class="opts" id="opts"></div>
+<div class="desc" id="desc"></div>
+<div class="dur">SPEED <input id="dur" type="range" min="250" max="1200" step="50" value="600"><span id="durv">600 MS</span></div>
+
+<div class="dev">
+  <div class="top">TUNERITE</div>
+  <div class="glass" id="glass"></div>
+  <div class="deck" id="deck"></div>
+</div>
+
+<script>
+const TABS=[['TUNER','#7a3b1e'],['PIANO','#2c5a6b'],['DRILL','#5a4a8a'],['COMP','#2f6b45'],['STATS','#8a6a1e'],['SETUP','#6b3a52']];
+const EASE='cubic-bezier(.65,0,.25,1)';
+/* each style: [outgoing keyframes, incoming keyframes] for direction d (+1 = going to a later tab) */
+const STYLES={
+ carousel:{name:'Carousel',desc:'Both screens ride together on one strip. Nothing fades; the old one just leaves the glass as the new one arrives.',
+   f:d=>[[{transform:'none'},{transform:`translateX(${-100*d}%)`}],[{transform:`translateX(${100*d}%)`},{transform:'none'}]]},
+ vertical:{name:'Up / down',desc:'Same strip turned on its side: later tabs come up from below, earlier ones come down from above.',
+   f:d=>[[{transform:'none'},{transform:`translateY(${-100*d}%)`}],[{transform:`translateY(${100*d}%)`},{transform:'none'}]]},
+ depth:{name:'Carousel + depth',desc:'Like the carousel, but the screen you leave shrinks a little and dims as it travels away, so it feels like it recedes rather than vanishes.',
+   f:d=>[[{transform:'none',filter:'brightness(1)'},{transform:`translateX(${-100*d}%) scale(.8)`,filter:'brightness(.45)'}],[{transform:`translateX(${100*d}%) scale(.8)`,filter:'brightness(.45)'},{transform:'none',filter:'brightness(1)'}]]},
+ push:{name:'Push (parallax)',desc:'The new screen slides over the top while the old one drifts away a third as fast. Gives a sense of layers.',
+   f:d=>[[{transform:'none',filter:'brightness(1)'},{transform:`translateX(${-30*d}%)`,filter:'brightness(.5)'}],[{transform:`translateX(${100*d}%)`},{transform:'none'}]],top:true},
+ tilt:{name:'Cube-ish tilt',desc:'The strip rotates slightly as it moves, like a carousel turning on a shelf. Both screens are always on glass.',
+   f:d=>[[{transform:'perspective(900px) none'},{transform:`perspective(900px) translateX(${-100*d}%) rotateY(${35*d}deg)`}],[{transform:`perspective(900px) translateX(${100*d}%) rotateY(${-35*d}deg)`},{transform:'perspective(900px) none'}]]}
+};
+let style='carousel',cur=0,busy=null;
+const glass=document.getElementById('glass'),panes=TABS.map(([n,c])=>{const p=document.createElement('div');p.className='pane';p.style.background=`linear-gradient(160deg,${c},#0f100c 130%)`;
+  p.innerHTML=`<h2>${n}</h2><i></i><i></i><i></i>`;p.style.display='none';glass.appendChild(p);return p});
+panes[0].style.display='flex';
+const keys=TABS.map(([n],i)=>{const k=document.createElement('button');k.className='key'+(i?'':' on');k.innerHTML=`<span class="l">${n}</span>`;k.onclick=()=>go(i);document.getElementById('deck').appendChild(k);return k});
+function go(j){
+  if(j===cur)return;
+  if(busy)busy.forEach(a=>a.finish());
+  const d=j>cur?1:-1,[o,n]=STYLES[style].f(d),dur=+document.getElementById('dur').value,from=panes[cur],to=panes[j];
+  keys.forEach((k,i)=>k.classList.toggle('on',i===j));
+  to.style.display='flex';from.style.zIndex=STYLES[style].top?1:0;to.style.zIndex=2;
+  const opt={duration:dur,easing:EASE,fill:'both'};
+  const a=from.animate(o,opt),b=to.animate(n,opt);busy=[a,b];
+  const prev=cur;cur=j;
+  b.onfinish=()=>{panes[prev].style.display='none';[a,b].forEach(x=>x.cancel());busy=null};
+}
+const optsEl=document.getElementById('opts');
+Object.entries(STYLES).forEach(([id,s])=>{const b=document.createElement('button');b.textContent=s.name;b.className=id===style?'on':'';
+  b.onclick=()=>{style=id;optsEl.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));document.getElementById('desc').textContent=s.desc};optsEl.appendChild(b)});
+document.getElementById('desc').textContent=STYLES[style].desc;
+document.getElementById('dur').oninput=e=>document.getElementById('durv').textContent=e.target.value+' MS';
+</script>
+</body>
+</html>

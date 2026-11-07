@@ -7,18 +7,15 @@
   --c-hi:color-mix(in srgb,var(--c-body) 86%,#fff);--c-lip:color-mix(in srgb,var(--c-ink) 60%,var(--c-lo));--c-well:var(--tn-well,#202124);
   --c-print:var(--tn-print,#8f9096);--c-printh:var(--tn-printh,#cfc8b8);--c-acc:var(--tn-tip,#c0321c);
   --c-slab:var(--c-ink);--c-slab2:color-mix(in srgb,var(--c-ink) 60%,var(--c-body));--c-groove:color-mix(in srgb,var(--tn-lcd2,#0e0905) 70%,var(--c-body));
-  padding:0;overflow:hidden;background:var(--c-wall);font-family:"Silkscreen",ui-monospace,monospace;color:var(--c-print);user-select:none;-webkit-user-select:none}
-#s-tuner .tnstage{position:absolute;left:50%;top:50%;width:var(--sw,1280px);height:var(--sh,720px);margin:calc(var(--sh,720px)/-2) 0 0 calc(var(--sw,1280px)/-2);zoom:var(--s,1)}
+  padding:0;overflow:hidden;background:transparent;font-family:"Silkscreen",ui-monospace,monospace;color:var(--c-print);user-select:none;-webkit-user-select:none}
+#s-tuner .tnstage{position:absolute;left:50%;bottom:0;width:var(--sw,1280px);height:var(--sh,720px);margin:0 0 0 calc(var(--sw,1280px)/-2);zoom:var(--s,1)}
 
 /* case: flat colour with a lit top edge, a shaded underside, a hard shadow on the wall (light from above) */
-#s-tuner .tndev{position:absolute;left:20px;right:20px;top:22px;bottom:52px;padding:16px 24px 20px;background:var(--c-body);border:4px solid var(--c-ink);border-radius:30px;
-  box-shadow:inset 0 10px 0 var(--c-hi),inset 0 -16px 0 var(--c-lo),0 12px 0 var(--c-ink),0 14px 0 var(--c-lip),0 40px 0 color-mix(in srgb,var(--c-wall) 55%,#000);
-  display:grid;grid-template-columns:500px 1fr;grid-template-rows:auto 1fr;gap:14px 24px}
-#s-tuner .tnscrew{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--c-lo);border:3px solid var(--c-ink);box-shadow:inset 0 3px 0 var(--c-hi)}
-#s-tuner .tnscrew::after{content:"";position:absolute;left:1px;right:1px;top:3px;height:2px;background:var(--c-ink);transform:rotate(35deg)}
-#s-tuner .tnscrew.a{left:12px;top:12px}#s-tuner .tnscrew.b{right:12px;top:12px}#s-tuner .tnscrew.c{left:12px;bottom:16px}#s-tuner .tnscrew.d{right:12px;bottom:16px}
+#s-tuner .tndev{position:absolute;left:4px;right:4px;top:4px;bottom:4px;padding:16px 18px 16px;background:var(--c-body);border:4px solid var(--c-ink);border-radius:30px;
+  box-shadow:inset 0 10px 0 var(--c-hi),inset 0 -16px 0 var(--c-lo);
+  display:grid;grid-template-columns:500px 1fr;grid-template-rows:1fr;gap:14px 24px}
 
-#s-tuner .tnhead{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 14px 0 10px;position:relative;z-index:6}
+#s-tuner .tnhead{display:none!important;grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 14px 0 10px;position:relative;z-index:6}
 #s-tuner .tnbrand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1;color:var(--c-printh)}
 #s-tuner .tnbrand small{display:block;font-weight:400;font-size:10px;letter-spacing:3px;margin-top:6px;color:var(--c-print)}
 #s-tuner .tnpwr{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:3px;margin-left:22px}
@@ -120,7 +117,7 @@
 #s-tuner .tnstage .banner{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:8;margin:0;white-space:nowrap}
 
 /* ---- portrait: the same parts stacked in one column ---- */
-#s-tuner .tnstage.portrait .tndev{left:14px;right:14px;top:18px;bottom:50px;padding:14px 18px 18px;grid-template-columns:1fr;grid-template-rows:auto auto 1fr;gap:14px}
+#s-tuner .tnstage.portrait .tndev{left:4px;right:4px;top:4px;bottom:4px;padding:12px 18px 26px;grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:8px}
 #s-tuner .portrait .tnhead{gap:6px;padding:0 4px}
 #s-tuner .portrait .tnbrand{font-size:19px;letter-spacing:3px}
 #s-tuner .portrait .tnbrand small{display:none}
@@ -130,6 +127,9 @@
 #s-tuner .portrait .tnreadouts{grid-template-columns:1fr 1fr}
 #s-tuner .portrait .tnreadouts .tnlcd:last-child{grid-column:1/-1}
 #s-tuner .portrait .tnchrom{grid-template-columns:repeat(6,1fr);gap:6px}
-#s-tuner .portrait .tnchrom>div{height:60px}
+#s-tuner .portrait .tnchrom>div{height:46px}
+#s-tuner .portrait .tnright{gap:8px}
+#s-tuner .tnmsg{flex:none}
+#s-tuner .portrait .tnmsg{line-height:34px;padding:6px 12px}
 #s-tuner .portrait .tnctl{grid-template-columns:1fr auto;gap:16px}
 #s-tuner .portrait .tncap button{width:50px}#s-tuner .portrait .tncaps{gap:8px}

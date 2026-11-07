@@ -1,0 +1,86 @@
+/* The whole app sits in one device: plastic frame, top bar, glass screen, key deck. Loaded last so it wins over app.css. */
+:root{--dk-body:#2b2c2f;--dk-hi:#3d3e42;--dk-lo:#212225;--dk-lip:#141415;--dk-clay:#e07a33;--dk-print:#e2ded2;--dk-print-lo:#8c897e;
+  --dk-lcd-bg:#2a1d0a;--dk-lcd-fg:#ffc65e;--dk-lcd-dim:#6b4f1f;--dk-lcd-off:#0f100c;--dk-glow:rgba(255,170,50,.6);--dk-lamp0:#3a2420}
+body{padding:5px 5px max(5px,env(safe-area-inset-bottom));gap:0;border-radius:0;
+  background:linear-gradient(160deg,var(--dk-hi),var(--dk-body) 30%,var(--dk-lo));box-shadow:inset 0 2px 0 rgba(255,255,255,.12),inset 0 -3px 0 rgba(0,0,0,.35)}
+#dkGlass{flex:1;min-height:0;position:relative;overflow:hidden;border-radius:10px;background:#0f100c;box-shadow:inset 0 3px 10px #000,0 0 0 2px var(--dk-lip),0 1px 0 2px rgba(255,255,255,.08)}
+#dkRot{position:absolute;left:0;top:0;width:100%;height:100%}
+#dkGlass main{position:absolute;inset:0;flex:none;border-radius:0;background:none;box-shadow:none}
+#volZone,#volPop{display:none!important}
+#micBar{display:none}
+
+/* top bar: name, key mode, volume */
+#dkTop{flex:none;display:flex;align-items:center;gap:10px;padding:0 26px 5px 6px;font:700 9px/1 "Silkscreen",monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dk-print)}
+#dkMode{min-width:46px;text-align:center;font:400 8px/1 "Silkscreen",monospace;letter-spacing:.12em;color:var(--dk-lcd-fg);background:#000;border:0;border-radius:3px;padding:5px 7px;box-shadow:inset 0 1px 3px #000,0 1px 0 rgba(255,255,255,.08);text-shadow:0 0 5px var(--dk-glow);cursor:pointer}
+#dkVolL{position:fixed;left:50%;top:24px;transform:translateX(-50%);pointer-events:none}
+#dkHole{flex:none;width:30px}
+#dkVolW{flex:1;min-width:0;display:flex;align-items:center;gap:7px;color:var(--dk-print-lo);font:400 8px/1 "Silkscreen",monospace;letter-spacing:.12em}
+#dkVol{--p:.7;--kw:26px;flex:1;position:relative;height:26px;touch-action:none;cursor:pointer;outline:0;background:#0e0905;border:2px solid #0a0a0c;border-radius:8px;box-shadow:inset 0 4px 0 #000,0 2px 0 #44454b}
+#dkVol:focus-visible{outline:2px solid #c0321c;outline-offset:2px}
+#dkVol::before{content:"";position:absolute;left:18px;right:18px;top:50%;height:3px;margin-top:-1.5px;background:#2e2a26;border-radius:2px}
+#dkVol .dot{position:absolute;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#2e2a26}
+#dkVol u{position:absolute;top:2px;bottom:2px;width:var(--kw);left:calc(2px + var(--p)*(100% - var(--kw) - 4px));
+  background:repeating-linear-gradient(90deg,#44454b 0 4px,#2a2b2f 4px 6px);border:2px solid #0a0a0c;border-radius:4px;box-shadow:0 4px 0 rgba(0,0,0,.45)}
+#dkVol u::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:7px;margin-left:-6px;background:#0e0905;border-left:2px solid #0a0a0c;border-right:2px solid #0a0a0c}
+#dkVol u::before{content:"";position:absolute;left:50%;top:4px;bottom:4px;width:2px;margin-left:-1px;background:#c0321c;z-index:1}
+#dkMode{position:relative;overflow:hidden;display:grid;place-items:center}
+#dkMode .w{grid-area:1/1;display:block}
+#dkMode .w.out{animation:dkOut .3s cubic-bezier(.4,0,.2,1) forwards}
+#dkMode .w.in{animation:dkIn .3s cubic-bezier(.4,0,.2,1)}
+@keyframes dkOut{to{transform:translateX(-170%)}}
+@keyframes dkIn{from{transform:translateX(170%)}}
+/* mic-on dot, top right corner */
+#dkMic{position:fixed;top:16px;right:6px;width:5px;height:5px;border-radius:50%;background:#2a1412;z-index:40;pointer-events:none}
+#dkMic.on{background:#5dff7a;box-shadow:0 0 4px #5dff7a}
+
+/* key deck */
+#nav{flex:none;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:5px;padding:5px;border:0;border-radius:10px;
+  background:linear-gradient(#232427,#1a1b1d);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.08)}
+#nav button{flex:none;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:4px 3px 5px;border:0;border-radius:5px;
+  background:linear-gradient(var(--dk-hi),var(--dk-body));color:var(--dk-print-lo);letter-spacing:0;font-size:inherit;box-shadow:0 3px 0 #0a0a0b,inset 0 1px 0 rgba(255,255,255,.14);transition:transform .05s,box-shadow .05s}
+#nav button::before{content:"";order:2;width:16px;height:4px;margin:0;border-radius:2px;background:var(--dk-lamp0);box-shadow:inset 0 1px 1px #000;transition:all .1s}
+#nav button:active,#nav button.on{transform:translateY(2px);box-shadow:0 1px 0 #0a0a0b,inset 0 2px 4px rgba(0,0,0,.5);background:linear-gradient(var(--dk-lo),var(--dk-body))}
+#nav button.on::before{background:var(--dk-clay);box-shadow:0 0 6px rgba(224,122,51,.6)}
+#nav button.off{opacity:.45}
+#nav .klcd{order:1;width:100%;height:32px;border-radius:3px;background:var(--dk-lcd-off);box-shadow:inset 0 1px 3px #000;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;font:400 8px/1 "Silkscreen",monospace;letter-spacing:.04em;color:#b98a42;overflow:hidden;white-space:nowrap}
+#nav .klcd em{font-style:normal}
+#nav .klcd b{font-weight:700;font-size:10px;letter-spacing:.02em;color:#ffd58a;text-shadow:0 0 4px rgba(255,170,50,.35)}
+#nav button.on .klcd{background:var(--dk-lcd-bg);color:#ffc65e;text-shadow:0 0 5px var(--dk-glow)}
+#nav button.on .klcd b{color:#fff0c4;text-shadow:0 0 6px var(--dk-glow)}
+
+/* tab change: both screens stay on glass while they travel (see UI.show in deck.js) */
+.screen.dk-leave{display:block!important;pointer-events:none;z-index:1}
+.screen.dk-enter{pointer-events:none;z-index:2}
+.screen.dk-warm{display:block;visibility:hidden;pointer-events:none}
+.screen.on,.screen.dk-leave,.screen.dk-enter{visibility:visible}
+
+/* Stats and Setup still scroll, without a visible bar */
+#s-progress,#s-settings,#s-progress *,#s-settings *{scrollbar-width:none}
+#s-progress::-webkit-scrollbar,#s-settings::-webkit-scrollbar,#s-progress *::-webkit-scrollbar,#s-settings *::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* Piano case: the same tight edge, border and padding as the Tuner's */
+#s-piano.screen{padding:4px!important}
+#s-piano .synth.synthmain{border-width:4px;border-radius:22px;padding:10px 8px 12px;gap:8px}
+
+#nav .ic{display:none;width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:square;stroke-linejoin:miter}
+
+
+/* Portrait-locked casing, phone held sideways: only the screen turns (see Deck.turn). The keys swap words for symbols, kept upright for the person holding the phone. */
+body.dkvland #nav button.tab .ic{display:block}
+body.dkvland #nav button.tab .klcd b{display:none}
+body.dkvland.cw #nav .ic{transform:rotate(-90deg)}
+body.dkvland.ccw #nav .ic{transform:rotate(90deg)}
+
+/* Window turned to landscape on a phone: the whole app is turned back in CSS, so the casing is in place from the first frame */
+@media (orientation:landscape) and (max-height:520px){
+  body{inset:auto;left:0;top:0;width:100dvh;height:100dvw;transform-origin:0 0;transform:translateY(100dvh) rotate(-90deg)}
+  html.w270 body{transform:translateX(100dvw) rotate(90deg)}
+}
+/* sideways: the mode word is separate letters, each turned upright for the person holding the phone; keys swap their contents with a small pop */
+#dkMode .w.v{display:flex;gap:1px;font-size:8px;letter-spacing:0}
+#dkMode .w.v i{display:block;width:8px;font-style:normal;text-align:center}
+body.cw #dkMode .w.v i{transform:rotate(-90deg)}
+body.ccw #dkMode .w.v i{transform:rotate(90deg)}
+body.dkflip #nav .klcd>*{animation:dkPop .32s ease-out}
+@keyframes dkPop{from{opacity:0;scale:.55}}

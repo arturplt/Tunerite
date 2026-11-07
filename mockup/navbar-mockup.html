@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunerite bottom navbar mockup</title>
+<style>
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Regular.ttf) format("truetype");font-weight:400}
+@font-face{font-family:"Silkscreen";src:url(../fonts/Silkscreen-Bold.ttf) format("truetype");font-weight:700}
+:root{
+  --wall:#18181a;--ink:#050506;--print:#e2ded2;--print-lo:#8c897e;
+  --body:#2b2c2f;--body-hi:#3d3e42;--body-lo:#212225;--lip:#141415;--clay:#e07a33;
+  --groove:#222326;--lcd-bg:#2a1d0a;--lcd-fg:#ffc65e;--lcd-dim:#6b4f1f;--lcd-glow:rgba(255,170,50,.6);
+  --lamp0:#3a2420;--lamp:#d9704a;--inset:#000}
+*{box-sizing:border-box;margin:0}
+body{background:var(--wall);color:var(--print);font-family:"Silkscreen",monospace;padding:24px 16px 48px}
+h1{font-size:14px;letter-spacing:.14em;text-transform:uppercase;text-align:center;margin-bottom:6px}
+.sub{text-align:center;color:var(--print-lo);font-size:10px;letter-spacing:.08em;margin-bottom:28px}
+.grid{display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.opt{width:375px}
+.opt h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;color:var(--clay)}
+.opt p{font-size:9px;color:var(--print-lo);letter-spacing:.06em;line-height:1.5;margin-bottom:10px;min-height:27px}
+.phone{height:300px;border:2px solid var(--lip);border-radius:18px;background:#101012;display:flex;flex-direction:column;overflow:hidden}
+.screen{flex:1;display:flex;align-items:center;justify-content:center;color:#3a3b40;font-size:10px;letter-spacing:.2em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+svg.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:square;stroke-linejoin:miter}
+nav{flex:none;display:flex}
+nav button{flex:1 1 0;min-width:0}
+
+/* A: current LED dots */
+.a nav{background:#1a1714;border-top:1px solid #2e2a25;padding-bottom:4px}
+.a nav button{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:2.6rem;gap:3px;color:#8a847a;font-size:9px;letter-spacing:.06em}
+.a nav button::before{content:"";width:8px;height:8px;border-radius:50%;background:#3a352f}
+.a nav button.on{color:#ffb347}
+.a nav button.on::before{background:#ffb347;box-shadow:0 0 8px #ffb347}
+.a svg{display:none}
+
+/* B: raised keys in the app's palette */
+.b nav{gap:4px;padding:6px 6px 8px;background:#1a1714;border-top:1px solid #4a433b}
+.b nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:2.9rem;padding:4px 0 8px;background:#3a352f;color:#b8a888;
+  box-shadow:inset 0 -4px 0 #1a1714;font-size:8px;letter-spacing:.04em;border-radius:2px}
+.b nav button::before{content:"";width:8px;height:8px;border-radius:50%;background:#1a1714;box-shadow:inset 0 1px 2px #000}
+.b nav button:active{transform:translateY(2px);box-shadow:inset 0 -2px 0 #1a1714}
+.b nav button.on{background:#e9dcc0;color:#24211e;box-shadow:inset 0 -4px 0 #b8a888}
+.b nav button.on::before{background:#ffb347;box-shadow:0 0 8px #ffb347,inset 0 0 0 1px #c9822a}
+.b svg{display:none}
+
+/* C: LCD readout + icon keys */
+.c .wrap{background:linear-gradient(#26272a,#1c1d1f);border-top:2px solid #0a0a0b;padding:8px 8px 10px;display:flex;flex-direction:column;gap:7px}
+.c .lcd{background:var(--lcd-bg);border-radius:4px;box-shadow:inset 0 2px 5px #000,0 1px 0 #3d3e42;padding:5px 10px;display:flex;justify-content:space-between;
+  color:var(--lcd-fg);font-size:10px;letter-spacing:.14em;text-shadow:0 0 6px var(--lcd-glow)}
+.c .lcd span:last-child{color:var(--lcd-dim);text-shadow:none}
+.c nav{gap:3px;background:#0e0f10;border-radius:5px;padding:3px;box-shadow:inset 0 2px 4px #000}
+.c nav button{display:flex;align-items:center;justify-content:center;padding:9px 0;border-radius:3px;color:#6b6d74}
+.c nav button.on{background:linear-gradient(var(--body-hi),var(--body));color:var(--lcd-fg);box-shadow:0 1px 0 #000,inset 0 1px 0 rgba(255,255,255,.15);filter:drop-shadow(0 0 4px var(--lcd-glow))}
+.c .t{display:none}
+
+/* D: rail with sliding knob (matches Sound source slider) */
+.d .wrap{background:linear-gradient(#26272a,#1c1d1f);border-top:2px solid #0a0a0b;padding:10px 10px 10px}
+.d .rail{position:relative;height:14px;margin:0 calc(100%/12);border-radius:7px;background:var(--inset);box-shadow:inset 0 2px 3px #000,0 1px 0 #3d3e42}
+.d .rail i{position:absolute;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#3b3c40}
+.d .knob{position:absolute;top:-4px;width:34px;height:22px;margin-left:-17px;border-radius:5px;background:linear-gradient(var(--body-hi),var(--body-lo));
+  box-shadow:0 2px 0 #000,inset 0 1px 0 rgba(255,255,255,.2);transition:left .18s}
+.d .knob::after{content:"";position:absolute;left:50%;top:5px;bottom:5px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--clay);box-shadow:0 0 6px var(--clay)}
+.d nav{margin-top:8px}
+.d nav button{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--print-lo);font-size:8px;letter-spacing:.04em;padding:2px 0}
+.d nav button.on{color:var(--print)}
+.d svg{width:18px;height:18px}
+</style>
+</head>
+<body>
+<h1>Bottom navbar</h1>
+<div class="sub">Tap the tabs. Six destinations, utility theme, 375px phone width.</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const ICONS={
+ tuner:'<path d="M3 17a9 9 0 0 1 18 0"/><path d="M12 17l4-7"/><path d="M3 20h18"/>',
+ piano:'<rect x="3" y="5" width="18" height="14"/><path d="M9 5v14M15 5v14"/><path d="M7.5 5v7M13 5v7M18.5 5v7" stroke-width="3"/>',
+ train:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01" stroke-width="3"/>',
+ seq:'<path d="M4 7h10M4 12h16M4 17h7"/><path d="M17 6v4M14 17v-3"/>',
+ progress:'<path d="M3 20h18"/><path d="M5 16l5-5 3 3 6-8"/><path d="M15 6h4v4"/>',
+ settings:'<path d="M4 7h16M4 12h16M4 17h16"/><path d="M9 5v4M15 10v4M8 15v4" stroke-width="3"/>'};
+const TABS=[['tuner','Tuner'],['piano','Piano'],['train','Practice'],['seq','Compose'],['progress','Progress'],['settings','Settings']];
+const OPTS=[
+ ['A · Current','LED dot above each label. Quiet, but the dot is small and the label does all the work.','a'],
+ ['B · Raised keys','Same raised cream-on-brown keys as the buttons and segmented controls, with the existing LED dot. Active key goes cream with a lit amber LED.','b'],
+ ['C · LCD + icon keys','Icon-only keys in a recessed tray, with a small LCD that names the current screen. Most compact.','c'],
+ ['D · Rail and knob','A sliding knob on a rail, like the Sound source slider. The knob follows the active tab.','d']];
+const grid=document.getElementById('grid');
+OPTS.forEach(([title,desc,cls])=>{
+  const o=document.createElement('div');o.className='opt '+cls;
+  const btn=(k,n,i)=>`<button data-i="${i}" class="${i?'':'on'}" aria-label="${n}"><svg class="ic" viewBox="0 0 24 24">${ICONS[k]}</svg><span class="t">${n}</span></button>`;
+  const btns=TABS.map(([k,n],i)=>btn(k,n,i)).join('');
+  let bar;
+  if(cls==='c')bar=`<div class="wrap"><div class="lcd"><span class="cur">TUNER</span><span>1/6</span></div><nav>${btns}</nav></div>`;
+  else if(cls==='d')bar=`<div class="wrap"><div class="rail">${TABS.map((_,i)=>`<i style="left:${i*20}%"></i>`).join('')}<div class="knob" style="left:0%"></div></div><nav>${btns}</nav></div>`;
+  else bar=`<nav>${btns}</nav>`;
+  o.innerHTML=`<h2>${title}</h2><p>${desc}</p><div class="phone"><div class="screen">SCREEN</div>${bar}</div>`;
+  if(cls==='a')o.querySelectorAll('.t').forEach(t=>t.style.display='inline');
+  if(cls==='a'||cls==='b'||cls==='d')o.querySelectorAll('.t').forEach(t=>t.style.display='block');
+  o.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    o.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    const i=+b.dataset.i,k=o.querySelector('.knob'),c=o.querySelector('.cur'),n=o.querySelector('.lcd span:last-child');
+    if(k)k.style.left=(i*20)+'%';
+    if(c){c.textContent=TABS[i][1].toUpperCase();n.textContent=(i+1)+'/6'}
+  });
+  grid.appendChild(o);
+});
+</script>
+</body>
+</html>

@@ -66,7 +66,7 @@ const TunerDial = {
   fit(force) {
     const s = $('#s-tuner'), w = s.clientWidth, h = s.clientHeight, dpr = window.devicePixelRatio || 1; if (!w || !h) return;
     if (!force && w === this.fw && h === this.fh && dpr === this.fd) return; this.fw = w; this.fh = h; this.fd = dpr;
-    const portrait = w / h < 1, DW = portrait ? 560 : 1280, DH = portrait ? 1380 : 720, sc = Math.min(w / DW, h / DH), st = s.style;
+    const portrait = w / h < 1, DW = portrait ? 560 : 1280, DH = portrait ? Math.round(Math.min(1300, Math.max(1155, DW * h / w))) : Math.round(Math.min(720, Math.max(640, DW * h / w))), sc = Math.min(w / DW, h / DH), st = s.style;
     st.setProperty('--sw', DW + 'px'); st.setProperty('--sh', DH + 'px'); st.setProperty('--s', sc.toFixed(4)); st.setProperty('--dp', (1 / (dpr * sc)).toFixed(4) + 'px');
     for (const p of [2, 4, 8]) { const v = p * sc * dpr, q = v >= 3.5 ? 2 * Math.floor(v / 2) : Math.max(1, Math.round(v)); st.setProperty('--f' + p, (q * 8 / (dpr * sc)).toFixed(3) + 'px'); }
     $('#tnStage').classList.toggle('portrait', portrait);
