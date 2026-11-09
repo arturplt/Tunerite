@@ -4,8 +4,8 @@
 #s-piano{--c-ink:var(--tn-edge,#0a0a0c);--c-body:var(--tn-p1,#2b2c31);--c-lo:var(--tn-p3,#141518);--c-hi:color-mix(in srgb,var(--c-body) 86%,#fff);--c-acc:var(--tn-tip,#ffb347);--c-print:var(--tn-print,#8f9096)}
 
 /* the case */
-#s-piano .synth.synthmain{background:var(--c-body);border:0.2rem solid var(--c-ink);border-radius:1.2rem;
-  box-shadow:inset 0 0.4rem 0 var(--c-hi),inset 0 -0.6rem 0 var(--c-lo),0 0.4rem 0 var(--c-ink)}
+#s-piano .synth.synthmain{background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 10rem);border:0.2rem solid var(--c-ink);border-radius:1.2rem;
+  box-shadow:inset 0 -0.6rem 0 var(--c-lo),0 0.4rem 0 var(--c-ink)}
 #s-piano .lowbreak{display:none}
 #s-piano .synsecs,#s-piano .synlow{display:contents}
 #s-piano .pnright{display:flex;flex-direction:column;gap:0.6rem;min-width:0;min-height:0}
@@ -226,11 +226,68 @@
 #s-piano #specCv{touch-action:pan-y!important}
 #s-piano #pianoCv{touch-action:none!important}
 /* the Sand display view: turn, shake and empty sit in the corner of the display, only while that view is on */
-.sandctl{position:absolute;right:6px;top:6px;display:flex;gap:6px;z-index:4}
+.sandctl{flex:0 0 100%;box-sizing:border-box;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0.3rem;padding:0 0.1rem}
 .sandctl[hidden]{display:none}
 .sandctl .synbtn[aria-pressed="true"]{color:#ffb347;box-shadow:0 0 0 2px #ffb347 inset}
 .synpane[data-p="spec"].sandview::after{display:none}      /* the Sand view is fine grained, so the display's coarse mesh stays off it */
-.sandctl .synbtn{min-height:0;height:1.7rem;padding:0 .7rem;font:400 .7rem "Silkscreen",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
+.sandctl .synbtn{min-width:0;min-height:0;height:1.7rem;padding:0 .2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 .7rem "Silkscreen",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
 
 /* the case's shadow ends exactly where the bottom bar starts */
 #s-piano.screen{padding-bottom:calc(0.4rem + 2px)!important}
+
+/* ---- keys as keycaps, like the Tuner's: a matte face with a sharp light line along its top edge and soft corner glints, a darker front lip below, pressed straight down ---- */
+#s-piano{--pklip:color-mix(in srgb,var(--tn-key2,#2a2b2f) 40%,var(--tn-edge,#121315))}
+#s-piano .synbtn,#s-piano .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico),#s-piano .pntabs button,#s-piano .bigjack{border:0;
+  background:radial-gradient(ellipse 75% 55% at 50% 0,rgba(255,255,255,.17),transparent),linear-gradient(180deg,var(--tn-key1,#3a3b40),var(--tn-key2,#2a2b2f));
+  box-shadow:0 0.25rem 0 var(--pklip),0 0.45rem 0.35rem rgba(0,0,0,.4);transition:transform .07s ease-out,box-shadow .07s ease-out}
+#s-piano .bigjack{box-shadow:0 0.3rem 0 var(--pklip),0 0.5rem 0.35rem rgba(0,0,0,.4)}
+#s-piano .synbtn:hover,#s-piano .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):hover,#s-piano .pntabs button:hover,#s-piano .bigjack:hover{filter:brightness(1.07);background:radial-gradient(ellipse 75% 55% at 50% 0,rgba(255,255,255,.17),transparent),linear-gradient(180deg,var(--tn-key1,#3a3b40),var(--tn-key2,#2a2b2f))}
+#s-piano .synbtn:active,#s-piano .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico):active,#s-piano .synbtn[aria-pressed=true],#s-piano .pntabs button.on,#s-piano .bigjack:active,#s-piano .bigjack[aria-pressed=true]{transform:translateY(0.22rem);box-shadow:0 0.03rem 0 var(--pklip),0 0.1rem 0.12rem rgba(0,0,0,.4)}
+
+
+/* effect switches: a long LED strip along the bottom of the key instead of a round dot (the dot's colours and glow still apply) */
+#s-piano .synbtn.pntgl{position:relative}
+#s-piano .synbtn.pntgl .kylamp{position:absolute;left:12px;right:12px;bottom:6px;width:auto;min-width:0;height:4px;border-radius:2px;flex:none}
+#s-piano .synbtn.pntgl.sq .kylamp{left:9px;right:9px;bottom:5px;width:auto;height:4px}
+#s-piano .synbtn.pntgl.envsw .kylamp{left:9px;right:9px;bottom:4px;width:auto;min-width:0;height:3px}
+
+/* the page keys' lamp too: a short strip along the top of the key, with larger labels below it (green when the page is chosen, blue while its effects are at work) */
+#s-piano .pntabs button::after{top:0.3rem;bottom:auto;left:0.9rem;right:0.9rem;width:auto;height:0.16rem;border:0;border-radius:0.08rem}
+#s-piano .pntabs button{font-size:0.68rem;padding-top:0.3rem}
+#s-piano .pntabs button:not(.on):not(.fx)::after{box-shadow:inset 0 0.05rem 0.05rem #000}
+
+/* highlight rim: a thin line along the top that carries down both sides and fades out */
+#s-piano .synbtn,#s-piano .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico){position:relative}
+#s-piano .synbtn::before,#s-piano .synbtn:is(.prPP,.prPN,.pkPP,.pkPN,.sfFP,.sfFN,.sfPP,.sfPN,.ico)::before{content:"";display:block;position:absolute;inset:0;border-radius:inherit;border:0.07rem solid rgba(255,255,255,.3);border-bottom:0;pointer-events:none;-webkit-mask:linear-gradient(180deg,#000,transparent 60%);mask:linear-gradient(180deg,#000,transparent 60%);background:none;box-shadow:none}
+#s-piano .synbtn.pntgl.sq.noisebtn .kylamp{top:5px;bottom:auto}
+
+/* Banks, Instruments and Presets on a phone: smaller type, and a long name wraps onto a second line with its tag under it instead of being cut off */
+@media (max-width:899px),(max-aspect-ratio:5/4){
+  #s-piano .lcdrows{scroll-snap-type:none}
+  #s-piano .lcdrow{height:auto;min-height:calc(var(--dp,1px)*36);flex-wrap:wrap;align-items:center;align-content:center;gap:0 calc(var(--dp,1px)*8);padding:calc(var(--dp,1px)*5) calc(var(--dp,1px)*12);font-size:calc(var(--dp,1px)*16)}
+  #s-piano .lcdrow span{flex:1 1 100%;margin:0;font-size:calc(var(--dp,1px)*16);line-height:calc(var(--dp,1px)*22);letter-spacing:calc(var(--dp,1px)*2);white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+  #s-piano .lcdrow i{flex:1 1 100%;margin:0;font-size:calc(var(--dp,1px)*10);line-height:calc(var(--dp,1px)*14);letter-spacing:calc(var(--dp,1px)*2)}
+  #s-piano .lcdnote{font-size:calc(var(--dp,1px)*12);line-height:calc(var(--dp,1px)*18);letter-spacing:calc(var(--dp,1px)*2)}
+  #s-piano .lcdfind{font-size:calc(var(--dp,1px)*16);letter-spacing:calc(var(--dp,1px)*2)}
+  #s-piano .lcdrows .lcdhead{font-size:calc(var(--dp,1px)*12);line-height:calc(var(--dp,1px)*18)}
+}
+
+/* the sound readout as two lines: the instrument on top, then Preset · SoundFont under it. The separator is a small square centred on the text, not a dot character. */
+#s-piano .pnhud{flex-wrap:wrap;align-items:center;column-gap:0.45rem;row-gap:0.2rem;max-width:calc(100% - 0.8rem)}
+#s-piano .pnhud .synlcd:has(.sfOutP){order:-1;flex:1 1 100%}
+#s-piano .pnhud .synlcd:has(.sfOutP) .lcd b{font-size:0.75rem}
+#s-piano .pnhud .synlcd{align-items:center}
+#s-piano .pnhud .synlcd+.synlcd::before{content:"";flex:none;width:0.22rem;height:0.22rem;margin:0 0.45rem 0 0;background:var(--tn-fg,#ffb347);box-shadow:0 0 0.25rem var(--tn-glow,rgba(255,170,50,.5));font:0/0 serif}
+#s-piano .pnhud .synlcd:has(.sfOutP)::before{display:none}
+#s-piano .pnhud .lcd b{opacity:.9}
+#s-piano .pnhud .synlcd:has(.sfOutP) .lcd b{opacity:1}
+
+/* the sound readout is just the instrument's name, on one line */
+#s-piano .pnhud{flex-wrap:nowrap}
+#s-piano .pnhud .synlcd:not(:has(.sfOutP)){display:none}
+#s-piano .pnhud .synlcd:has(.sfOutP){flex:0 1 auto;order:0}
+
+/* the backing hugs the name: no fixed heights inside it */
+#s-piano .pnhud{padding:0.12rem 0.4rem;align-items:center}
+#s-piano .pnhud .synlcd,#s-piano .pnhud .lcd,#s-piano .pnhud .lcd b{height:auto;min-height:0;line-height:1.1}
+#s-piano .pnhud .lcd b{font-size:0.7rem;margin:0;padding:0}

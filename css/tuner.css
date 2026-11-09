@@ -11,9 +11,14 @@
 #s-tuner .tnstage{position:absolute;left:50%;bottom:0;width:var(--sw,1280px);height:var(--sh,720px);margin:0 0 0 calc(var(--sw,1280px)/-2);zoom:var(--s,1)}
 
 /* case: flat colour with a lit top edge, a shaded underside, a hard shadow on the wall (light from above) */
-#s-tuner .tndev{position:absolute;left:4px;right:4px;top:4px;bottom:4px;padding:16px 18px 16px;background:var(--c-body);border:4px solid var(--c-ink);border-radius:30px;
-  box-shadow:inset 0 10px 0 var(--c-hi),inset 0 -16px 0 var(--c-lo);
+#s-tuner .tndev{position:absolute;left:4px;right:4px;top:4px;bottom:4px;padding:16px 18px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 160px);border:4px solid var(--c-ink);border-radius:30px;
+  box-shadow:inset 0 -16px 0 var(--c-lo);isolation:isolate;
   display:grid;grid-template-columns:500px 1fr;grid-template-rows:1fr;gap:14px 24px}
+/* the case is lit like the keys: a sharp specular line along the top edge that wraps the corners and fades down the sides, and a soft glint in each top corner */
+#s-tuner .tndev::before,#s-tuner .tndev::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:26px;pointer-events:none}
+#s-tuner .tndev::before{background:radial-gradient(circle at 0 0,rgba(255,255,255,.16),transparent 44px),radial-gradient(circle at 100% 0,rgba(255,255,255,.12),transparent 44px)}
+#s-tuner .tndev::after{padding:2px;background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.08) 90px,transparent 220px);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
 
 #s-tuner .tnhead{display:none!important;grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 14px 0 10px;position:relative;z-index:6}
 #s-tuner .tnbrand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1;color:var(--c-printh)}
@@ -45,12 +50,12 @@
 /* the two analog meters, recessed; the dial SVGs are built by TunerDial.build */
 #s-tuner .tnleft{display:flex;flex-direction:column;gap:16px;min-height:0}
 /* a microphone grille fills the rest of the column (portrait has no spare room, so it hides there) */
-#s-tuner .tngrille{flex:1;min-height:24px;border-radius:10px;border:3px solid var(--c-ink);background:repeating-linear-gradient(90deg,var(--c-ink) 0 5px,transparent 5px 14px),var(--c-lo);box-shadow:inset 0 5px 0 rgba(0,0,0,.5),0 3px 0 var(--c-hi)}
+#s-tuner .tngrille{flex:1;min-height:24px;margin-bottom:8px;border-radius:10px;border:3px solid var(--c-ink);background:repeating-linear-gradient(90deg,var(--c-ink) 0 5px,transparent 5px 14px),var(--c-lo);box-shadow:inset 0 5px 0 rgba(0,0,0,.5),0 3px 0 var(--c-hi)}
 #s-tuner .portrait .tngrille{display:none}
 #s-tuner .tnbezel{background:var(--c-ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 #000,0 4px 0 var(--c-hi),0 6px 0 var(--c-ink)}
 #s-tuner .tnbezel svg{display:block;width:100%;height:auto;border-radius:10px}
 
-#s-tuner .tnright{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:0}
+#s-tuner .tnright{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:0;padding-bottom:8px}
 
 /* LCD screens: pixel font on the mesh, glass colours from the theme */
 #s-tuner .tnreadouts{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:10px}
@@ -82,36 +87,58 @@
 #s-tuner .tnlamp.red.on{background:var(--tn-red,#ff5a36);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 0 14px var(--tn-red,#ff5a36),0 0 30px var(--tn-redglow,rgba(255,90,54,.6))}
 #s-tuner .tnlamp.grn.on{background:var(--tn-grn,#7ee05a);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 16px var(--tn-grn,#7ee05a),0 0 36px var(--tn-grnglow,rgba(126,224,90,.6))}
 
-/* controls: the three-position source slider with a split cap, and three hardware keys */
+/* controls: the three-position source switch, and three hardware keys */
 #s-tuner .tnctl{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;align-items:end;padding:0 4px}
-#s-tuner .tnslabels{display:flex;justify-content:space-between;margin-bottom:8px;padding:0 4px}
-#s-tuner .tnslabels button{background:none;border:0;padding:2px 4px;cursor:pointer;position:relative;font:400 12px "Silkscreen",monospace;letter-spacing:2px;color:var(--c-print);transition:color .2s}
+/* source slide switch: a wide keycap in the slot that snaps between three close positions. The labels step down above it, each joined to the red dot by a leader line. */
+#s-tuner .tnslabels{position:relative;height:28px;margin:0 3px 3px;padding:0}
+#s-tuner .tnslabels button{position:absolute;height:14px;min-height:0;margin:0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;white-space:nowrap;font:400 12px/14px "Silkscreen",monospace;letter-spacing:.1em;color:var(--c-print);transition:color .15s}
 #s-tuner .tnslabels button.on{color:var(--c-acc)}
-#s-tuner .tnslabels button::after{content:"";position:absolute;left:50%;bottom:-8px;width:3px;height:6px;background:var(--c-ink);transform:translateX(-50%)}
-#s-tuner .tnslabels button::before{display:none}
-#s-tuner .tnslabels .led{display:none}
-#s-tuner .tntrack{--p:.5;--kw:92px;position:relative;height:62px;background:var(--tn-lcd2,#0e0905);border:3px solid var(--c-ink);border-radius:12px;box-shadow:inset 0 8px 0 #000,0 3px 0 var(--c-hi);touch-action:none;cursor:pointer}
+#s-tuner .tnslabels button::before,#s-tuner .tnslabels button::after{display:none}
+#s-tuner .tnld{position:absolute;bottom:0;width:10px;pointer-events:none;border:0 solid var(--c-print);transition:border-color .15s}
+#s-tuner .tnld.on{border-color:var(--c-acc)}
+#s-tuner .tnslabels .lb1{top:0;left:calc(59px + 5%);padding-left:10px}
+#s-tuner .tnld.ld1{top:7px;left:calc(59px + 5%);margin-left:-.75px;border-left-width:1.5px;border-top-width:1.5px}
+#s-tuner .tnslabels .lb0{top:14px;right:calc(100% - 59px);padding-right:10px;text-align:right}
+#s-tuner .tnld.ld0{top:21px;left:49px;margin-left:.75px;border-right-width:1.5px;border-top-width:1.5px}
+#s-tuner .tnslabels .lb2{top:14px;left:calc(59px + 10%);padding-left:10px}
+#s-tuner .tnld.ld2{top:21px;left:calc(59px + 10%);margin-left:-.75px;border-left-width:1.5px;border-top-width:1.5px}
+#s-tuner .tntrack{--p:0;position:relative;height:62px;background:linear-gradient(180deg,#000,var(--tn-lcd2,#0e0905) 40%);border:3px solid var(--c-ink);border-radius:12px;box-shadow:inset 0 7px 9px rgba(0,0,0,.85),0 3px 0 var(--c-hi);touch-action:none;cursor:pointer;user-select:none}
 #s-tuner .tntrack:focus-visible,#s-tuner .tnctl button:focus-visible,#s-tuner .tnthemebtn:focus-visible,#s-tuner .tnopt:focus-visible{outline:3px solid var(--c-acc);outline-offset:3px}
 #s-tuner .tntrack::before{content:"";position:absolute;left:49px;right:49px;top:50%;height:4px;margin-top:-2px;background:var(--c-groove);border-radius:2px}
-#s-tuner .tndot{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--c-groove)}
-#s-tuner .tnknob{position:absolute;top:3px;bottom:3px;width:var(--kw);left:calc(3px + var(--p)*(100% - var(--kw) - 6px));
-  background:repeating-linear-gradient(90deg,var(--tn-key1h,#44454b) 0 5px,var(--tn-key2,#2a2b2f) 5px 7px);border:3px solid var(--c-ink);border-radius:6px;box-shadow:0 7px 0 rgba(0,0,0,.45);transition:left .1s ease-out}
-#s-tuner .tnknob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-8px;background:var(--tn-lcd2,#0e0905);border-left:3px solid var(--c-ink);border-right:3px solid var(--c-ink)}
-#s-tuner .tnknob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1.5px;background:var(--c-acc);z-index:1}
-#s-tuner .tncaps{display:flex;justify-content:space-between;gap:12px}
-#s-tuner .tncap{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:2px;color:var(--c-print)}
-#s-tuner .tncap span{margin-top:10px;font-size:12px;font-weight:400;letter-spacing:2px;color:var(--c-printh);text-shadow:0 1px 0 rgba(0,0,0,.6)}
+/* the cap is built exactly like the keys below: a front lip, a matte face with the same grain, and the same top-edge highlight */
+#s-tuner .tnknob{position:absolute;top:1px;bottom:1px;width:calc(90% - 6px);left:calc(3px + var(--p)*var(--st,5%));transition:left .09s cubic-bezier(.3,1.3,.5,1);filter:drop-shadow(0 5px 4px rgba(0,0,0,.45));pointer-events:none}
+#s-tuner .tnknob::before{content:"";position:absolute;left:0;right:0;top:22px;bottom:0;border-radius:0 0 11px 11px;background:linear-gradient(180deg,color-mix(in srgb,var(--tn-key2,#2a2b2f) 55%,var(--tn-edge,#121315)),var(--tn-edge,#121315))}
+#s-tuner .tnface{position:absolute;left:0;right:0;top:0;bottom:10px;border-radius:11px 11px 8px 8px;overflow:hidden;
+  background:linear-gradient(180deg,var(--tn-key1,#3a3b40),var(--tn-key2,#2a2b2f));
+  box-shadow:inset 0 3px 0 0 rgba(255,255,255,.04),inset -3px 0 0 0 rgba(0,0,0,.08),inset 0 -3px 0 0 rgba(0,0,0,.16)}
+#s-tuner .tnface::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 0 0,rgba(255,255,255,.12),transparent 14px),radial-gradient(circle at 100% 0,rgba(255,255,255,.1),transparent 14px),linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%)}
+#s-tuner .tnface::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:2;background:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,.06) 25%,transparent 50%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+#s-tuner .tnlamp2{position:absolute;z-index:1;left:56px;top:8px;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;background:var(--tn-red,#e8452c);box-shadow:0 0 7px 1px var(--tn-redglow,rgba(232,69,44,.5))}
+#s-tuner .tngrip{position:absolute;z-index:1;right:0;top:0;bottom:0;width:34%;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 var(--rib2,2px),rgba(255,255,255,.06) var(--rib2,2px) var(--rib,5px)),linear-gradient(90deg,transparent,rgba(255,255,255,.08) 60%,rgba(0,0,0,.35));-webkit-mask-image:linear-gradient(90deg,transparent,#000 40%);mask-image:linear-gradient(90deg,transparent,#000 40%)}
+#s-tuner .tncaps{display:flex;justify-content:space-between;gap:12px;margin-bottom:4px}      /* the slider cap and the keys sit on the same line: the cap ends 4px above the slot's bottom edge, so the keys do too */
+#s-tuner .tncap{display:flex;flex-direction:column-reverse;align-items:center;gap:0;font-size:10px;letter-spacing:2px;color:var(--c-print)}
+/* a small LCD above each key shows what the key does right now (Range finder swaps the words: NEXT, REDO, EXIT) */
+#s-tuner .tncap>span{box-sizing:border-box;width:100%;margin:0 0 8px;height:22px;line-height:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;
+  font-size:10px;font-weight:400;letter-spacing:1px;color:var(--tn-fg,#ffc65e);text-shadow:0 0 5px var(--tn-glow,rgba(255,170,50,.6));
+  background:var(--tn-lcd,#1a120a);border:2px solid var(--c-ink);border-radius:5px;box-shadow:inset 0 3px 0 #000,0 2px 0 var(--c-hi)}
 #s-tuner .tncap{isolation:isolate}
-/* the base under each key is two real rounded shapes (one dark, one a soft shadow), so the corners have no steps */
-#s-tuner .tncap button{--lift:8px;width:62px;height:56px;padding:0;border-radius:16px;border:3px solid var(--c-ink);cursor:pointer;background:linear-gradient(180deg,var(--tn-key1h,#44454b) 0 22%,var(--tn-key1,#3a3b40) 22%,var(--tn-key2,#2a2b2f));
-  background-clip:padding-box;transition:transform .06s,box-shadow .06s;position:relative}
-#s-tuner .tncap button::before,#s-tuner .tncap button::after{content:"";position:absolute;left:-3px;right:-3px;top:-3px;border-radius:16px;pointer-events:none}
-#s-tuner .tncap button::before{bottom:calc(-3px - var(--lift));background:var(--c-ink);z-index:-1}
-#s-tuner .tncap button::after{left:-2px;right:-2px;top:18px;bottom:calc(-3px - var(--lift) - 8px);background:rgba(0,0,0,.28);z-index:-2}      /* tucked 1px inside the dark base and started low, so its soft edge never rings the base */
-#s-tuner .tncap button:disabled{opacity:.45;cursor:default;transform:none}
-#s-tuner .tncap button:disabled::before,#s-tuner .tncap button:disabled::after,#s-tuner .tncap button:active:not(:disabled)::before,#s-tuner .tncap button:active:not(:disabled)::after,#s-tuner .tncap button.press::before,#s-tuner .tncap button.press::after{display:none}
-#s-tuner .tncap button:disabled{box-shadow:0 var(--lift) 0 var(--c-ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28)}
-#s-tuner .tncap button:active:not(:disabled),#s-tuner .tncap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--c-ink),0 3px 0 rgba(0,0,0,.28)}
+/* keycaps: a flat matte top face with a darker front lip (button::before), a sharp highlight along the top edge, pressed straight down as one block */
+#s-tuner .tncap button{width:62px;height:54px;padding:0;margin:0;min-height:0;border:0;background:none;box-shadow:none;border-radius:11px;cursor:pointer;position:relative;isolation:isolate;
+  color:var(--tn-print,#8c897e);filter:drop-shadow(0 5px 4px rgba(0,0,0,.45));transition:transform .07s ease-out,filter .07s ease-out;-webkit-tap-highlight-color:transparent}
+#s-tuner .tncap button::before{content:"";position:absolute;left:0;right:0;top:22px;bottom:0;border-radius:0 0 11px 11px;z-index:-1;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--tn-key2,#2a2b2f) 55%,var(--tn-edge,#121315)),var(--tn-edge,#121315))}
+#s-tuner .tncap button .face{position:absolute;left:0;right:0;top:0;bottom:10px;border-radius:11px 11px 8px 8px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,var(--tn-key1,#3a3b40),var(--tn-key2,#2a2b2f));
+  box-shadow:inset 0 3px 0 0 rgba(255,255,255,.04),inset -3px 0 0 0 rgba(0,0,0,.08),inset 0 -3px 0 0 rgba(0,0,0,.16)}
+#s-tuner .tncap button .face::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 0 0,rgba(255,255,255,.12),transparent 14px),radial-gradient(circle at 100% 0,rgba(255,255,255,.1),transparent 14px),linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%)}
+#s-tuner .tncap button .face::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,.06) 25%,transparent 50%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+#s-tuner .tncap button:hover:not(:disabled) .face{filter:brightness(1.06)}
+#s-tuner .tncap button:disabled{opacity:.45;cursor:default}
+#s-tuner .tncap button:active:not(:disabled),#s-tuner .tncap button.press{transform:translateY(5px);filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
 
 /* the "switch source?" hint floats over the top of the case */
 #s-tuner .tnstage .banner{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:8;margin:0;white-space:nowrap}
@@ -128,7 +155,7 @@
 #s-tuner .portrait .tnreadouts .tnlcd:last-child{grid-column:1/-1}
 #s-tuner .portrait .tnchrom{grid-template-columns:repeat(6,1fr);gap:6px}
 #s-tuner .portrait .tnchrom>div{height:46px}
-#s-tuner .portrait .tnright{gap:8px}
+#s-tuner .portrait .tnright{gap:8px;padding-bottom:0}
 #s-tuner .tnmsg{flex:none}
 #s-tuner .portrait .tnmsg{line-height:34px;padding:6px 12px}
 #s-tuner .portrait .tnctl{grid-template-columns:1fr auto;gap:16px}

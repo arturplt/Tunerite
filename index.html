@@ -57,13 +57,13 @@ try{var m=JSON.parse(localStorage.getItem('pitchperfect.profiles')),a=m&&m.activ
       </div>
       <div class="tnctl">
         <div class="tnslot">
-          <div class="tnslabels" id="instSeg"><button type="button" data-i="voice">VOICE</button><button type="button" data-i="piano">PIANO</button><button type="button" data-i="whistle">WHISTLE</button></div>
-          <div class="tntrack" id="tnInst" role="slider" tabindex="0" aria-label="Sound source" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0" aria-valuetext="Voice"><i class="tndot" style="left:49px"></i><i class="tndot" style="left:50%"></i><i class="tndot" style="left:calc(100% - 49px)"></i><div class="tnknob"></div></div>
+          <div class="tnslabels" id="instSeg"><span class="tnld ld0"></span><button type="button" class="lb0" data-i="voice">VOICE</button><span class="tnld ld1"></span><button type="button" class="lb1" data-i="piano">PIANO</button><span class="tnld ld2"></span><button type="button" class="lb2" data-i="whistle">WHISTLE</button></div>
+          <div class="tntrack" id="tnInst" role="slider" tabindex="0" aria-label="Sound source" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0" aria-valuetext="Voice"><div class="tnknob"><span class="tnface"><i class="tnlamp2"></i><i class="tngrip"></i></span></div></div>
         </div>
         <div class="tncaps">
-          <div class="tncap"><button type="button" id="tuRange" aria-label="Find my range" title="Find my range"></button><span>RANGE</span></div>
-          <div class="tncap"><button type="button" id="tuDown" aria-label="Lower the reference pitch" title="Reference pitch down"></button><span>A4 −</span></div>
-          <div class="tncap"><button type="button" id="tuUp" aria-label="Raise the reference pitch" title="Reference pitch up"></button><span>A4 +</span></div>
+          <div class="tncap"><button type="button" id="tuRange" aria-label="Find my range" title="Find my range"><span class="face"></span></button><span>RANGE</span></div>
+          <div class="tncap"><button type="button" id="tuDown" aria-label="Lower the reference pitch" title="Reference pitch down"><span class="face"></span></button><span>A4 −</span></div>
+          <div class="tncap"><button type="button" id="tuUp" aria-label="Raise the reference pitch" title="Reference pitch up"><span class="face"></span></button><span>A4 +</span></div>
         </div>
       </div>
     </div>
@@ -84,7 +84,7 @@ try{var m=JSON.parse(localStorage.getItem('pitchperfect.profiles')),a=m&&m.activ
       <div class="syngrid"><svg class="syncables" aria-hidden="true"></svg>
         <div class="synleft"><div class="synscreen"><div class="synglass">
           <div class="syntabs" role="tablist"><button data-t="spec" class="on" role="tab"><i></i>Spectrum</button><button data-t="banks" role="tab"><i></i>Banks</button><button data-t="patch" role="tab"><i></i>Instruments</button><button data-t="user" role="tab"><i></i>Presets</button></div>
-          <div class="synpane" data-p="spec"><span id="specPhCv"></span><canvas id="specCv" style="height:100%;display:block"></canvas><canvas id="specBloom" aria-hidden="true"></canvas><canvas id="specTags" aria-hidden="true"></canvas><div id="sandCtl" class="sandctl" hidden><button type="button" class="synbtn" data-s="turn" title="Turn the pane over: the sand sifts down into new shapes">Turn</button><button type="button" class="synbtn" data-s="shake" title="Two quick jolts: towers taller than 4 topple">Shake</button><button type="button" class="synbtn" data-s="clear" title="Empty the pane">Empty</button><button type="button" class="synbtn" data-s="motion" aria-pressed="false" title="Use the phone's motion: shake it to shake the pane, turn it upside down to turn the pane over, tilt it to lean the sand">Motion</button></div></div>
+          <div class="synpane" data-p="spec"><span id="specPhCv"></span><canvas id="specCv" style="height:100%;display:block"></canvas><canvas id="specBloom" aria-hidden="true"></canvas><canvas id="specTags" aria-hidden="true"></canvas></div>
           <div class="synpane lcdlist" data-p="banks" hidden><div id="spBanks" class="lcdrows"></div><div class="synspecbar"><button class="synbtn" id="spAdd">＋ File</button><button class="synbtn" id="spDir">📁 Folder</button></div></div>
           <div class="synpane lcdlist" data-p="patch" hidden><input id="spFind" class="lcdfind" placeholder="Search instruments…" aria-label="Search instruments"><div id="spPatches" class="lcdrows"></div></div>
           <div class="synpane lcdlist" data-p="user" hidden><div id="spPresets" class="lcdrows"></div></div>

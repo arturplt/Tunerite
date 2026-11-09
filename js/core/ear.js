@@ -107,7 +107,7 @@ const EAR = {
   },
   q_cmp(c, rnd) {
     const gap = this.pick(rnd, c.gaps), up = rnd() < 0.5, a = 52 + Math.floor(rnd() * 20), b = up ? a + gap : a - gap;
-    return { key: a + ':' + b, prompt: 'Is the second note higher or lower?', sub: 'Two notes, one after the other.', options: [{ id: 'hi', label: 'Higher' }, { id: 'lo', label: 'Lower' }], answer: up ? 'hi' : 'lo',
+    return { key: a + ':' + b, prompt: 'Is the second note higher or lower?', sub: 'Two notes, one after the other.', options: [{ id: 'hi', label: 'Higher' }, { id: 'lo', label: 'Lower' }], answer: up ? 'hi' : 'lo', first: a,
       events: [{ t: 0, d: 0.8, n: [a] }, { t: 0.9, d: 0.9, n: [b] }], explain: 'The second note was ' + (up ? 'higher' : 'lower') + ', ' + gap + (gap === 1 ? ' semitone' : ' semitones') + ' away.' };
   },
   q_ivl(c, rnd) {
@@ -116,7 +116,7 @@ const EAR = {
     const ev = mode === 'asc' ? [{ t: 0, d: 0.8, n: [a] }, { t: 0.9, d: 1, n: [top] }] : mode === 'desc' ? [{ t: 0, d: 0.8, n: [top] }, { t: 0.9, d: 1, n: [a] }] : [{ t: 0, d: 1.6, n: [a, top] }];
     const sub = mode === 'asc' ? 'Two notes, going up.' : mode === 'desc' ? 'Two notes, going down.' : 'Two notes at the same time.';
     const hint = mode === 'asc' ? ' Going up it sounds like ' + this.IVL[s][1] + '.' : '';
-    return { key: mode + ':' + a + ':' + s, prompt: 'Which interval is it?', sub, options: c.set.map(i => ({ id: String(i), label: this.IVL[i][0], hint: this.IVL[i][1] })), answer: String(s), events: ev, explain: 'That was a ' + this.IVL[s][0].toLowerCase() + '.' + hint };
+    return { key: mode + ':' + a + ':' + s, prompt: 'Which interval is it?', sub, options: c.set.map(i => ({ id: String(i), label: this.IVL[i][0], hint: this.IVL[i][1] })), answer: String(s), first: mode === 'harm' ? null : ev[0].n[0], events: ev, explain: 'That was a ' + this.IVL[s][0].toLowerCase() + '.' + hint };
   },
   q_chq(c, rnd) {
     const q = this.pick(rnd, c.set), r = 48 + Math.floor(rnd() * 14), notes = this.chordNotes(r, q);

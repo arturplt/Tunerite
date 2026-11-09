@@ -764,7 +764,7 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 
 /* Noise filter switch in the Display heading; its lamp blinks while it listens */
 #pnDisplay .mod-disp{position:relative}
-#pnDisplay .noisebtn{position:absolute;top:0.4rem;right:0.7rem;z-index:2}
+#pnDisplay .noisebtn{position:static;width:40px;height:40px;min-width:0;padding:0}
 .noisebtn.learn .kylamp{animation:noiseblink .5s steps(2) infinite}
 @keyframes noiseblink{50%{opacity:.15}}
 @media (prefers-reduced-motion:reduce){.noisebtn.learn .kylamp{animation:none}}
@@ -849,10 +849,16 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 /* Full-screen spectrogram: the same CRT look as the LCD screens, and the view and colour buttons up top */
 #o-spec .row{align-items:center}
 #o-spec #specFullCtl{display:flex;align-items:center;justify-content:flex-end}
-#o-spec .disprow{flex:1;justify-content:flex-end;gap:1.2rem;padding:0 0.5rem}
-#o-spec .dispgrp{gap:0.4rem}
-#o-spec .dispgrp .synbtn.envp{width:44px;height:36px}
-#o-spec .dispgrp .envp svg{width:18px;height:18px}
+#o-spec #specFullCtl{flex-wrap:wrap;gap:0.3rem 0.6rem;min-width:0}
+#o-spec .row>.btn{flex:none}
+#o-spec .disprow{flex:0 1 auto;flex-wrap:wrap;justify-content:flex-end;gap:0.3rem 0.6rem;padding:0}
+#o-spec .dispgrp{gap:0.2rem}
+#o-spec .dispgrp .synbtn.envp{width:30px;height:26px}
+#o-spec .dispgrp .envp svg{width:14px;height:14px}
+#o-spec .seg button{min-height:2rem;padding:0 0.5rem;font-size:0.75rem}
+#o-spec .sandctl{flex:0 1 auto;display:flex;gap:0.2rem;padding:0}
+#o-spec .sandctl[hidden]{display:none}
+#o-spec .sandctl .synbtn{height:1.5rem;padding:0 0.45rem;font-size:0.6rem}
 #specFullCv{--gn:3}
 #specFullCv::after{content:"";position:absolute;inset:0 0 var(--kh,0px) 0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
 
@@ -1135,3 +1141,19 @@ p.lcdlab{padding:0 0.6rem 0.5rem}
 
 /* Bypass, Panic and Reset labels: bigger and brighter */
 .bypcell b{margin-top:calc(11px*var(--k));font-weight:400;font-size:calc(11.5px*var(--k));color:var(--tn-printh,#cfc8b8)}
+.earlcd small{margin-bottom:calc(var(--dp,1px)*8)}.earlcd b{line-height:calc(var(--dp,1px)*28)}
+.earlcd .earfirst{display:block;margin-top:calc(var(--dp,1px)*10);font-size:calc(var(--dp,1px)*24);line-height:calc(var(--dp,1px)*30);color:var(--tn-fg,#ffb347)}
+#pnDisplay .disprow{justify-content:flex-start;gap:0.6rem;padding-bottom:0}
+#pnDisplay .disprow .noisebtn,#pnDisplay .disprow .sqfull{flex:none;align-self:center;width:44px;height:44px;min-width:0;min-height:0;margin:0;padding:0}
+#pnDisplay .disprow .lcdpx{flex:1;min-width:0;align-self:stretch}
+#pnDisplay .disprow .noisebtn{top:auto;right:auto;left:auto;bottom:auto;transform:none}
+
+/* Banks, Instruments and Presets: a faint mesh and no colour fringing on the text, so the names read easily */
+.lcdlist::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.07) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}
+.lcdlist .lcdrow,.lcdlist .lcdnote,.lcdlist .lcdfind{text-shadow:0 0 4px rgba(255,160,50,.35)}
+.lcdlist .lcdrow.on{text-shadow:none}
+
+/* The tab bar scrolls sideways on a phone, so a mesh laid over the bar only covered the part showing at first. Each tab carries its own mesh instead, the same on all four. */
+.syntabs::after{display:none}
+.syntabs button{position:relative}
+.syntabs button::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3))),repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 var(--dp,1px),transparent var(--dp,1px) calc(var(--dp,1px)*var(--gn,3)))}

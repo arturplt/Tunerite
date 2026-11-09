@@ -48,7 +48,7 @@ function bind() {
   const fsOk = !!document.documentElement.requestFullscreen, standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
   if (standalone) $('#btnFs').closest('.srow').hidden = true;
   else if (!fsOk) { $('#btnFs').hidden = true; $('#fsHint').textContent = 'This browser cannot hide its address bar. Use Share, then Add to Home Screen, and open Pitch Perfect from there.'; }
-  $('#btnFs').onclick = async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); try { await screen.orientation.unlock(); } catch (e) {} } } catch (e) { toast('Full screen was refused by the browser.'); } };
+  $('#btnFs').onclick = async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); try { await screen.orientation.lock('portrait'); } catch (e) {} } } catch (e) { toast('Full screen was refused by the browser.'); } };
   document.addEventListener('fullscreenchange', () => { $('#btnFs').textContent = document.fullscreenElement ? '⛶ Exit full screen' : '⛶ Full screen'; });
   const sideOff = (() => { try { return localStorage.getItem('pp-seq-side') === 'off'; } catch (e) { return false; } })();
   const showSide = on => { $('#sqBody').classList.toggle('noside', !on); $('#sqSide').classList.toggle('on', on); $('#sqSide').setAttribute('aria-pressed', on); try { localStorage.setItem('pp-seq-side', on ? 'on' : 'off'); } catch (e) {} };

@@ -44,8 +44,11 @@ body{padding:5px 5px max(5px,env(safe-area-inset-bottom));gap:0;border-radius:0;
 #nav button.off{opacity:.45}
 #nav .klcd{order:1;width:100%;height:32px;border-radius:3px;background:var(--dk-lcd-off);box-shadow:inset 0 1px 3px #000;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;font:400 8px/1 "Silkscreen",monospace;letter-spacing:.04em;color:#b98a42;overflow:hidden;white-space:nowrap}
-#nav .klcd em{font-style:normal}
-#nav .klcd b{font-weight:700;font-size:10px;letter-spacing:.02em;color:#ffd58a;text-shadow:0 0 4px rgba(255,170,50,.35)}
+/* key text scales with the key, so five letters always fit the little LCD (a letter is about as wide as the font is tall) */
+#nav{container-type:inline-size}
+#nav button{--kf:min(10px,calc((16.667cqw - 11px)/5.4))}
+#nav .klcd em{font-style:normal;font-size:calc(var(--kf)*.8)}
+#nav .klcd b{font-weight:700;font-size:var(--kf);max-width:100%;overflow:hidden;letter-spacing:.02em;color:#ffd58a;text-shadow:0 0 4px rgba(255,170,50,.35)}
 #nav button.on .klcd{background:var(--dk-lcd-bg);color:#ffc65e;text-shadow:0 0 5px var(--dk-glow)}
 #nav button.on .klcd b{color:#fff0c4;text-shadow:0 0 6px var(--dk-glow)}
 
@@ -63,14 +66,13 @@ body{padding:5px 5px max(5px,env(safe-area-inset-bottom));gap:0;border-radius:0;
 #s-piano.screen{padding:4px!important}
 #s-piano .synth.synthmain{border-width:4px;border-radius:22px;padding:10px 8px 12px;gap:8px}
 
-#nav .ic{display:none;width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:square;stroke-linejoin:miter}
 
 
-/* Portrait-locked casing, phone held sideways: only the screen turns (see Deck.turn). The keys swap words for symbols, kept upright for the person holding the phone. */
-body.dkvland #nav button.tab .ic{display:block}
-body.dkvland #nav button.tab .klcd b{display:none}
-body.dkvland.cw #nav .ic{transform:rotate(-90deg)}
-body.dkvland.ccw #nav .ic{transform:rotate(90deg)}
+/* Portrait-locked casing, phone held sideways: only the screen turns (see Deck.turn). Key words are set letter by letter so they stay upright for the person holding the phone. */
+#nav .klcd b.v{display:flex;gap:0;font-size:var(--kf);letter-spacing:0}
+#nav .klcd b.v i{display:block;font-size:inherit;line-height:1;width:1.05em;font-style:normal;text-align:center}
+body.cw #nav .klcd b.v i{transform:rotate(-90deg)}
+body.ccw #nav .klcd b.v i{transform:rotate(90deg)}
 
 /* Window turned to landscape on a phone: the whole app is turned back in CSS, so the casing is in place from the first frame */
 @media (orientation:landscape) and (max-height:520px){
@@ -84,3 +86,10 @@ body.cw #dkMode .w.v i{transform:rotate(-90deg)}
 body.ccw #dkMode .w.v i{transform:rotate(90deg)}
 body.dkflip #nav .klcd>*{animation:dkPop .32s ease-out}
 @keyframes dkPop{from{opacity:0;scale:.55}}
+
+/* every device case is lit like the Tuner's: a sharp specular line along the top edge that wraps the corners and fades down the sides, and a soft glint in each top corner (drawn behind the contents) */
+.pdev .device,#s-settings .setcase,#s-progress .setcase,#o-start .stcase,#s-piano .synth.synthmain{position:relative;isolation:isolate}
+:is(.pdev .device,#s-settings .setcase,#s-progress .setcase,#o-start .stcase,#s-piano .synth.synthmain)::before,:is(.pdev .device,#s-settings .setcase,#s-progress .setcase,#o-start .stcase,#s-piano .synth.synthmain)::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none}
+:is(.pdev .device,#s-settings .setcase,#s-progress .setcase,#o-start .stcase,#s-piano .synth.synthmain)::before{background:radial-gradient(circle at 0 0,rgba(255,255,255,.16),transparent 44px),radial-gradient(circle at 100% 0,rgba(255,255,255,.12),transparent 44px)}
+:is(.pdev .device,#s-settings .setcase,#s-progress .setcase,#o-start .stcase,#s-piano .synth.synthmain)::after{padding:2px;background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.08) 90px,transparent 220px);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}

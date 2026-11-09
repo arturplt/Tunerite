@@ -2,16 +2,7 @@
 /* ---- Device frame: top bar (volume, key mode, mic light) and the six keys. NAV mode: the keys switch tabs. FUNC mode: the same keys run jobs for the current tab, each labelled on its own LCD. The casing stays put whether the phone is held upright or sideways; only the screen inside turns. ---- */
 const Deck = {
   mode: 'nav',
-  tabs: [['tuner', 'TUNER', 'Tuner'], ['piano', 'PIANO', 'Piano'], ['train', 'DRILL', 'Practice'], ['seq', 'COMP', 'Compose'], ['progress', 'STATS', 'Progress'], ['settings', 'SETUP', 'Settings']],
-  /* symbols for the keys when the screen is too short for words (landscape) */
-  icons: {
-    tuner: '<path d="M3 17a9 9 0 0 1 18 0"/><path d="M12 17l4-7"/><path d="M3 20h18"/>',
-    piano: '<rect x="3" y="5" width="18" height="14"/><path d="M9 5v14M15 5v14"/><path d="M7.5 5v7M13 5v7M18.5 5v7" stroke-width="3"/>',
-    train: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01" stroke-width="3"/>',
-    seq: '<path d="M4 7h10M4 12h16M4 17h7"/><path d="M17 6v4M14 17v-3"/>',
-    progress: '<path d="M3 20h18"/><path d="M5 16l5-5 3 3 6-8"/><path d="M15 6h4v4"/>',
-    settings: '<path d="M4 7h16M4 12h16M4 17h16"/><path d="M9 5v4M15 10v4M8 15v4" stroke-width="3"/>'
-  },
+  tabs: [['tuner', 'TUNER', 'Tuner'], ['piano', 'PLAY', 'Piano'], ['train', 'DRILL', 'Practice'], ['seq', 'COMP', 'Compose'], ['progress', 'STATS', 'Progress'], ['settings', 'SETUP', 'Settings']],
   st: () => Store.data.settings,
   /* a function key: top label, bottom text (or fn), lamp state (or fn), action */
   fnKeys(tab) {
@@ -22,13 +13,15 @@ const Deck = {
     const oct = d => ({ top: 'KEYS', bot: () => (d < 0 ? '-' : '+') + ' ' + (st.pxOct || 'all'), act: () => { const v = ['2', '3', '4', '5', 'all'], i = Math.max(0, Math.min(4, v.indexOf(String(st.pxOct || 'all')) + d)); st.pxOct = v[i]; Store.save(); Spec.key = null; UI.refresh(); } });
     const btn = (top, sel, bot) => ({ top, bot: () => bot || '', act: () => this.click(sel) });
     const loop = { top: 'LOOP', bot: () => ($('#sqLoop').getAttribute('aria-pressed') === 'true' || $('#sqLoop').classList.contains('on')) ? 'ON' : 'OFF', on: () => $('#sqLoop').getAttribute('aria-pressed') === 'true' || $('#sqLoop').classList.contains('on'), act: () => this.click('#sqLoop') };
+    const mv = d => ({ top: d < 0 ? 'LEFT' : 'RIGHT', bot: () => d < 0 ? '◀ OCT' : 'OCT ▶', act: () => { const was = pianoSpan().lo; st.pxShift = (+st.pxShift || 0) + d; if (pianoSpan().lo === was) st.pxShift -= d; Store.save(); Spec.key = null; UI.refresh(); } });
+    const hard = { top: 'RELOAD', bot: () => 'HARD', act: async () => { try { if (window.caches) await Promise.all((await caches.keys()).map(k => caches.delete(k))); if (navigator.serviceWorker) await Promise.all((await navigator.serviceWorker.getRegistrations()).map(r => r.unregister())); } catch (e) {} location.reload(); } };
     return ({
-      tuner: [inst, a4(-1), a4(1), theme, full, null],
-      piano: [oct(-1), oct(1), inst, theme, full, null],
-      train: [inst, a4(-1), a4(1), theme, full, null],
+      tuner: [inst, a4(-1), a4(1), theme, full, hard],
+      piano: [oct(-1), oct(1), mv(-1), mv(1), full, hard],
+      train: [inst, a4(-1), a4(1), theme, full, hard],
       seq: [btn('REW', '#sqRew'), btn('PLAY', '#sqPlay'), btn('STOP', '#sqStop'), loop, theme, full],
-      progress: [theme, full, null, null, null, null],
-      settings: [theme, full, inst, a4(-1), a4(1), null]
+      progress: [theme, full, null, null, null, hard],
+      settings: [theme, full, inst, a4(-1), a4(1), hard]
     })[tab];
   },
   /* Neighbouring tabs are laid out but hidden, so their look is ready before the slide starts. Nothing in them runs until the tab is really entered (UI.show). */
@@ -36,13 +29,15 @@ const Deck = {
     const i = this.tabs.findIndex(t => t[0] === UI.screen), want = new Set([i - 1, i + 1, extra].filter(k => k >= 0 && k < this.tabs.length && k !== i).map(k => 's-' + this.tabs[k][0]));
     $$('.screen').forEach(el => el.classList.toggle('dk-warm', want.has(el.id) && !el.classList.contains('on')));
   },
+  /* sideways: separate letters, each turned upright for the person holding the phone, ordered so they read downwards */
+  letters(word) { const l = [...word].map(c => '<i>' + c + '</i>'); return (this.rot.side === 'ccw' ? l.reverse() : l).join(''); },
   click(sel) { const el = $(sel); if (el) el.click(); },
   val(v) { return typeof v === 'function' ? v() : v; },
   render() {
     const tab = UI.screen, keys = $$('#nav button'), nav = this.mode === 'nav', fk = nav ? null : this.fnKeys(tab);
     const mb = $('#dkMode'), word = nav ? 'NAV' : 'FUNC', up = !!this.rot.side, key = word + (up ? this.rot.side : ''), cur = mb.querySelector('.w:not(.out)');
     /* sideways, the word is set as separate letters, each turned upright for the person holding the phone; the order flips with the turn so it reads N-A-V downwards */
-    const html = up ? [...word].map(c => '<i>' + c + '</i>')[this.rot.side === 'ccw' ? 'reverse' : 'slice']().join('') : word;
+    const html = up ? this.letters(word) : word;
     if (!cur) mb.innerHTML = '<span class="w' + (up ? ' v' : '') + '" data-k="' + key + '">' + html + '</span>';
     else if (cur.dataset.k !== key) {
       mb.querySelectorAll('.out').forEach(o => o.remove());
@@ -53,7 +48,7 @@ const Deck = {
     this.lastUp = up;
     keys.forEach((b, i) => {
       const t = this.tabs[i];
-      if (nav) { b.innerHTML = '<span class="klcd"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + this.icons[t[0]] + '</svg><b>' + t[1] + '</b></span>'; b.classList.remove('off'); b.classList.add('tab'); b.classList.toggle('on', t[0] === tab); b.setAttribute('aria-label', t[2]); b.title = t[2]; return; }
+      if (nav) { b.innerHTML = '<span class="klcd"><b' + (up ? ' class="v"' : '') + '>' + (up ? this.letters(t[1]) : t[1]) + '</b></span>'; b.classList.remove('off'); b.classList.add('tab'); b.classList.toggle('on', t[0] === tab); b.setAttribute('aria-label', t[2]); b.title = t[2]; return; }
       const f = fk[i]; b.classList.remove('tab');
       b.innerHTML = '<span class="klcd"><b>' + (f ? f.top : '·') + '</b><em>' + (f ? this.val(f.bot) || '' : '') + '</em></span>';
       b.classList.toggle('off', !f); b.classList.toggle('on', !!(f && f.on && f.on())); b.setAttribute('aria-label', f ? f.top : 'Unused'); b.title = f ? f.top : '';
@@ -138,16 +133,22 @@ const Deck = {
     addEventListener('resize', () => this.windowTurned()); addEventListener('orientationchange', () => setTimeout(() => this.windowTurned(), 120));
     this.windowTurned();
     /* locked to portrait (installed app or full screen): the window never turns, so gravity in the device's own axes says which way the phone is held */
-    const lock = () => { try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) { /* only some browsers allow it */ } };
-    lock(); addEventListener('pointerdown', lock, { once: true });      // some phones only allow it from a tap, and only installed or in full screen
-    let t = 0;
+    const lock = () => { if (typeof Spec !== 'undefined' && Spec.full) return; try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) { /* only some browsers allow it */ } };
+    lock(); addEventListener('pointerdown', lock, { once: true });
+    document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement) setTimeout(lock, 300); });      // a browser tab can only lock once it is in full screen      // some phones only allow it from a tap, and only installed or in full screen
+    let t = 0, pend;
+    const dbg = /motion/.test(location.hash) ? Object.assign(document.createElement('pre'), { id: 'dkDbg' }) : null, seen = { n: 0 };
+    if (dbg) { dbg.style.cssText = 'position:fixed;left:6px;bottom:80px;z-index:99;margin:0;padding:4px 6px;background:#000c;color:#5dff7a;font:10px monospace;pointer-events:none'; dbg.textContent = 'waiting for the motion sensor...'; document.body.appendChild(dbg); }
     addEventListener('devicemotion', e => {
+      const a = e.accelerationIncludingGravity; if (dbg && a) { seen.n++; dbg.textContent = 'x ' + (a.x || 0).toFixed(1) + '  y ' + (a.y || 0).toFixed(1) + '  z ' + (a.z || 0).toFixed(1) + '\nside ' + this.rot.side + '  win ' + this.win + '  events ' + seen.n; }
       if (this.win) return;
-      const a = e.accelerationIncludingGravity; if (!a || a.x == null || a.y == null) return;
+      if (!a || a.x == null || a.y == null) return;
       let want = this.want !== undefined ? this.want : this.rot.side;
       if (Math.abs(a.y) > 6.8) want = null;
       else if (Math.abs(a.x) > 6.8 && Math.abs(a.x) > Math.abs(a.y) + 2) want = a.x > 0 ? 'ccw' : 'cw';
-      clearTimeout(t); if (want !== this.rot.side) t = setTimeout(() => this.turn(want), 350);
+      /* the sensor reports ~60 times a second, so only restart the wait when the wanted side changes (otherwise it would never get to fire) */
+      if (want === this.rot.side) { clearTimeout(t); pend = undefined; }
+      else if (want !== pend) { clearTimeout(t); pend = want; t = setTimeout(() => { pend = undefined; this.turn(want); }, 350); }
     });
   },
   init() {

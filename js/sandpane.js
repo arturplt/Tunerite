@@ -344,7 +344,8 @@ const Sand = (() => {
   function onMotion(e) {
     const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
     mot.seen = true; const now = performance.now(), k = ios ? -1 : 1;                              // iPhones report the opposite sign
-    const ax = a.x * k, ay = a.y * k, az = (a.z || 0) * k, ang = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+    const ax = a.x * k, ay = a.y * k, az = (a.z || 0) * k; let ang = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+    if (!ang && typeof Deck !== 'undefined' && Deck.rot && Deck.rot.side) ang = Deck.rot.side === 'ccw' ? 90 : 270;                 // the casing is locked upright and only the screen inside turns: that turn is the screen's angle
     const sx = ang === 90 ? -ay : ang === 180 || ang === -180 ? -ax : ang === 270 || ang === -90 ? ay : ax, sy = ang === 90 ? ax : ang === 180 || ang === -180 ? -ay : ang === 270 || ang === -90 ? -ax : ay;   // gravity's pull as seen on the screen: x to the right, y up
     const lin = e.acceleration && e.acceleration.x != null ? Math.hypot(e.acceleration.x, e.acceleration.y, e.acceleration.z) : Math.abs(Math.hypot(ax, ay, az) - G);
     if (lin > 14 && now - mot.shakeAt > 1200) { mot.shakeAt = now; shk = 1; }                       // a sharp spike of acceleration is a shake
@@ -376,4 +377,4 @@ const Sand = (() => {
     airborne() { let n = 0, s = 0, q = 0; for (let y = TOP; y < GHM - 1; y++) for (let x = 0; x < GW; x++) { const i = idx(x, y); if (T[i] && !T[i + SW]) { n++; s += x; q += x * x; } } return { n, sd: n ? Math.sqrt(Math.max(0, q / n - (s / n) * (s / n))) : 0 }; }, save, MAT, NAMES
   };
 })();
-$$('#sandCtl [data-s]').forEach(b => b.onclick = () => Sand[b.dataset.s]());
+document.addEventListener('click', e => { const b = e.target.closest('#sandCtl [data-s]'); if (b) Sand[b.dataset.s](); });

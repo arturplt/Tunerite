@@ -70,22 +70,33 @@ const TunerDial = {
     st.setProperty('--sw', DW + 'px'); st.setProperty('--sh', DH + 'px'); st.setProperty('--s', sc.toFixed(4)); st.setProperty('--dp', (1 / (dpr * sc)).toFixed(4) + 'px');
     for (const p of [2, 4, 8]) { const v = p * sc * dpr, q = v >= 3.5 ? 2 * Math.floor(v / 2) : Math.max(1, Math.round(v)); st.setProperty('--f' + p, (q * 8 / (dpr * sc)).toFixed(3) + 'px'); }
     $('#tnStage').classList.toggle('portrait', portrait);
+    // the grip ribs and the switch steps are whole device pixels, so every rib looks the same wherever the cap rests
+    const dev = dpr * sc, snap = v => Math.max(1, Math.round(v * dev)) / dev, tr = $('#tnInst');
+    st.setProperty('--rib', snap(5).toFixed(4) + 'px'); st.setProperty('--rib2', snap(2).toFixed(4) + 'px');
+    if (tr && tr.clientWidth) tr.style.setProperty('--st', snap(tr.clientWidth * 0.05).toFixed(4) + 'px');
   },
 
   /* the source slider follows the setting (it is also changed from Settings and by the "switch?" hint) */
   paintInst(i) {
     if (i === this.inst) return; this.inst = i; const t = $('#tnInst');
-    t.style.setProperty('--p', i / 2); t.setAttribute('aria-valuenow', i); t.setAttribute('aria-valuetext', ['Voice', 'Piano', 'Whistle'][i]);
+    t.style.setProperty('--p', i); t.setAttribute('aria-valuenow', i); t.setAttribute('aria-valuetext', ['Voice', 'Piano', 'Whistle'][i]);
+    $$('#instSeg button').forEach((b, k) => b.classList.toggle('on', k === i)); $$('#instSeg .tnld').forEach((l, k) => l.classList.toggle('on', k === i));
   },
   sharpSvg: '<svg viewBox="0 0 5 5" aria-hidden="true"><path d="M1 0h1v5H1zM3 0h1v5H3zM0 1h5v1H0zM0 3h5v1H0z"/></svg>',
   init() {
     this.build();
     $('#ppOcts').innerHTML = this.NAMES.map(n => '<div' + (n.length > 1 ? ' class="sh"' : '') + '>' + n[0] + (n.length > 1 ? this.sharpSvg : '') + '</div>').join('');
-    // source slider: tap or drag, it jumps between the three positions (the labels above work too)
-    const tr = $('#tnInst'), pick = e => { const r = tr.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, i = clamp(Math.round((x - 0.1) / 0.4), 0, 2); if (this.INST[i] !== Store.data.settings.inst) setInst(this.INST[i]); };
-    let drag = false;
-    tr.addEventListener('pointerdown', e => { drag = true; try { tr.setPointerCapture(e.pointerId); } catch (x) { /* a synthetic pointer */ } pick(e); e.preventDefault(); });
-    tr.addEventListener('pointermove', e => { if (drag) pick(e); });
+    // source switch: the cap snaps between three close positions as it is dragged (grab the cap), and a tap anywhere else in the slot jumps there; the labels work too.
+    // The slot is scaled with the stage, so pointer positions are turned back into layout pixels first. The positions are 5% of the slot apart, the first one 59px in.
+    const tr = $('#tnInst'), cur = () => Math.max(0, this.INST.indexOf(Store.data.settings.inst)), set = i => { if (this.INST[i] !== Store.data.settings.inst) setInst(this.INST[i]); };
+    const lx = e => { const r = tr.getBoundingClientRect(); return (e.clientX - r.left) / (r.width / tr.offsetWidth) - 3; }, nearest = (x, off) => clamp(Math.round((x - off - 59) / (tr.clientWidth * 0.05)), 0, 2);
+    let drag = false, off = 0;
+    tr.addEventListener('pointerdown', e => {
+      try { tr.setPointerCapture(e.pointerId); } catch (x) { /* a synthetic pointer */ }
+      const x = lx(e), c = cur(), l = 3 + tr.clientWidth * 0.05 * c, onCap = x >= l && x <= l + tr.clientWidth * 0.9 - 6;
+      drag = onCap; off = onCap ? x - (59 + tr.clientWidth * 0.05 * c) : 0; if (!onCap) set(nearest(x, 0)); e.preventDefault();
+    });
+    tr.addEventListener('pointermove', e => { if (drag) set(nearest(lx(e), off)); });
     const end = () => { drag = false; }; tr.addEventListener('pointerup', end); tr.addEventListener('pointercancel', end);
     tr.addEventListener('keydown', e => { const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key]; if (!d) return; e.preventDefault(); const i = clamp(this.INST.indexOf(Store.data.settings.inst) + d, 0, 2); setInst(this.INST[i]); });
     // keys: find my range for the current source, and the reference pitch down and up

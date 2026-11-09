@@ -44,7 +44,7 @@ const Tuner = {
     const rf = RangeFinder, on = rf.active && rf.onTuner, rs = !on && this.rangeShow && now < this.rangeShow.until ? this.rangeShow : null, mode = on || !!rs;
     if (mode !== this.rangeMode) { this.rangeMode = mode; ['LOW', 'HIGH', 'OCTAVES'].forEach((t, i) => { $$('#s-tuner .tnlcd small')[i].textContent = mode ? t : ['NOTE', 'CENTS', 'FREQ \u00b7 HZ'][i]; }); }
     const keys = on ? [rf.step === 0 ? 'NEXT' : 'DONE', 'REDO', 'EXIT'] : ['RANGE', 'A4 \u2212', 'A4 +'], kt = keys.join();
-    if (kt !== this.keyTxt) { this.keyTxt = kt; $$('#s-tuner .tncap span').forEach((s, i) => { s.textContent = keys[i]; }); }
+    if (kt !== this.keyTxt) { this.keyTxt = kt; $$('#s-tuner .tncap > span').forEach((s, i) => { s.textContent = keys[i]; }); }
     $('#tuRange').disabled = on && rf.best[rf.step] == null;
     if (!mode) return;
     const live = voiced ? Math.round(this.midi) : null, lo = on ? rf.best[0] : rs.lo, hi = on ? rf.best[1] : rs.hi, name = m => m == null ? '--' : noteName(m);

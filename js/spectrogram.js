@@ -2,8 +2,8 @@
 /* ---- Spectrogram over a piano keyboard (collapsed by default; only drawn while open) ---- */
 const setInst = i => { Store.data.settings.inst = i; Store.save(); Engine.applySettings(); Spec.setMode(instMode(i)); UI.refresh(); };
 const instMode = i => i === 'piano' ? 'piano' : i === 'whistle' ? 'whistle' : 'voice';
-/* The keys the Piano tab shows: all of A0 to C8, or n octaves from C to C around middle C. */
-const pianoSpan = () => { const n = +Store.data.settings.pxOct; if (!(n >= 2 && n <= 5)) return { lo: 21, hi: 108 }; const lo = Math.max(21, 48 - 12 * Math.floor((n - 1) / 2)); return { lo, hi: Math.min(108, lo + 12 * n) }; };
+/* The keys the Piano tab shows: all of A0 to C8, or n octaves from C to C around middle C, moved up or down by pxShift octaves. */
+const pianoSpan = () => { const n = +Store.data.settings.pxOct; if (!(n >= 2 && n <= 5)) return { lo: 21, hi: 108 }; const lo = Math.max(21, Math.min(108 - 12 * n, 48 - 12 * Math.floor((n - 1) / 2) + 12 * (+Store.data.settings.pxShift || 0))); return { lo, hi: Math.min(108, lo + 12 * n) }; };
 
 /* Horizontal centre of every key (lo..hi) on a keyboard drawn w wide, matching Piano.draw. */
 const kbCenters = (w, lo, hi) => {
@@ -19,7 +19,7 @@ const Spec = {
     this.full = true; const cv = $('#specCv');
     { const t = $('#specTags'); if (t) t.width = t.width; }        // drop the note chips left on the page behind the overlay
     $('#specFullCtl').appendChild($('#specCtl')); $('#specFullCv').appendChild(cv); cv.classList.add('sfull-cv'); cv.style.height = '';
-    { const d = $('.disprow'); if (d) { if (!this.dispHome) { this.dispHome = document.createComment('disprow'); d.before(this.dispHome); } $('#specFullCtl').appendChild(d); } }       // view and colour buttons come along
+    { const sc = $('#sandCtl'); if (sc) { if (!this.sandHome) { this.sandHome = document.createComment('sandctl'); sc.before(this.sandHome); } $('#specFullCtl').appendChild(sc); } }       // so do the Sand keys
     $('#o-spec').classList.add('on');
     try { if (document.documentElement.requestFullscreen) await $('#o-spec').requestFullscreen(); } catch (e) {}
     try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {}    // only possible in full screen on some phones
@@ -29,13 +29,13 @@ const Spec = {
     if (!this.full) return; this.full = false; const cv = $('#specCv');
     { const t = $('#specFullTags'); if (t) t.width = t.width; }
     $('#specPhCtl').after($('#specCtl')); $('#specPhCv').after(cv); cv.classList.remove('sfull-cv'); cv.style.height = '100%';
-    { const d = $('.disprow'); if (d && this.dispHome && this.dispHome.parentNode) this.dispHome.after(d); }
+    { const sc = $('#sandCtl'); if (sc && this.sandHome && this.sandHome.parentNode) this.sandHome.after(sc); }
     $('#o-spec').classList.remove('on');
-    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}      // back to the app's portrait lock
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
   },
   /* Quality (FFT size): left = fast response, coarse pitch; right = fine pitch, slower. The slider steps through powers of two. Default follows the range: piano and max mic use the finest. */
-  FFT: { low: 4096, mid: 16384, high: 32768 }, SIZES: [2048, 4096, 8192, 16384, 32768],
+  FFT: { low: 4096, mid: 16384, high: 32768 }, SIZES: [512, 1024, 2048, 4096, 8192, 16384, 32768],
   fftSize() { const v = Store.data.settings.fft; return typeof v === 'number' && this.SIZES.includes(v) ? v : this.FFT[v] || (this.mode === 'piano' || this.mode === 'max' ? 32768 : 16384); },
   applyFft() {
     const an = Engine.specAn, sz = this.fftSize();
@@ -136,7 +136,7 @@ const Spec = {
   },
   /* Scope sync: find the note's period by autocorrelation, then trigger on the rising zero crossing after the deepest trough and end exactly a whole number of cycles later (both at sub-sample positions), so the picture does not drift. Returns [start, length] in samples; unpitched sound falls back to a plain 2048-sample window. */
   scopeLock(T, N, sr) {
-    const fb = [N - 2049, 2048], L = 2048, e = N - 1, base = e - L - 1500; if (base < 1) return fb;
+    const fb = [Math.max(0, N - 2049), Math.min(2048, N - 1)], L = 2048, e = N - 1, base = e - L - 1500; if (base < 1) return fb;
     const lmin = Math.max(12, Math.floor(sr / 3000)), lmax = Math.min(1500, Math.floor(sr / 40)); let e0 = 0; for (let i = 0; i < L; i++) e0 += T[e - i] * T[e - i]; if (e0 < 1e-6) return fb;
     const r = new Float32Array(lmax + 2); let best = 0;
     for (let k = lmin; k <= lmax; k++) { let sx = 0, sy = 0; for (let i = 0; i < L; i += 2) { const a = T[e - i], b = T[e - i - k]; sx += a * b; sy += b * b; } r[k] = sx / Math.sqrt(e0 / 2 * sy + 1e-12); if (r[k] > best) best = r[k]; }

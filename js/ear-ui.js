@@ -20,7 +20,7 @@ const Ear = {
   ask() {
     clearTimeout(this.timer); this.q = EAR.make(this.lv, Math.random, this.prev); this.prev = this.q; this.tap = []; this.locked = false;
     $('#earStep').textContent = (this.qi + 1) + ' / ' + this.n + ' · ' + this.ok + ' right'; $('#earBar').style.width = (this.qi / this.n * 100) + '%';
-    $('#earPrompt').textContent = this.q.prompt; $('#earSub').textContent = this.q.sub; $('#earFb').textContent = ''; $('#earFb').className = 'earfb'; $('#earNext').hidden = true;
+    $('#earPrompt').textContent = this.q.prompt; { const sb = $('#earSub'); sb.textContent = this.q.sub; if (this.q.first != null) { const f = document.createElement('span'); f.className = 'earfirst'; f.textContent = 'First note: ' + noteName(this.q.first); sb.appendChild(f); } } $('#earFb').textContent = ''; $('#earFb').className = 'earfb'; $('#earNext').hidden = true;
     const box = $('#earOpts'); box.textContent = ''; box.dataset.n = this.q.options.length;
     this.q.options.forEach((o, i) => { const b = document.createElement('button'); b.className = 'synbtn earopt'; b.dataset.id = o.id; b.type = 'button'; const k = document.createElement('i'); k.textContent = i < 9 ? i + 1 : ''; b.appendChild(k); b.appendChild(document.createTextNode(o.label)); b.onclick = () => this.pick(o.id); box.appendChild(b); });
     const mel = $('#earMel'); mel.hidden = !this.q.seq; this.paintMel(); this.play(this.q.events);
