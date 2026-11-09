@@ -8,8 +8,8 @@ function bind() {
   $$('#menuDiff button').forEach(b => b.onclick = () => { Store.data.settings.diff = b.dataset.d; Store.save(); if (Session.s) Session.s.tol = TOLERANCE[b.dataset.d]; UI.refresh(); });
   SetUI.init();
   { const sec = $$('#s-progress .secbtn'), show = k => { $('#s-progress').dataset.sec = k; sec.forEach(b => b.setAttribute('aria-pressed', b.dataset.sec === k ? 'true' : 'false')); }; sec.forEach(b => b.addEventListener('click', () => show(b.dataset.sec))); show('ov'); }
-  /* the Practice device's source slider: Sing, Piano, Whistle or Ear */
-  window.setTrainMode = m => { const st = Store.data.settings; st.trainMode = m === 'piano' || m === 'ear' ? m : 'sing'; Store.save(); if (m === 'sing' && st.inst !== 'voice') setInst('voice'); else if (m === 'whistle' && st.inst !== 'whistle') setInst('whistle'); else UI.refresh(); };
+  /* the Practice device's source slider: Sing, Piano, Whistle, Ear, Rhythm or Play */
+  window.setTrainMode = m => { const st = Store.data.settings; st.trainMode = m === 'piano' || m === 'ear' || m === 'rhythm' || m === 'play' ? m : 'sing'; Store.save(); if (m === 'sing' && st.inst !== 'voice') setInst('voice'); else if (m === 'whistle' && st.inst !== 'whistle') setInst('whistle'); else UI.refresh(); };
   const set = (id, key, get) => $(id).onchange = $(id).oninput = e => { Store.data.settings[key] = get(e.target); Store.save(); Engine.applySettings(); if (key === 'gateDb') UI.refresh(); };
   set('#setDiff', 'diff', e => { const d = e.value; if (Session.s) Session.s.tol = TOLERANCE[d]; return d; }); set('#setHear', 'hear', e => e.checked); set('#setDrone', 'drone', e => e.checked);
   set('#setCues', 'cues', e => e.checked); set('#setWait', 'wait', e => e.checked); set('#setFind', 'find', e => +e.value); set('#setGuide', 'guide', e => e.value); set('#setVol', 'vol', e => +e.value);
@@ -62,7 +62,7 @@ function bind() {
   $('#sqTempo').oninput = e => { $('#sqTempoOut').textContent = e.target.value + '%'; }; $('#sqTempo').onchange = e => Seq.setTempo(e.target.value / 100);
   { const cv = $('#seqCv'); cv.onpointerdown = e => Seq.ovDown(e); cv.onpointermove = e => Seq.ovMove(e); cv.onpointerup = () => Seq.ovUp(); cv.onpointercancel = () => { Seq.ovDrag = null; Seq.ovMode = null; Seq.ovReg = null; }; }
   $('#sqSeek').oninput = e => { Seq.drag = true; $('#sqTime').textContent = Seq.fmt(+e.target.value) + ' / ' + Seq.fmt(Seq.length); }; $('#sqSeek').onchange = e => { Seq.drag = false; Seq.seek(+e.target.value); };
-  Ed.init(); Knobs.init(); Scale.mount(); Ear.init(); Synth.init(); Vox.init(); PianoUI.init(); PDev.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
+  Ed.init(); Knobs.init(); Scale.mount(); Ear.init(); Rhy.init(); Hero.init(); Synth.init(); Vox.init(); PianoUI.init(); PDev.init(); $('#sqAcc').checked = Store.data.settings.seqAcc !== false; $('#sqAcc').onchange = e => { Store.data.settings.seqAcc = e.target.checked; Store.save(); };
   TunerDial.init(); Themes.apply(Store.data.settings.theme);
   $('#instHintBtn').onclick = () => { if (Tuner.hint.want) setInst(Tuner.hint.want); $('#instHint').hidden = true; };
   $('#instHintNo').onclick = () => { Tuner.hint.dismissed[Tuner.hint.want] = true; $('#instHint').hidden = true; };

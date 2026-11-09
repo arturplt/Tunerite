@@ -18,10 +18,10 @@ const UI = {
   },
   refresh() {
     const S = Store.data, st = S.settings;
-    const mode = st.trainMode === 'ear' ? 'ear' : st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing', whistle = mode === 'whistle', view = st.prView === 'lib' ? 'lib' : st.prView === 'ex' ? 'ex' : 'course';
+    const mode = st.trainMode === 'ear' ? 'ear' : st.trainMode === 'rhythm' ? 'rhythm' : st.trainMode === 'play' ? 'play' : st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing', whistle = mode === 'whistle', view = st.prView === 'lib' ? 'lib' : st.prView === 'ex' ? 'ex' : 'course';
     $('#defaultRangeBanner').hidden = whistle ? !!S.rangeWhistle : !!S.range; $('#drbTxt').textContent = whistle ? 'Using a default whistle range.' : 'Using a default range.'; $('#btnFindRange2').textContent = whistle ? 'Find my whistle range' : 'Find my range';
     $('#trSingI').textContent = whistle ? '😗' : '🎤'; $('#trSingT').textContent = whistle ? 'Whistling' : 'Singing'; $('#trSingD').textContent = whistle ? 'The app listens to your whistle (400 Hz and up) and shows how close each note is.' : 'The app listens to your voice and shows how close each note is.';
-    $('#trEx').hidden = view !== 'ex' || mode === 'ear'; $('#trLib').hidden = view !== 'lib' || mode === 'ear'; $('#trSing').hidden = mode === 'piano' || mode === 'ear'; $('#trPiano').hidden = mode !== 'piano'; PDev.refresh();
+    const noList = mode === 'ear' || mode === 'rhythm' || mode === 'play'; $('#trEx').hidden = view !== 'ex' || noList; $('#trLib').hidden = view !== 'lib' || noList; $('#trSing').hidden = mode === 'piano' || noList; $('#trPiano').hidden = mode !== 'piano'; PDev.refresh();
     Lib.f.kind = mode === 'piano' ? 'piano' : 'sing';
     const names = Midi.inputNames(), pin = $('#pxInput');
     pin.innerHTML = ''; const pt = document.createElement('div'); pt.textContent = names.length ? '🎹 Keyboard connected: ' + names.join(', ') : '🎤 No keyboard connected. I will listen through the microphone in Piano mode. Single notes work best, and chords need a quiet room.'; pin.appendChild(pt);
@@ -67,7 +67,7 @@ const UI = {
     Gate.paint(); SetUI.sync();
     // progress
     const H = S.history;
-    const streak = computeStreak(H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || [])); $('#pStreak').textContent = streak + ' day' + (streak === 1 ? '' : 's');
+    const streak = computeStreak(H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || [], S.rhythmLog || [])); $('#pStreak').textContent = streak + ' day' + (streak === 1 ? '' : 's');
     $('#pCount').textContent = H.length; $('#pRoutines').textContent = (S.routines || []).length;
     $('#pRange').textContent = (S.range ? noteName(S.range.lo) + '–' + noteName(S.range.hi) : 'not set') + (S.rangeWhistle ? ' · whistle ' + noteName(S.rangeWhistle.lo) + '–' + noteName(S.rangeWhistle.hi) : '');
     if (S.rangeLog.length > 1) {
@@ -83,12 +83,13 @@ const UI = {
     { const P = Ear.prog(), el = S.earLog || []; $('#pEar').textContent = EAR.LEVELS.filter(l => P[l.id] && P[l.id].stars >= 1).length + ' / ' + EAR.LEVELS.length; $('#pEarStars').textContent = EAR.LEVELS.reduce((a, l) => a + (P[l.id] ? P[l.id].stars : 0), 0) + ' / ' + EAR.LEVELS.length * 3; $('#pEarPct').textContent = el.length ? Math.round(100 * el.reduce((a, e) => a + e.ok, 0) / Math.max(1, el.reduce((a, e) => a + e.n, 0))) + '%' : '–'; }
     { const P = Ear.prog(), lv = $('#pLvl'); lv.textContent = ''; const nx = EAR.LEVELS.findIndex(l => !(P[l.id] && P[l.id].stars >= 1)); EAR.LEVELS.forEach((l, i) => { const st = P[l.id] ? P[l.id].stars : 0, d = document.createElement('div'); d.className = st >= 1 ? 'p' : i === nx ? 'cur' : ''; d.innerHTML = i + 1 + '<small></small>'; d.lastChild.textContent = st ? '★'.repeat(st) : '–'; lv.appendChild(d); }); }
     { // practice calendar and this week, from every log that counts for the streak
-      const acts = H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || []), per = {}; acts.forEach(a => { const k = dayKey(a.ts); per[k] = (per[k] || 0) + 1; });
+      const acts = H.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || [], S.rhythmLog || []), per = {}; acts.forEach(a => { const k = dayKey(a.ts); per[k] = (per[k] || 0) + 1; });
       const cal = $('#pCal'); cal.textContent = ''; const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - 97);
       for (let i = 0; i < 98; i++, d.setDate(d.getDate() + 1)) { const n = per[dayKey(d)] || 0, c = document.createElement('i'); c.className = (n ? 'l' + (n >= 5 ? 4 : n >= 3 ? 3 : n) : '') + (i === 97 ? ' t' : ''); c.title = d.toLocaleDateString() + (n ? ' · ' + n : ''); cal.appendChild(c); }
       const wk = Date.now() - 7 * 864e5, W = acts.filter(a => a.ts >= wk), WH = H.filter(h => h.ts >= wk);
       $('#pwN').textContent = W.length; $('#pwDays').textContent = new Set(W.map(a => dayKey(a.ts))).size; $('#pwAcc').textContent = WH.length ? Math.round(100 * WH.reduce((a, h) => a + h.acc, 0) / WH.length) + '%' : '–'; }
-    { const cb = $('#pCourse'); cb.textContent = ''; Object.keys(COURSE.KINDS).forEach(k => { const m = COURSE.summary(k, Course.prog(k)), r = document.createElement('div'); r.className = 'stat pcrs'; r.innerHTML = '<span></span><div class="pbar"></div><b></b>'; r.children[0].textContent = COURSE.KINDS[k].ico + ' ' + COURSE.KINDS[k].name; for (let i = 0; i < 12; i++) r.children[1].appendChild(document.createElement('i')).className = i < Math.round(12 * m.passed / Math.max(1, m.total)) ? 'on' : ''; r.children[2].textContent = m.passed + ' / ' + m.total + ' · ' + m.stars + ' ★'; cb.appendChild(r); }); }
+    { const cb = $('#pCourse'); cb.textContent = ''; Object.keys(COURSE.KINDS).forEach(k => { const m = COURSE.summary(k, Course.prog(k)), r = document.createElement('div'); r.className = 'stat pcrs'; r.innerHTML = '<span></span><div class="pbar"></div><b></b>'; r.children[0].textContent = COURSE.KINDS[k].ico + ' ' + COURSE.KINDS[k].name; for (let i = 0; i < 12; i++) r.children[1].appendChild(document.createElement('i')).className = i < Math.round(12 * m.passed / Math.max(1, m.total)) ? 'on' : ''; r.children[2].textContent = m.passed + ' / ' + m.total + ' · ' + m.stars + ' ★'; cb.appendChild(r); });
+      [['🥁 Rhythm', false], ['🎮 Play', true]].forEach(([name, game]) => { const P = Rhy.prog(), L = RHYTHM.LEVELS.filter(l => !!l.game === game), r = document.createElement('div'); r.className = 'stat pcrs'; r.innerHTML = '<span></span><div class="pbar"></div><b></b>'; r.children[0].textContent = name; const done = L.filter(l => P[l.id] && P[l.id].stars >= 1).length; for (let i = 0; i < 12; i++) r.children[1].appendChild(document.createElement('i')).className = i < Math.round(12 * done / L.length) ? 'on' : ''; r.children[2].textContent = done + ' / ' + L.length + ' · ' + L.reduce((a, l) => a + (P[l.id] ? P[l.id].stars : 0), 0) + ' ★'; cb.appendChild(r); }); }
     const pl = S.pianoLog || []; $('#pPiano').textContent = pl.length;
     $('#pPianoPct').textContent = pl.length ? Math.round(100 * pl.reduce((a, p) => a + p.firstTry, 0) / Math.max(1, pl.reduce((a, p) => a + p.steps, 0))) + '%' : '–';
     const pb = $('#pPianoBest'); pb.textContent = '';

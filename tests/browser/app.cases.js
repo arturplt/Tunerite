@@ -444,6 +444,52 @@ T.test('ear training: the Ear mode lists the course, a drill scores, and passing
   } finally { Ear.close(); st.trainMode = keep.m; Store.data.ear = JSON.parse(keep.e || 'null') || undefined; Store.data.earLog = JSON.parse(keep.l || 'null') || undefined; UI.show('tuner'); }
 });
 
+T.test('rhythm training: every level fits its bar, scoring follows the taps, and a drill earns stars and opens the next level', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, r: JSON.stringify(Store.data.rhythm), l: JSON.stringify(Store.data.rhythmLog), click: Engine.click }; Store.data.rhythm = { levels: {} }; Store.data.rhythmLog = []; Engine.click = () => null;
+  try {
+    const ids = RHYTHM.LEVELS.map(l => l.id); T.eq(new Set(ids).size, ids.length, 'level ids are unique');
+    RHYTHM.LEVELS.filter(l => !l.game).forEach(l => l.pats.forEach(p => { T.ok(p.length === l.pats[0].length && p.length % l.beats === 0 && /^[x.]+$/.test(p) && p.includes('x'), l.id + ' pattern ' + p); }));
+    const exp = [0, 1, 2, 3]; T.eq(RHYTHM.score(exp, [0.01, 1.02, 1.99, 3.03]).score, 1, 'close taps are perfect'); T.eq(RHYTHM.score(exp, [0.5, 1.5, 2.5, 3.5]).score, 0, 'half a beat off earns nothing'); T.eq(RHYTHM.score(exp, [0, 1, 2]).score, 0.75, 'a missed hit costs a quarter'); T.eq(RHYTHM.score(exp, [0, 1, 2, 3, 3.4]).extras, 1, 'an extra tap is counted');
+    T.eq([60, 70, 85, 95].map(p => RHYTHM.stars(p)).join(), '0,1,2,3', 'stars at 70, 85 and 95');
+    st.trainMode = 'rhythm'; UI.show('train'); UI.refresh(); T.ok(!$('#trDevice').hidden && $('#trEx').hidden && $('#trSing').hidden, 'the device shows the rhythm map'); T.eq(PDev.mode(), 'rhythm');
+    { const a = PDev.api('rhythm'); T.eq(a.levels.length, RHYTHM.LEVELS.filter(l => !l.game).length, 'every drill level is on the map'); T.eq(a.levels.filter(l => a.unlocked(l.id)).length, 1, 'only the first level is open'); }
+    $$('#pdLabels button').forEach(b => { if (b.dataset.m === 'rhythm') T.ok(b.classList.contains('on'), 'the RHYTHM key is lit'); });
+    Rhy.open('r1l2'); await new Promise(r => setTimeout(r, 50)); T.ok(!$('#o-rhythm').classList.contains('on'), 'a locked level does not open');
+    await Rhy.open('r1l1'); T.ok($('#o-rhythm').classList.contains('on') && PDev.playing(), 'the drill opens inside the screen'); T.ok($$('#rhyLane .rdot').length > 0, 'the lane shows the pattern');
+    for (let i = 0; i < Rhy.lv.n; i++) { Rhy.taps = RHYTHM.onsets(Rhy.pat, Rhy.lv.beats).map(b => b * Rhy.beat + 0.01); Rhy.judge(); clearTimeout(Rhy.timer); T.ok($$('#rhyLane .rdot.good').length > 0, 'a clean round lights the hits green'); if (Rhy.rd >= Rhy.lv.n) Rhy.finish(); else Rhy.round(); }
+    const rec = Store.data.rhythm.levels.r1l1; T.ok(rec && rec.stars === 3 && rec.best === 100, 'five clean rounds earn three stars: ' + JSON.stringify(rec)); T.ok(RHYTHM.unlocked(Rhy.prog(), 'r1l2'), 'the next level is open'); T.eq(Store.data.rhythmLog.length, 1, 'the drill is logged for the streak'); T.ok(!Rhy.on && PDev.state === 'result' && PDev.res.kind === 'rhythm', 'the device shows the result');
+    await Rhy.open('r1l1'); Rhy.setClap(true); T.ok(Rhy.clap && Engine.listeners.has(Rhy.fn), 'clap mode listens to the microphone'); Rhy.phase = 'tap'; Rhy.endAt = Rhy.Y + 99; Rhy.sounds = []; const f = (t, rms) => Rhy.heard({ t, rms }), h = Engine.half || 0.02;
+    for (let i = 0; i < 20; i++) f(Rhy.Y - 1 + i * 0.02, 0.003); f(Rhy.Y + 1 - h + 0.01, 0.2); f(Rhy.Y + 1.02 - h + 0.01, 0.2); T.eq(Rhy.taps.length, 1, 'a jump in level is one clap, and its ring is not another'); T.ok(Math.abs(Rhy.taps[0] - 1) < 0.1, 'at about the right time: ' + Rhy.taps[0]);
+    Rhy.sounds = [Rhy.Y + 2]; f(Rhy.Y + 2.05 - h + 0.01 - 0.0, 0.003); f(Rhy.Y + 2.07, 0.3); T.eq(Rhy.taps.length, 1, 'a level jump right after our own click is ignored'); Rhy.setClap(false); T.ok(!Engine.listeners.has(Rhy.fn), 'tap mode lets go of the microphone'); Rhy.close();
+    await Rhy.open('r1l2'); for (let i = 0; i < Rhy.lv.n; i++) { Rhy.taps = []; Rhy.judge(); clearTimeout(Rhy.timer); if (Rhy.rd >= Rhy.lv.n) Rhy.finish(); else Rhy.round(); }
+    T.eq(Store.data.rhythm.levels.r1l2.stars, 0, 'no taps earn nothing'); T.ok(!RHYTHM.unlocked(Rhy.prog(), 'r1l3'), 'and open nothing');
+  } finally { Rhy.on && Rhy.close(); Engine.click = keep.click; st.trainMode = keep.m; Store.data.rhythm = JSON.parse(keep.r || 'null') || undefined; Store.data.rhythmLog = JSON.parse(keep.l || 'null') || undefined; UI.show('tuner'); }
+});
+
+T.test('beat hero: the five songs build, claps and held notes are judged, the boss song ends the course unit, and a run is scored on the device', async () => {
+  await audio(); const st = Store.data.settings, keep = { m: st.trainMode, r: JSON.stringify(Store.data.rhythm), l: JSON.stringify(Store.data.rhythmLog), click: Engine.click, back: st.heroBack }; Store.data.rhythm = { levels: {} }; Store.data.rhythmLog = []; Engine.click = () => null; st.heroBack = true;
+  try {
+    const G = RHYTHM.LEVELS.filter(l => l.game); T.eq(G.length, 5, 'five game levels'); T.ok(G[4].boss && G[4].game === 'h5', 'the last one is the boss song');
+    G.forEach(l => { const song = HERO.SONGS[l.game], notes = HERO.build(song); T.ok(notes.length >= 8, l.id + ' has notes'); song.bars.forEach(b => T.ok(b.length === 8 && /^[csw.\-]+$/.test(b.replace(/ /g, '')) && !/^-/.test(b), l.id + ' bar ' + b)); T.ok(notes.every((n, i) => !i || n.b >= notes[i - 1].b), l.id + ' is in time order'); T.eq(l.bpm, song.bpm, l.id + ' tempo'); });
+    T.ok(new Set(G.map(l => HERO.SONGS[l.game].bpm)).size === 5 || HERO.SONGS.h5.bpm > HERO.SONGS.h1.bpm, 'the boss is quicker than the first song');
+    T.eq([0.05, 0.1, 0.18, 0.3].map(HERO.clapQ).join(), '1,0.75,0.5,0', 'clap windows'); T.eq([0.9, 0.7, 0.4, 0.1].map(HERO.holdQ).join(), '1,0.75,0.5,0', 'hold windows'); T.eq(HERO.laneOf(300) + HERO.laneOf(900) + HERO.laneOf(20), 'sw' + null, 'voice below 600 Hz, whistle above');
+    T.eq([0, 9, 10, 35, 99].map(HERO.mult).join(), '1,1,2,4,4', 'multiplier');
+    const a = PDev.api('play'); T.eq(a.levels.length, 5, 'the PLAY map holds the five songs'); T.ok(a.unlocked('r8l1'), 'the first game level is open from the start'); T.ok(!a.unlocked('r8l2'), 'the second waits for a star');
+    st.trainMode = 'play'; UI.show('train'); UI.refresh(); T.eq(PDev.mode(), 'play'); T.eq(PDev.KINDS[PDev.KINDS.length - 1], 'play', 'PLAY is the last key, after RHYTHM'); await Rhy.open('r8l2'); T.ok(!Hero.on, 'a locked game level does not open');
+    await Rhy.open('r8l1'); T.ok(Hero.on && $('#o-hero').classList.contains('on'), 'the game opens inside the Practice screen'); T.ok($('#o-hero').parentNode === $('#pdPane') && !$('#pdPane').hidden, 'in the device pane'); Hero.at = 0;
+    { const W0 = Hero.W, H0 = Hero.H; Hero.W = 900; Hero.H = 400; T.ok(Hero.geo().horiz, 'a wide screen runs the notes sideways'); const gw = Hero.geo(); T.eq(Hero.laneAt(gw.hit + 50, gw.y0 + gw.lw * 1.5), 's', 'a row is a lane'); Hero.draw(1);
+      Hero.W = 360; Hero.H = 540; T.ok(!Hero.geo().horiz, 'a tall screen drops them'); const gt = Hero.geo(); T.eq(Hero.laneAt(gt.x0 + gt.lw * 2.5, 300), 'w', 'a column is a lane'); Hero.draw(1); Hero.W = W0; Hero.H = H0; }
+    Hero.notes.filter(n => n.l === 'c').forEach((n, i) => { Hero.at = n.t + (i % 2 ? 0.02 : -0.03); Hero.clap(Hero.at); Hero.update(); });
+    T.ok(Hero.combo === Hero.notes.length && Hero.points > 0, 'clean claps build a combo: ' + Hero.combo); T.ok(Hero.maxCombo === Hero.notes.length && Hero.meter > 0.9, 'and fill the rock meter');
+    Hero.at = Hero.endSec + 1; Hero.update(); T.ok(!Hero.on && PDev.state === 'result' && PDev.res.kind === 'play' && PDev.res.id === 'r8l1', 'the run ends on the device result');
+    const rec = Store.data.rhythm.levels.r8l1; T.ok(rec && rec.stars === 3 && rec.best === 100, 'a perfect run earns three stars: ' + JSON.stringify(rec)); T.ok(a.unlocked('r8l2'), 'the second song opens');
+    await Rhy.open('r8l2'); Hero.at = 0; const s2 = Hero.notes.find(n => n.l === 's'); for (let t = s2.t; t < s2.t + s2.len; t += 0.02) Hero.voice('s', t, 0.02); Hero.at = s2.t + s2.len + 0.3; Hero.update(); T.eq(s2.q, 1, 'a held voice for the whole note is perfect');
+    Hero.voice('w', s2.t + 99, 0.02); const w = Hero.notes.find(n => n.l === 'c'); T.ok(w.q == null || w.q === 0, 'untouched claps stay open or miss');
+    Hero.at = Hero.endSec + 1; Hero.update(); T.ok(Store.data.rhythm.levels.r8l2 && Store.data.rhythm.levels.r8l2.stars === 0, 'a song with only one note sung earns nothing');
+    await Rhy.open('r8l1'); Hero.at = 0; Hero.notes.forEach(n => Hero.resolve(n, 0)); Hero.update(); T.ok(Hero.fail || !Hero.on, 'missing everything fails the song');
+  } finally { Hero.on && Hero.close(); Hero.at = null; Engine.click = keep.click; st.heroBack = keep.back; st.trainMode = keep.m; Store.data.rhythm = JSON.parse(keep.r || 'null') || undefined; Store.data.rhythmLog = JSON.parse(keep.l || 'null') || undefined; UI.show('tuner'); }
+});
+
 T.test('SoundFonts popup: Built-in is a font of its own with every built-in instrument', async () => {
   await audio(); scene(); Ed.ti = 0; $('#sfPop').hidden = false; await SFMgr.refresh(true);
   try {

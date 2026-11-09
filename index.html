@@ -130,8 +130,10 @@ try{var m=JSON.parse(localStorage.getItem('pitchperfect.profiles')),a=m&&m.activ
               <button type="button" data-m="piano"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v8M15 5v8M7.5 13h3M13.5 13h3"/></svg>PIANO</button>
               <button type="button" data-m="whistle"><svg viewBox="0 0 24 24"><circle cx="8" cy="14" r="5"/><path d="M12 9h9v3h-6M8 11v3"/></svg>WHISTLE</button>
               <button type="button" data-m="ear"><svg viewBox="0 0 24 24"><path d="M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-6 0"/><path d="M11 9a1.5 1.5 0 0 1 3 0"/></svg>EAR</button>
+              <button type="button" data-m="rhythm"><svg viewBox="0 0 24 24"><path d="M8 21h8l-2-17h-4z"/><path d="M12 15l5-8"/></svg>RHYTHM</button>
+              <button type="button" data-m="play"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M8 10v5M5.5 12.5h5M15.5 11.5h.01M18 13.5h.01"/></svg>PLAY</button>
             </div>
-            <div class="mtrack" id="pdTrack" role="slider" tabindex="0" aria-label="Sound source" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" aria-valuetext="Sing"><i class="mdot" style="left:12.5%"></i><i class="mdot" style="left:37.5%"></i><i class="mdot" style="left:62.5%"></i><i class="mdot" style="left:87.5%"></i><div class="mknob"></div></div>
+            <div class="mtrack" id="pdTrack" role="slider" tabindex="0" aria-label="Sound source" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-valuetext="Sing"><i class="mdot" style="left:8.33%"></i><i class="mdot" style="left:25.00%"></i><i class="mdot" style="left:41.67%"></i><i class="mdot" style="left:58.33%"></i><i class="mdot" style="left:75.00%"></i><i class="mdot" style="left:91.67%"></i><div class="mknob"></div></div>
             </div>
             <div class="cap hk"><button type="button" id="pdRange" aria-label="Find my range" title="Find my range"><svg viewBox="0 0 24 24"><path d="M4 12h16M7 8l-3 4 3 4M17 8l3 4-3 4"/></svg></button><span>RANGE</span></div>
           </div>
@@ -495,6 +497,20 @@ try{var m=JSON.parse(localStorage.getItem('pitchperfect.profiles')),a=m&&m.activ
   <div id="earRes" class="earres" hidden></div>
 </div>
 
+<div id="o-rhythm" class="overlay earov">
+  <div class="row earbar"><button class="btn" id="rhyClose" style="min-height:2.5rem;padding:4px 0.875rem" aria-label="Close">✕</button><b id="rhyTitle"></b><span class="muted small" id="rhyStep"></span></div>
+  <div class="meter earmeter"><i id="rhyBar"></i></div>
+  <div class="earbody">
+    <div class="earlcd"><small id="rhyPhase"></small><b id="rhySub"></b></div>
+    <div id="rhyLane" class="rhylane"></div>
+    <button class="synbtn rhypad" id="rhyPad" type="button">TAP</button>
+    <div class="row"><button class="synbtn" id="rhyMode" type="button" aria-label="Switch between tapping and clapping">TAPPING</button></div>
+    <div id="rhyFb" class="earfb"></div>
+  </div>
+</div>
+
+<div id="o-hero" class="overlay herov"><canvas id="heroCv"></canvas></div>
+
 <!-- SPECTROGRAM FULL SCREEN -->
 <div id="o-spec" class="overlay" style="padding:0.5rem;gap:0.5rem;background:#000;justify-content:flex-start">
   <div class="row" style="width:100%;flex-wrap:nowrap"><button class="btn" id="specClose" style="min-height:2.75rem;padding:4px 1rem">✕</button><div id="specFullCtl" style="flex:1;min-width:0"></div></div>
@@ -557,6 +573,8 @@ try{var m=JSON.parse(localStorage.getItem('pitchperfect.profiles')),a=m&&m.activ
 <script src="js/core/song.js"></script>
 <script src="js/core/progress.js"></script>
 <script src="js/core/ear.js"></script>
+<script src="js/core/hero.js"></script>
+<script src="js/core/rhythm.js"></script>
 <script src="js/core/library.js"></script>
 <script src="js/core/course.js"></script>
 <script src="js/core/soundfont-read.js"></script>
@@ -575,6 +593,8 @@ try{var m=JSON.parse(localStorage.getItem('pitchperfect.profiles')),a=m&&m.activ
 <script src="js/piano.js"></script>
 <script src="js/scale.js"></script>
 <script src="js/ear-ui.js"></script>
+<script src="js/rhythm-ui.js"></script>
+<script src="js/hero-ui.js"></script>
 <script src="js/course-ui.js"></script>
 <script src="js/soundfont.js"></script>
 <script src="js/library-ui.js"></script>

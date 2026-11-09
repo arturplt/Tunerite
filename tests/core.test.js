@@ -685,4 +685,33 @@ test('song: markers round-trip through a MIDI file; duplicate track copies on a 
   assert.notStrictEqual(C.songTrackChannels(s.tracks[1])[0], C.songTrackChannels(s.tracks[0])[0]); s.tracks[1].notes[0].tick = 5; assert.strictEqual(s.tracks[0].notes[0].tick, 0);
 });
 
+/* ---- rhythm course (js/core/rhythm.js) ---- */
+const RH = new Function(['hero', 'rhythm'].map(f => fs.readFileSync(path.join(__dirname, '..', 'js', 'core', f + '.js'), 'utf8').replace(/^"use strict";\n/, '')).join('\n') + '; return RHYTHM;')();
+test('rhythm: every level has patterns of one length that fit its bar, with at least one hit, and ids are unique', () => {
+  const ids = RH.LEVELS.map(l => l.id); assert.strictEqual(new Set(ids).size, ids.length);
+  RH.LEVELS.filter(l => !l.game).forEach(l => {
+    assert.ok(l.title && l.desc && l.bpm > 0 && l.pats.length, l.id);
+    l.pats.forEach(p => { assert.strictEqual(p.length, l.pats[0].length, l.id + ' pattern length ' + p); assert.ok(/^[x.]+$/.test(p) && p.includes('x'), l.id + ' ' + p); assert.ok(l.pats[0].length % l.beats === 0, l.id + ': steps divide the bar'); });
+    const steps = l.pats[0].length / l.beats, gap = 60 / l.bpm / steps; assert.ok(gap > 0.09, l.id + ': steps are playable (' + gap.toFixed(3) + ' s)');
+  });
+});
+test('rhythm: onsets, stars, unlocking', () => {
+  assert.deepStrictEqual(RH.onsets('x.x.x.x.', 4), [0, 1, 2, 3]); assert.deepStrictEqual(RH.onsets('x.xx.xx.xx.x', 4).slice(0, 3).map(x => +x.toFixed(3)), [0, 0.667, 1]);
+  assert.deepStrictEqual([60, 70, 85, 95, 100].map(p => RH.stars(p)), [0, 1, 2, 3, 3]);
+  const P = {}; assert.ok(RH.unlocked(P, 'r1l1') && !RH.unlocked(P, 'r1l2')); assert.strictEqual(RH.next(P).id, 'r1l1');
+  P.r1l1 = { best: 60, stars: 0 }; assert.ok(!RH.unlocked(P, 'r1l2')); P.r1l1 = { best: 75, stars: 1 }; assert.ok(RH.unlocked(P, 'r1l2')); assert.strictEqual(RH.next(P).id, 'r1l2');
+  const lv = RH.LEVELS[2]; let prev = lv.pats[0]; for (let i = 0; i < 20; i++) { const p = RH.pick(lv, Math.random, prev); assert.notStrictEqual(p, prev); prev = p; }
+});
+test('rhythm: scoring rewards close taps, and penalises misses and extra taps', () => {
+  const exp = [0, 1, 2, 3];
+  assert.strictEqual(RH.score(exp, [0.01, 1.02, 1.99, 3.03]).score, 1, 'taps within 60 ms are perfect');
+  const late = RH.score(exp, [0.15, 1.15, 2.15, 3.15]).score; assert.ok(late > 0.3 && late < 0.8, 'late taps score partly: ' + late);
+  assert.strictEqual(RH.score(exp, [0.5, 1.5, 2.5, 3.5]).score, 0, 'half a beat off earns nothing');
+  assert.strictEqual(RH.score(exp, []).score, 0); assert.strictEqual(RH.score(exp, [0, 1, 2]).score, 0.75, 'a missed hit costs a quarter');
+  const ex = RH.score(exp, [0, 1, 2, 3, 3.4]); assert.strictEqual(ex.extras, 1); assert.strictEqual(+ex.score.toFixed(3), 0.875, 'an extra tap costs half a hit');
+  const r = RH.score(exp, [0.1, 1, 2, 3]); assert.ok(Math.abs(r.per[0].err - 0.1) < 1e-9 && r.per[1].err === 0);
+  const fast = RH.score([0, 0.1, 0.2, 0.3], [0.2, 0.3]); assert.ok(fast.score <= 0.5 + 1e-9, 'one tap is never used for two close hits');
+  assert.strictEqual(RH.score([1], [1.2]).per[0].tap, 1.2); assert.ok(RH.score([1], [1.2]).score < 0.1);
+});
+
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

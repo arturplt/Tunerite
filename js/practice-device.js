@@ -3,7 +3,7 @@
    course data as before (core/course.js, core/ear.js); this file only draws the map and starts a level. Pressing START opens the level in the exercise screens as it always did.
    The device is drawn at a fixed design size (1240 wide, or 430 on a phone) and scaled to fit (fit); the screen is a canvas of 750 x 446 (wide) or 360 x 540 (phone) pixels. ---- */
 const PDev = {
-  KINDS: ['sing', 'piano', 'whistle', 'ear'], NAMES: { sing: 'SING', piano: 'PIANO', whistle: 'WHISTLE', ear: 'EAR' },
+  KINDS: ['sing', 'piano', 'whistle', 'ear', 'rhythm', 'play'], NAMES: { sing: 'SING', piano: 'PIANO', whistle: 'WHISTLE', ear: 'EAR', rhythm: 'RHYTHM', play: 'PLAY' },
   state: 'map', res: null, sel: {}, unitPick: {}, narrow: false, short: false, W: 750, H: 446, hits: [], ts: 0, raf: 0, C: {}, lastKind: null,
   /* ---- the levels of one kind, whichever engine they come from ---- */
   api(kind) {
@@ -11,10 +11,14 @@ const PDev = {
       const P = Ear.prog();
       return { kind, units: EAR.UNITS, levels: EAR.LEVELS, P, unlocked: id => EAR.unlocked(P, id), next: () => EAR.next(P), thr: EAR.STARS.map(x => Math.round(x * 100)), suffix: '%', best: p => Math.round(p.best * 100) + '%', start: id => Ear.open(id) };
     }
+    if (kind === 'rhythm' || kind === 'play') {      // the rhythm drills, and the Beat Hero game levels, share one level list and one save
+      const P = Rhy.prog(), game = kind === 'play', units = RHYTHM.UNITS.filter(u => u.levels[0].game ? game : !game), levels = [].concat(...units.map(u => u.levels));
+      return { kind, units, levels, P, unlocked: id => RHYTHM.unlocked(P, id), next: () => levels.find(l => RHYTHM.unlocked(P, l.id) && !(P[l.id] && P[l.id].stars >= 1)) || levels[levels.length - 1], thr: RHYTHM.STARS, suffix: '%', best: p => Math.round(p.best) + '%', start: id => Rhy.open(id) };
+    }
     const K = COURSE.KINDS[kind], P = Course.prog(kind);
     return { kind, units: COURSE.UNITS[kind], levels: COURSE.LEVELS[kind], P, unlocked: id => COURSE.unlocked(kind, P, id), next: () => COURSE.next(kind, P), thr: K.thr, suffix: kind === 'piano' ? '%' : '', best: p => Math.round(p.best) + (kind === 'piano' ? '%' : ''), start: id => Course.start(kind, id) };
   },
-  mode() { const st = Store.data.settings; return st.trainMode === 'ear' ? 'ear' : st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing'; },
+  mode() { const st = Store.data.settings; return st.trainMode === 'ear' ? 'ear' : st.trainMode === 'rhythm' ? 'rhythm' : st.trainMode === 'play' ? 'play' : st.trainMode === 'piano' ? 'piano' : st.inst === 'whistle' ? 'whistle' : 'sing'; },
   visible() { const d = $('#trDevice'); return !!d && !d.hidden && UI.screen === 'train'; },
   /* the selected level of a kind: the one the player picked, else the next one to play */
   current(a) { let id = this.sel[a.kind]; if (!id || !a.levels.some(l => l.id === id)) id = a.next().id; this.sel[a.kind] = id; return a.levels.find(l => l.id === id); },
@@ -46,13 +50,13 @@ const PDev = {
   init() {
     const dev = $('#trDevice'); if (!dev) return; this.cv = $('#pdCv'); this.g = this.cv.getContext('2d'); this.dev = dev;
     $$('#pdLabels button').forEach(b => b.onclick = () => this.setMode(b.dataset.m));
-    const tr = $('#pdTrack'), pick = e => { const r = tr.getBoundingClientRect(), i = clamp(Math.floor((e.clientX - r.left) / r.width * 4), 0, 3); if (this.KINDS[i] !== this.mode()) this.setMode(this.KINDS[i]); };
+    const tr = $('#pdTrack'), pick = e => { const r = tr.getBoundingClientRect(), i = clamp(Math.floor((e.clientX - r.left) / r.width * this.KINDS.length), 0, this.KINDS.length - 1); if (this.KINDS[i] !== this.mode()) this.setMode(this.KINDS[i]); };
     tr.addEventListener('pointerdown', e => { try { tr.setPointerCapture(e.pointerId); } catch (x) { /* a synthetic pointer */ } tr.drag = 1; pick(e); });
     tr.addEventListener('pointermove', e => { if (tr.drag) pick(e); }); tr.addEventListener('pointerup', () => { tr.drag = 0; });
-    tr.addEventListener('keydown', e => { const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key]; if (!d) return; this.setMode(this.KINDS[clamp(this.KINDS.indexOf(this.mode()) + d, 0, 3)]); e.preventDefault(); });
+    tr.addEventListener('keydown', e => { const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key]; if (!d) return; this.setMode(this.KINDS[clamp(this.KINDS.indexOf(this.mode()) + d, 0, this.KINDS.length - 1)]); e.preventDefault(); });
     $('#pdPrev').onclick = () => { if (this.view() !== 'course' || this.playing()) return this.scrollPane(-1); this.toMap(); this.move(-1); this.draw(); }; $('#pdNext').onclick = () => { if (this.view() !== 'course' || this.playing()) return this.scrollPane(1); this.toMap(); this.move(1); this.draw(); }; $('#pdGo').onclick = () => { if (this.canRepeat()) return this.repeat(); if (this.view() === 'course' && !this.playing()) this.go(); }; $('#pdMap').onclick = () => { Store.data.settings.prView = 'course'; Store.save(); this.toMap(); UI.refresh(); };
     $('#pdLib').onclick = () => this.toggleView('lib');
-    this.pane = $('#pdPane'); this.pane.append($('#trLib'), $('#trEx'), $('#tr-sess'), $('#tr-res'), $('#o-pex'), $('#o-ear'), $('#o-range'));      // the lists, the exercise and its results, the piano exercise and the ear drill all live inside the screen
+    this.pane = $('#pdPane'); this.pane.append($('#trLib'), $('#trEx'), $('#tr-sess'), $('#tr-res'), $('#o-pex'), $('#o-ear'), $('#o-rhythm'), $('#o-hero'), $('#o-range'));      // the lists, the exercise and its results, the piano exercise and the ear drill all live inside the screen
     $('#pdRange').onclick = () => RangeFinder.open(Store.data.settings.inst === 'whistle');
     this.cv.addEventListener('click', e => { const r = this.cv.getBoundingClientRect(), x = (e.clientX - r.left) * this.W / r.width, y = (e.clientY - r.top) * this.H / r.height; for (let i = this.hits.length - 1; i >= 0; i--) { const h = this.hits[i]; if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) { h.fn(); this.draw(); break; } } });
     addEventListener('resize', () => this.fit());
@@ -61,8 +65,9 @@ const PDev = {
   },
   setMode(m) { setTrainMode(m); },
   /* Exercises and Library show inside the screen; pressing the key again goes back to the map */
-  toggleView(v) { if (this.mode() === 'ear') return toast('Ear training has no ' + (v === 'ex' ? 'exercise list' : 'library') + '.', 1800); const st = Store.data.settings; st.prView = st.prView === v ? 'course' : v; Store.save(); this.toMap(); UI.refresh(); },
-  view() { const v = Store.data.settings.prView; return this.mode() === 'ear' ? 'course' : v === 'lib' ? 'lib' : v === 'ex' ? 'ex' : 'course'; },
+  toggleView(v) { if (this.noLists()) return toast(this.NAMES[this.mode()].charAt(0) + this.NAMES[this.mode()].slice(1).toLowerCase() + ' has no ' + (v === 'ex' ? 'exercise list' : 'library') + '.', 1800); const st = Store.data.settings; st.prView = st.prView === v ? 'course' : v; Store.save(); this.toMap(); UI.refresh(); },
+  noLists() { return ['ear', 'rhythm', 'play'].includes(this.mode()); },
+  view() { const v = Store.data.settings.prView; return this.noLists() ? 'course' : v === 'lib' ? 'lib' : v === 'ex' ? 'ex' : 'course'; },
   /* the device is scaled to fit the tab; on a tall narrow window it is the phone layout, which scrolls */
   fit() {
     const dev = this.dev; if (!dev || dev.hidden) return; const host = $('#s-train'), w = host.clientWidth, h = host.clientHeight; if (!w || !h) return;
@@ -87,16 +92,17 @@ const PDev = {
     this.sync();
     $$('#pdLabels button').forEach(b => b.classList.toggle('on', b.dataset.m === mode)); const tk = $('#pdTrack'); tk.style.setProperty('--i', mi); tk.setAttribute('aria-valuenow', mi); tk.setAttribute('aria-valuetext', this.NAMES[mode]);
     $('#pdLv').textContent = String(1 + Math.floor(tot / 8)).padStart(2, '0'); $('#pdXp').style.width = (100 * (tot % 8) / 8) + '%'; $('#pdStars').textContent = '★ ' + tot;
-    const n = computeStreak(S.history.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || [])); $('#pdStreak').textContent = n + (n === 1 ? ' DAY' : ' DAYS');
+    const n = computeStreak(S.history.concat(S.routines || [], S.guideLog || [], S.pianoLog || [], S.earLog || [], S.rhythmLog || [])); $('#pdStreak').textContent = n + (n === 1 ? ' DAY' : ' DAYS');
     this.goKey();
     if (!this.raf) this.raf = requestAnimationFrame(t => this.tick(t));
   },
   /* the big key: START on the map, NEXT LEVEL or REPEAT on a result, REPEAT on the details page, with the matching symbol */
   /* REPEAT works whenever an exercise is open: while it runs, on its results, and during an ear drill */
-  canRepeat() { return !$('#tr-res').hidden || (!$('#tr-sess').hidden && !!Session.s && !Routine.active) || (Ear.on && !!Ear.lv); },
+  canRepeat() { return !$('#tr-res').hidden || (!$('#tr-sess').hidden && !!Session.s && !Routine.active) || (Ear.on && !!Ear.lv) || (Rhy.on && !!Rhy.lv); },
   repeat() {
     if (!$('#tr-res').hidden) return $('#rAgain').click();
     if (Ear.on && Ear.lv) return Ear.open(Ear.lv.id);
+    if (Rhy.on && Rhy.lv) return Rhy.open(Rhy.lv.id);
     const ex = UI.lastExercise, c = UI.curSession && UI.curSession.course; Session.stop(); Session.begin(ex, c ? { course: { kind: c.kind, id: c.id } } : undefined);
   },
   goKey() {
@@ -106,11 +112,11 @@ const PDev = {
     if (b.dataset.ico !== ico) { b.dataset.ico = ico; b.innerHTML = ico === 'rep' ? '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>'; }
   },
   /* the screen shows a list, an exercise, its results, a piano exercise or an ear drill whenever one of those is open; otherwise the map */
-  playing() { return !$('#tr-sess').hidden || !$('#tr-res').hidden || $('#o-pex').classList.contains('on') || $('#o-ear').classList.contains('on') || $('#o-range').classList.contains('on'); },
+  playing() { return !$('#tr-sess').hidden || !$('#tr-res').hidden || $('#o-pex').classList.contains('on') || $('#o-ear').classList.contains('on') || $('#o-rhythm').classList.contains('on') || $('#o-hero').classList.contains('on') || $('#o-range').classList.contains('on'); },
   sync() {
     if (!this.pane) return; this.goKey(); const view = this.view(), play = this.playing(); this.pane.hidden = view === 'course' && !play;
     $('#pdLib').parentNode.classList.toggle('go', view === 'lib' && !play);
-    if (play) $('#pdTick').textContent = !$('#tr-sess').hidden ? 'Sing or whistle the notes as they reach the line.' : !$('#tr-res').hidden ? 'Your results.' : $('#o-range').classList.contains('on') ? 'Sing or whistle your lowest note, then your highest.' : $('#o-ear').classList.contains('on') ? 'Listen, then pick your answer.' : 'Play the keys shown.';
+    if (play) $('#pdTick').textContent = !$('#tr-sess').hidden ? 'Sing or whistle the notes as they reach the line.' : !$('#tr-res').hidden ? 'Your results.' : $('#o-range').classList.contains('on') ? 'Sing or whistle your lowest note, then your highest.' : $('#o-ear').classList.contains('on') ? 'Listen, then pick your answer.' : $('#o-hero').classList.contains('on') ? 'Clap, sing and whistle the notes as they reach the line. Z X C also play.' : $('#o-rhythm').classList.contains('on') ? 'Count in, listen, then tap the pattern back. Space or the pad.' : 'Play the keys shown.';
     else if (view !== 'course') $('#pdTick').textContent = view === 'ex' ? 'Pick an exercise to start it. PREV and NEXT scroll.' : 'Search the library. PREV and NEXT scroll.';
   },
   tick(t) { this.raf = 0; if (!this.visible()) return; this.ts = t; this.draw(); this.raf = requestAnimationFrame(t2 => this.tick(t2)); },

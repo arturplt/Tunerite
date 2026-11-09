@@ -48,16 +48,16 @@
 .pdev .well{background:var(--body-lo);border:3px solid var(--ink);border-radius:12px;padding:10px 12px 12px;box-shadow:inset 0 5px 0 var(--lip),0 3px 0 var(--body-hi);position:relative}
 .pdev .well h4{margin:0 0 10px;font:400 12px "Silkscreen",monospace;letter-spacing:3px;color:var(--print-lo)}
 .pdev .modes{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px}
-.pdev .mlabels{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:12px}
-.pdev .mlabels button{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:2px 0 8px;color:var(--print-lo);font:400 12px "Silkscreen",monospace;letter-spacing:2px;position:relative;transition:color .2s}
+.pdev .mlabels{display:grid;grid-template-columns:repeat(6,1fr);margin-bottom:12px}
+.pdev .mlabels button{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:2px 0 8px;color:var(--print-lo);font:400 11px "Silkscreen",monospace;letter-spacing:1px;position:relative;transition:color .2s}
 .pdev .mlabels button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .pdev .mlabels button.on{color:var(--clay)}
 .pdev .mlabels button::after{content:"";position:absolute;left:50%;bottom:-4px;width:3px;height:6px;background:var(--ink);transform:translateX(-50%)}
 .pdev .mtrack{position:relative;height:56px;background:var(--glass);border:3px solid var(--ink);border-radius:12px;box-shadow:inset 0 8px 0 var(--inset),0 3px 0 var(--body-hi);touch-action:none;cursor:pointer;margin:0 2px}
-.pdev .mtrack::before{content:"";position:absolute;left:12.5%;right:12.5%;top:50%;height:4px;margin-top:-2px;background:var(--groove);border-radius:2px}
+.pdev .mtrack::before{content:"";position:absolute;left:8.33%;right:8.33%;top:50%;height:4px;margin-top:-2px;background:var(--groove);border-radius:2px}
 .pdev .mtrack:focus-visible{outline:3px solid var(--clay);outline-offset:3px}
 .pdev .mdot{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--dotc)}
-.pdev .mknob{position:absolute;top:3px;bottom:3px;width:calc(25% - 6px);left:calc(var(--i,0)*25% + 3px);
+.pdev .mknob{position:absolute;top:3px;bottom:3px;width:calc(16.667% - 6px);left:calc(var(--i,0)*16.667% + 3px);
   background:repeating-linear-gradient(90deg,var(--teal-hi) 0 5px,var(--teal) 5px 7px);border:3px solid var(--ink);border-radius:6px;box-shadow:0 7px 0 rgba(0,0,0,.45);transition:left .12s ease-out}
 .pdev .mknob::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:10px;margin-left:-5px;background:var(--glass);border-left:3px solid var(--ink);border-right:3px solid var(--ink)}
 .pdev .mknob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--clay);z-index:1}
@@ -179,6 +179,16 @@
 .pdev .pdpane .big{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;min-width:0!important;text-align:left}
 .pdev .pdpane .stars{text-align:left}
 .pdev .pdpane .earopt{min-height:44px;font-size:14px}
+/* the rhythm drill: a lane showing the bar (beats as ticks, the pattern as squares, your taps along the bottom) and a big pad */
+.pdev .pdpane .rhylane{position:relative;height:64px;background:var(--lcd-off);border:2px solid var(--lcd-dim);overflow:hidden}
+.pdev .pdpane .rtick{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--lcd-dim);opacity:.6}.pdev .pdpane .rtick.down{opacity:1;background:var(--lcd-lab)}
+.pdev .pdpane .rdot{position:absolute;top:14px;width:16px;height:16px;margin-left:-8px;border:2px solid var(--lcd-dim);background:none}
+.pdev .pdpane .rdot.lit{background:var(--lcd-fg);border-color:var(--lcd-fg);box-shadow:0 0 8px var(--lcd-glow)}
+.pdev .pdpane .rdot.good{background:var(--lamp-g);border-color:var(--lamp-g)}.pdev .pdpane .rdot.ok{background:var(--clay);border-color:var(--clay)}.pdev .pdpane .rdot.bad{background:none;border-color:var(--lamp-r)}
+.pdev .pdpane .rtap{position:absolute;bottom:6px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--lcd-fg)}
+.pdev .pdpane .rhead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--clay);box-shadow:0 0 6px var(--clay)}
+.pdev .pdpane .rhypad{min-height:84px;font-size:26px;letter-spacing:4px;border-width:3px}.pdev .pdpane .rhypad.tap{background:var(--lcd-fg);color:var(--lcd-on)}
+.pdev.short .pdpane .rhylane{height:40px}.pdev.short .pdpane .rdot{top:8px}.pdev.short .pdpane .rhypad{min-height:44px;font-size:16px}.pdev.short .pdpane #o-rhythm{padding:4px 8px;gap:4px}.pdev.short .pdpane #o-rhythm .earmeter{display:none}
 .pdev .pdpane #o-range{align-items:center;text-align:center;justify-content:center}
 .pdev .pdpane #o-range .big{font-size:48px!important;text-align:center;color:var(--lcd-fg)!important}
 
@@ -198,7 +208,7 @@
 .pdev.port .device{margin:0 2px 42px;gap:8px;padding:10px 12px 14px;border-radius:22px}
 .pdev.port .pleft{gap:6px}.pdev.port .pright{gap:8px}
 .pdev.port .well{padding:6px 8px 8px}.pdev.port .well h4{margin:0 0 4px;font-size:10px}
-.pdev.port .mlabels{margin-bottom:6px}.pdev.port .mlabels button{gap:0;padding:0 0 6px}.pdev.port .mlabels svg{display:none}.pdev.port .mtrack{height:44px}
+.pdev.port .mlabels{margin-bottom:6px;letter-spacing:0}.pdev.port .mlabels button{letter-spacing:0;font-size:11px}.pdev.port .mlabels{margin-bottom:6px}.pdev.port .mlabels button{gap:0;padding:0 0 6px}.pdev.port .mlabels svg{display:none}.pdev.port .mtrack{height:44px}
 .pdev.port .cap{gap:14px;font-size:10px}.pdev.port .cap button{width:48px;height:38px;border-radius:12px;--lift:6px}
 .pdev.port .big{width:76px!important;height:44px!important}.pdev.port .cap button svg{width:20px;height:20px}
 
@@ -227,3 +237,6 @@
 .pdev .pdpane .earlcd small{margin-bottom:6px;line-height:1.35}.pdev .pdpane .earlcd b{line-height:1.4}
 .pdev .pdpane .earlcd .earfirst{display:block;margin-top:8px;font-size:22px;line-height:1.2;color:var(--lcd-lab)}
 .pdev.short .pdpane .earlcd small{margin-bottom:2px}.pdev.short .pdpane .earlcd .earfirst{margin-top:3px;font-size:16px}
+
+/* Beat Hero: the game fills the screen of the device, wide or tall */
+.pdev .pdpane #o-hero.herov{padding:0;gap:0;background:#07060c;overflow:hidden}.pdev .pdpane #o-hero.herov.on{display:block}#heroCv{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}

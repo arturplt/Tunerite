@@ -11,7 +11,7 @@
 #s-tuner .tnstage{position:absolute;left:50%;bottom:0;width:var(--sw,1280px);height:var(--sh,720px);margin:0 0 0 calc(var(--sw,1280px)/-2);zoom:var(--s,1)}
 
 /* case: flat colour with a lit top edge, a shaded underside, a hard shadow on the wall (light from above) */
-#s-tuner .tndev{position:absolute;left:4px;right:4px;top:4px;bottom:4px;padding:16px 18px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 160px);border:4px solid var(--c-ink);border-radius:30px;
+#s-tuner .tndev{position:absolute;left:4px;right:4px;top:4px;bottom:4px;padding:16px 18px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 160px);border:4px solid transparent;background-clip:padding-box;border-radius:30px;
   box-shadow:inset 0 -16px 0 var(--c-lo);isolation:isolate;
   display:grid;grid-template-columns:500px 1fr;grid-template-rows:1fr;gap:14px 24px}
 /* the case is lit like the keys: a sharp specular line along the top edge that wraps the corners and fades down the sides, and a soft glint in each top corner */
@@ -52,7 +52,7 @@
 /* a microphone grille fills the rest of the column (portrait has no spare room, so it hides there) */
 #s-tuner .tngrille{flex:1;min-height:24px;margin-bottom:8px;border-radius:10px;border:3px solid var(--c-ink);background:repeating-linear-gradient(90deg,var(--c-ink) 0 5px,transparent 5px 14px),var(--c-lo);box-shadow:inset 0 5px 0 rgba(0,0,0,.5),0 3px 0 var(--c-hi)}
 #s-tuner .portrait .tngrille{display:none}
-#s-tuner .tnbezel{background:var(--c-ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 #000,0 4px 0 var(--c-hi),0 6px 0 var(--c-ink)}
+#s-tuner .tnbezel{background:var(--c-ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 #000,0 4px 0 var(--c-hi)}
 #s-tuner .tnbezel svg{display:block;width:100%;height:auto;border-radius:10px}
 
 #s-tuner .tnright{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:0;padding-bottom:8px}
