@@ -46,7 +46,7 @@ body{padding:5px 5px max(5px,env(safe-area-inset-bottom));gap:0;border-radius:0;
   gap:3px;font:400 8px/1 "Silkscreen",monospace;letter-spacing:.04em;color:#b98a42;overflow:hidden;white-space:nowrap}
 /* key text scales with the key, so five letters always fit the little LCD (a letter is about as wide as the font is tall) */
 #nav{container-type:inline-size}
-#nav button{--kf:min(10px,calc((16.667cqw - 11px)/5.4))}
+#nav button{--kf:min(14px,calc((16.667cqw - 11px)/5.2))}
 #nav .klcd em{font-style:normal;font-size:calc(var(--kf)*.8)}
 #nav .klcd b{font-weight:700;font-size:var(--kf);max-width:100%;overflow:hidden;letter-spacing:.02em;color:#ffd58a;text-shadow:0 0 4px rgba(255,170,50,.35)}
 #nav button.on .klcd{background:var(--dk-lcd-bg);color:#ffc65e;text-shadow:0 0 5px var(--dk-glow)}

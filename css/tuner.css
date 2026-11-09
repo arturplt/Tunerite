@@ -11,7 +11,7 @@
 #s-tuner .tnstage{position:absolute;left:50%;bottom:0;width:var(--sw,1280px);height:var(--sh,720px);margin:0 0 0 calc(var(--sw,1280px)/-2);zoom:var(--s,1)}
 
 /* case: flat colour with a lit top edge, a shaded underside, a hard shadow on the wall (light from above) */
-#s-tuner .tndev{position:absolute;left:4px;right:4px;top:4px;bottom:4px;padding:16px 18px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 160px);border:4px solid transparent;background-clip:padding-box;border-radius:30px;
+#s-tuner .tndev{position:absolute;left:4px;right:4px;top:4px;bottom:4px;padding:16px 18px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 160px),linear-gradient(180deg,transparent 45%,color-mix(in srgb,var(--c-ink) 85%,var(--c-lo)) 100%);border:4px solid transparent;background-origin:padding-box,border-box;background-clip:padding-box,border-box;border-radius:30px;
   box-shadow:inset 0 -16px 0 var(--c-lo);isolation:isolate;
   display:grid;grid-template-columns:500px 1fr;grid-template-rows:1fr;gap:14px 24px}
 /* the case is lit like the keys: a sharp specular line along the top edge that wraps the corners and fades down the sides, and a soft glint in each top corner */
@@ -129,7 +129,7 @@
   color:var(--tn-print,#8c897e);filter:drop-shadow(0 5px 4px rgba(0,0,0,.45));transition:transform .07s ease-out,filter .07s ease-out;-webkit-tap-highlight-color:transparent}
 #s-tuner .tncap button::before{content:"";position:absolute;left:0;right:0;top:22px;bottom:0;border-radius:0 0 11px 11px;z-index:-1;
   background:linear-gradient(180deg,color-mix(in srgb,var(--tn-key2,#2a2b2f) 55%,var(--tn-edge,#121315)),var(--tn-edge,#121315))}
-#s-tuner .tncap button .face{position:absolute;left:0;right:0;top:0;bottom:10px;border-radius:11px 11px 8px 8px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+#s-tuner .tncap button .face{position:absolute;left:0;right:0;top:0;bottom:10px;transition:transform .07s ease-out;border-radius:11px 11px 8px 8px;overflow:hidden;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(180deg,var(--tn-key1,#3a3b40),var(--tn-key2,#2a2b2f));
   box-shadow:inset 0 3px 0 0 rgba(255,255,255,.04),inset -3px 0 0 0 rgba(0,0,0,.08),inset 0 -3px 0 0 rgba(0,0,0,.16)}
 #s-tuner .tncap button .face::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 0 0,rgba(255,255,255,.12),transparent 14px),radial-gradient(circle at 100% 0,rgba(255,255,255,.1),transparent 14px),linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%)}
@@ -138,7 +138,9 @@
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
 #s-tuner .tncap button:hover:not(:disabled) .face{filter:brightness(1.06)}
 #s-tuner .tncap button:disabled{opacity:.45;cursor:default}
-#s-tuner .tncap button:active:not(:disabled),#s-tuner .tncap button.press{transform:translateY(5px);filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+/* pressed: the face sinks into the case over the front lip, which stays put, so less of the side shows (the key goes in, it does not slide down) */
+#s-tuner .tncap button:active:not(:disabled) .face,#s-tuner .tncap button.press .face{transform:translateY(6px)}
+#s-tuner .tncap button:active:not(:disabled),#s-tuner .tncap button.press{filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
 
 /* the "switch source?" hint floats over the top of the case */
 #s-tuner .tnstage .banner{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:8;margin:0;white-space:nowrap}

@@ -109,19 +109,17 @@ try{var m=JSON.parse(localStorage.getItem('pitchperfect.profiles')),a=m&&m.activ
       </div>
       <div id="trDevice" class="pdev"><div class="stage"><div class="device">
         <div class="head">
-          <div class="brand">TUNERITE<small>PRACTICE MODE</small></div>
-          <div class="chips">
+                    <div class="chips">
             <div class="cap hk"><button type="button" id="pdMap" aria-label="Level map" title="Level map"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v10h12V10"/></svg></button>MAP</div>
             <div class="chip"><small>PLAYER LV</small><b id="pdLv">01</b><div class="xp"><i id="pdXp" style="width:0%"></i></div></div>
             <div class="chip"><small>STARS</small><b id="pdStars">0</b></div>
             <div class="chip"><small>STREAK</small><b id="pdStreak">0 DAYS</b></div>
             <div class="cap hk"><button type="button" id="pdLib" aria-label="Library" title="Library"><svg viewBox="0 0 24 24"><path d="M5 4v16M10 4v16M15 5l4 15"/></svg></button>LIBRARY</div>
           </div>
-          <div class="pwr" style="margin-left:auto"><i></i>POWER</div>
+          <div class="ticker"><span id="pdTick">Pick a level and press start</span></div>
         </div>
         <div class="pleft">
           <div class="bezel"><div class="scr"><canvas id="pdCv" width="750" height="446" role="img" aria-label="The level map. Use the keys beside it to pick a level."></canvas><div class="pdpane" id="pdPane" hidden></div></div></div>
-          <div class="ticker"><span id="pdTick">Pick a level and press start</span></div>
         </div>
         <div class="pright">
           <div class="well" id="pdSrc"><div class="msrc"><div class="mcol">

@@ -4,8 +4,7 @@
 #s-piano{--c-ink:var(--tn-edge,#0a0a0c);--c-body:var(--tn-p1,#2b2c31);--c-lo:var(--tn-p3,#141518);--c-hi:color-mix(in srgb,var(--c-body) 86%,#fff);--c-acc:var(--tn-tip,#ffb347);--c-print:var(--tn-print,#8f9096)}
 
 /* the case */
-#s-piano .synth.synthmain{background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 10rem);border:0.2rem solid var(--c-ink);border-radius:1.2rem;
-  box-shadow:inset 0 -0.6rem 0 var(--c-lo),0 0.4rem 0 var(--c-ink)}
+#s-piano .synth.synthmain{background:linear-gradient(180deg,color-mix(in srgb,var(--c-body) 90%,#fff),var(--c-body) 10rem),linear-gradient(180deg,transparent 45%,color-mix(in srgb,var(--c-ink) 85%,var(--c-lo)) 100%);border:0.2rem solid transparent;background-origin:padding-box,border-box;background-clip:padding-box,border-box;box-shadow:inset 0 -0.6rem 0 color-mix(in srgb,var(--c-ink) 55%,var(--c-lo));border-radius:1.2rem}
 #s-piano .lowbreak{display:none}
 #s-piano .synsecs,#s-piano .synlow{display:contents}
 #s-piano .pnright{display:flex;flex-direction:column;gap:0.6rem;min-width:0;min-height:0}
@@ -144,7 +143,7 @@
 #s-piano .lcd{border:0.15rem solid var(--c-ink);border-radius:0.5rem;box-shadow:inset 0 0.3rem 0 #000,0 0.15rem 0 var(--c-hi)}
 
 /* the spectrogram's frame and the key / scale / chords strip match the other wells */
-#s-piano .synscreen{padding:0.5rem;border:0;border-radius:1rem;background:var(--c-ink);box-shadow:inset 0 0.3rem 0 #000,0 0.2rem 0 var(--c-hi),0 0.35rem 0 var(--c-ink)}
+#s-piano .synscreen{padding:0.5rem;border:0;border-radius:1rem;background:var(--c-ink);box-shadow:inset 0 0.3rem 0 #000,0 0.2rem 0 var(--c-hi)}
 #s-piano .synglass{border-radius:0.5rem;box-shadow:none}
 #s-piano #pnKey.synknobarea{padding:0.45rem 0.6rem;border:0.15rem solid var(--c-ink);border-radius:0.7rem;background:var(--c-well);box-shadow:inset 0 0.3rem 0 var(--c-lip),0 0.15rem 0 var(--c-hi)}
 
@@ -184,9 +183,9 @@
 #s-piano .synhead .synhbtns .bypcell b{display:none}
 
 /* the key strip: four caps that open their menu on the LCD */
-#s-piano #pnKey.synknobarea{padding:0.4rem 0.5rem}
+#s-piano #pnKey.synknobarea{padding:0 0 0.4rem;border:0;border-radius:0;background:none;box-shadow:none}
 #s-piano .keycaps{display:flex;gap:0.5rem}
-#s-piano .kycap{flex:1;min-width:0;min-height:0;height:2.1rem;padding:0;font:400 0.55rem "Silkscreen",ui-monospace,monospace;letter-spacing:0.03em;text-transform:uppercase;border-radius:0.5rem}
+#s-piano .kycap{flex:1;min-width:0;min-height:0;height:1.9rem;padding:0;font:400 0.55rem "Silkscreen",ui-monospace,monospace;letter-spacing:0.03em;text-transform:uppercase;border-radius:0.5rem}
 #s-piano .kycap:disabled{opacity:.4;pointer-events:none}
 #s-piano .pkhead{flex:none;display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.6rem;border-bottom:1px solid var(--tn-ledoff,#3a2a10);font:400 0.6rem "Silkscreen",ui-monospace,monospace;letter-spacing:.1em;color:var(--tn-dim,#a8731f);text-transform:uppercase}
 #s-piano .pkhead b{flex:1}
@@ -291,3 +290,6 @@
 #s-piano .pnhud{padding:0.12rem 0.4rem;align-items:center}
 #s-piano .pnhud .synlcd,#s-piano .pnhud .lcd,#s-piano .pnhud .lcd b{height:auto;min-height:0;line-height:1.1}
 #s-piano .pnhud .lcd b{font-size:0.7rem;margin:0;padding:0}
+
+/* a key that stays latched (Lock) sits only slightly in; the full travel is for the moment of the press */
+#s-piano .synbtn[aria-pressed=true]:not(:active){transform:translateY(0.1rem);box-shadow:0 0.15rem 0 var(--pklip),0 0.25rem 0.2rem rgba(0,0,0,.4)}

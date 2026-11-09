@@ -2,7 +2,7 @@
 /* ---- Device frame: top bar (volume, key mode, mic light) and the six keys. NAV mode: the keys switch tabs. FUNC mode: the same keys run jobs for the current tab, each labelled on its own LCD. The casing stays put whether the phone is held upright or sideways; only the screen inside turns. ---- */
 const Deck = {
   mode: 'nav',
-  tabs: [['tuner', 'TUNER', 'Tuner'], ['piano', 'PLAY', 'Piano'], ['train', 'DRILL', 'Practice'], ['seq', 'COMP', 'Compose'], ['progress', 'STATS', 'Progress'], ['settings', 'SETUP', 'Settings']],
+  tabs: [['tuner', 'TUNER', 'Tuner'], ['piano', 'PIANO', 'Piano'], ['train', 'DRILL', 'Practice'], ['seq', 'COMP', 'Compose'], ['progress', 'STATS', 'Progress'], ['settings', 'SETUP', 'Settings']],
   st: () => Store.data.settings,
   /* a function key: top label, bottom text (or fn), lamp state (or fn), action */
   fnKeys(tab) {

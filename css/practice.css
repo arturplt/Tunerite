@@ -8,18 +8,17 @@
   --lamp-r0:var(--tn-red0,#2a1a16);--lamp-g0:var(--tn-grn0,#18261a);--lamp-r:var(--tn-red,#ff5a36);--lamp-g:var(--tn-grn,#7ee05a);--pwr:var(--tn-red,#ff5a36);--dp:1px;
   font-family:"Silkscreen",ui-monospace,monospace;color:var(--print);user-select:none;-webkit-user-select:none;padding:0}
 .pdev .stage{position:relative;width:var(--dw,1240px);zoom:var(--s,1);margin:0 auto}
-.pdev .device{position:relative;margin:0 4px 4px;background:linear-gradient(180deg,color-mix(in srgb,var(--body) 90%,#fff),var(--body) 160px);border:4px solid var(--ink);border-radius:30px;padding:12px 18px 16px;
-  box-shadow:inset 0 -16px 0 var(--body-lo);
+.pdev .device{position:relative;margin:0 4px 4px;background:linear-gradient(180deg,color-mix(in srgb,var(--body) 90%,#fff),var(--body) 160px),linear-gradient(180deg,transparent 45%,color-mix(in srgb,var(--ink) 85%,var(--body-lo)) 100%);border:4px solid transparent;background-origin:padding-box,border-box;background-clip:padding-box,border-box;border-radius:30px;padding:12px 18px 30px;box-shadow:inset 0 -16px 0 var(--body-lo);
   display:grid;grid-template-columns:minmax(0,1fr) 402px;grid-template-rows:auto 1fr;gap:14px 24px}
 .pdev .head{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 14px 0 10px}
 .pdev .brand{font-weight:700;font-size:22px;letter-spacing:4px;line-height:1}
 .pdev .brand small{display:block;font-weight:400;font-size:12px;letter-spacing:3px;margin-top:6px;color:var(--print-lo)}
-.pdev .chips{display:flex;gap:10px;margin-left:34px}
-.pdev .chip{background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;padding:4px 12px 5px;box-shadow:inset 0 4px 0 var(--inset);position:relative;overflow:hidden;min-width:96px}
+.pdev .chips{display:flex;gap:8px;margin-left:0}
+.pdev .chip{background:var(--lcd-bg);border:3px solid var(--ink);border-radius:8px;padding:2px 8px 3px;box-shadow:inset 0 3px 0 var(--inset);position:relative;overflow:hidden;min-width:72px}
 .pdev .chip::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3))),repeating-linear-gradient(90deg,rgba(0,0,0,var(--mesh-a,.26)) 0 var(--dp),transparent var(--dp) calc(var(--dp)*var(--mesh-n,3)))}
-.pdev .chip small{display:block;font-size:11px;letter-spacing:2px;color:var(--lcd-lab)}
-.pdev .chip b{display:block;font-weight:400;font-size:16px;letter-spacing:2px;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow);margin-top:2px}
-.pdev .chip .xp{height:6px;margin-top:4px;background:var(--lcd-off);border:1px solid var(--ink);position:relative}
+.pdev .chip small{display:block;font-size:9px;letter-spacing:1px;color:var(--lcd-lab)}
+.pdev .chip b{display:block;font-weight:400;font-size:12px;letter-spacing:1px;color:var(--lcd-fg);text-shadow:0 0 6px var(--lcd-glow);margin-top:1px}
+.pdev .chip .xp{height:4px;margin-top:2px;background:var(--lcd-off);border:1px solid var(--ink);position:relative}
 .pdev .chip .xp i{position:absolute;left:0;top:0;bottom:0;background:var(--lcd-fg);box-shadow:0 0 6px var(--lcd-glow);transition:width .6s}
 .pdev .themebtn{margin-left:auto;display:flex;align-items:center;gap:10px;background:var(--body-lo);border:3px solid var(--ink);border-radius:10px;padding:5px 12px;cursor:pointer;color:var(--print-lo);font:400 12px "Silkscreen",monospace;letter-spacing:3px;box-shadow:inset 0 3px 0 var(--lip),0 3px 0 var(--ink)}
 .pdev .themebtn b{font-weight:400;color:var(--clay)}
@@ -28,7 +27,7 @@
 .pdev .pwr i{width:14px;height:14px;border-radius:50%;background:var(--pwr);border:3px solid var(--ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 10px var(--pwr)}
 /* the screen: a big recessed LCD, the whole game lives here */
 .pdev .pleft{display:flex;flex-direction:column;gap:12px;min-height:0}
-.pdev .bezel{background:var(--ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 var(--inset),0 4px 0 var(--body-hi),0 6px 0 var(--ink)}
+.pdev .bezel{background:var(--ink);border-radius:18px;padding:10px;box-shadow:inset 0 5px 0 var(--inset),0 4px 0 var(--body-hi)}
 .pdev .scr{position:relative;border-radius:8px;overflow:hidden;background:var(--lcd-off);line-height:0}
 .pdev .scr canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
 .pdev .scr::after{content:"";position:absolute;inset:0;pointer-events:none;--gn:3;
@@ -63,21 +62,26 @@
 .pdev .mknob::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;margin-left:-1px;background:var(--clay);z-index:1}
 .pdev .row{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
 .pdev .cap{display:flex;flex-direction:column;align-items:center;gap:20px;font-size:12px;letter-spacing:2px;color:var(--print)}
-.pdev .cap button{--lift:8px;width:62px;height:52px;padding:0;border-radius:16px;border:3px solid var(--ink);cursor:pointer;color:var(--print);display:grid;place-items:center;position:relative;
-  background:linear-gradient(180deg,var(--teal-hi) 0 22%,var(--teal) 22%,var(--teal-lo));box-shadow:0 var(--lift) 0 var(--ink),0 calc(var(--lift) + 8px) 0 rgba(0,0,0,.28);transition:transform .06s,box-shadow .06s}
+.pdev .cap button{width:62px;height:54px;padding:0;margin:0;border:0;background:none;box-shadow:none;border-radius:11px;cursor:pointer;color:var(--print);display:grid;place-items:center;position:relative;isolation:isolate;
+  filter:drop-shadow(0 5px 4px rgba(0,0,0,.45));transition:transform .07s ease-out,filter .07s ease-out;-webkit-tap-highlight-color:transparent;--face:linear-gradient(180deg,var(--teal-hi),var(--teal-lo));padding-bottom:10px}
+/* the same keycap as the Tuner: a matte top face (::after) over a darker front lip (::before), pressed straight down as one block */
+.pdev .cap button::before{content:"";position:absolute;left:0;right:0;top:40%;bottom:0;border-radius:0 0 11px 11px;z-index:-2;background:linear-gradient(180deg,color-mix(in srgb,var(--teal-lo) 55%,var(--ink)),var(--ink))}
+.pdev .cap button::after{content:"";position:absolute;left:0;right:0;top:0;bottom:10px;border-radius:11px 11px 8px 8px;z-index:-1;background:var(--face);
+  box-shadow:inset 0 3px 0 0 rgba(255,255,255,.04),inset -3px 0 0 0 rgba(0,0,0,.08),inset 0 -3px 0 0 rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.26)}
 .pdev .cap button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-.pdev .cap button:active,.pdev .cap button.press{transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.28)}
-.pdev .cap button:disabled{opacity:.4;cursor:default;transform:none}
+.pdev .cap button:hover:not(:disabled){filter:drop-shadow(0 5px 4px rgba(0,0,0,.45)) brightness(1.06)}
+.pdev .cap button:active:not(:disabled),.pdev .cap button.press{transform:translateY(5px);filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.pdev .cap button:disabled{opacity:.45;cursor:default}
 /* no corner lamps on the keys; a key that is switched on (Exercises, Library) stays pressed in instead */
-.pdev .cap.go button:not(.big){transform:translateY(calc(var(--lift) - 1px));box-shadow:0 1px 0 var(--ink),0 3px 0 rgba(0,0,0,.28);color:var(--clay)}
-.pdev .big{width:110px!important;height:60px!important;border-radius:16px!important;background:linear-gradient(180deg,color-mix(in srgb,var(--clay) 65%,#fff) 0 22%,var(--clay) 22%,color-mix(in srgb,var(--clay) 62%,#000))!important;color:var(--ink)!important}
+.pdev .cap.go button:not(.big){transform:translateY(5px);filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));color:var(--clay)}
+.pdev .big{width:110px!important;height:60px!important;--face:linear-gradient(180deg,color-mix(in srgb,var(--clay) 80%,#fff),color-mix(in srgb,var(--clay) 62%,#000));color:var(--ink)!important}
 .pdev .big svg{width:30px;height:30px}
 /* small keys in the header (Map, Library) and beside SOUND SOURCE (Range) */
 .pdev .chips{align-items:center}
 .pdev .cap.hk{flex-direction:row;gap:8px;font-size:10px;letter-spacing:1px}
-.pdev .cap.hk button{--lift:5px;width:44px;height:34px;border-radius:10px;margin-bottom:5px}
+.pdev .cap.hk button{width:44px;height:38px;border-radius:9px}
 .pdev .cap.hk button svg{width:20px;height:20px}
-.pdev .chips .cap.hk{flex-direction:column;gap:10px}
+.pdev .chips .cap.hk{flex-direction:column;gap:2px}
 .pdev .msrc{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center}.pdev .mcol,.pdev .msrc .cap.hk{display:contents}
 .pdev .msrc .cap.hk span{grid-column:2;grid-row:1;font:400 12px "Silkscreen",monospace;letter-spacing:2px;text-align:center;padding:2px 0 8px;color:var(--print-lo)}
 .pdev .msrc .cap.hk button{grid-column:2;grid-row:2;margin:0;justify-self:center}
@@ -240,3 +244,8 @@
 
 /* Beat Hero: the game fills the screen of the device, wide or tall */
 .pdev .pdpane #o-hero.herov{padding:0;gap:0;background:#07060c;overflow:hidden}.pdev .pdpane #o-hero.herov.on{display:block}#heroCv{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
+/* the message screen sits in the header beside the player chips, filling the rest of the row */
+.pdev .head .ticker{flex:1;min-width:0;height:auto;align-self:stretch;padding:4px 14px}
+.pdev .head .ticker span{overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.pdev.port .head .ticker{order:4;flex:1 1 100%;height:38px;align-self:auto}
+.pdev.short .head .ticker{width:auto;height:auto}

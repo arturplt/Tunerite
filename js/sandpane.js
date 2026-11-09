@@ -134,13 +134,16 @@ const Sand = (() => {
               continue;
             }
             const wet = fluid(T[b]);
-            if (wet && Math.random() < .3) continue;                                                  // water slows a grain down
+            const l = m.l, sw = sway(x, y, tt, l, P[i]), pace = .5 + P[i] / 255;                      // pace: each grain's own rate, .5 to 1.5
+            if (wet && Math.random() < .3) {                                                          // water slows a grain down; a light one then slips sideways instead of falling, a heavy one hardly does
+              if (l > .3 && Math.random() < .5 * l * pace && x + sw >= 0 && x + sw < GW && free(i + sw)) swap(i, i + sw);
+              continue;
+            }
             if (Math.random() > .7 + .3 * P[i] / 255) continue;                                       // each grain has its own pace, so a falling stream spreads out in time
             if (m.speed < 1 && Math.random() > m.speed) continue;                                     // dust hangs in the air
             let dst = b;
-            const l = m.l, sw = sway(x, y, tt, l, P[i]);
             if (strand(i, y) && x + sw >= 0 && x + sw < GW && free(b + sw) && Math.random() < .5) dst = b + sw;           // a stream taller than 4 widens
-            else if (Math.random() < (wet ? .25 + .3 * l : .03 + .1 * l) && x + sw >= 0 && x + sw < GW && free(b + sw)) dst = b + sw;           // a touch of turbulence even when just pouring
+            else if (Math.random() < (wet ? (.1 + .6 * l) * pace : .03 + .1 * l) && x + sw >= 0 && x + sw < GW && free(b + sw)) dst = b + sw;           // a touch of turbulence even when just pouring
             else if (m.speed < 1 && Math.random() < .4 && x + d >= 0 && x + d < GW && free(b + d)) dst = b + d;          // dust drifts sideways
             swap(i, dst);
             if ((m.speed > 1 || ch) && y + 2 < GHM && Math.random() < (ch ? .8 : .6) && free(dst + SW)) swap(dst, dst + SW);   // gravel and charged sand fall faster

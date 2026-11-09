@@ -73,14 +73,15 @@ const PDev = {
     const dev = this.dev; if (!dev || dev.hidden) return; const host = $('#s-train'), w = host.clientWidth, h = host.clientHeight; if (!w || !h) return;
     const port = w / h < 0.9 || w < 560, short = !port && h < 520, dw = port ? 430 : 1240;      // portrait, a landscape phone, or a roomy window
     dev.classList.toggle('port', port); dev.classList.toggle('short', short); dev.style.setProperty('--s', 1); dev.style.setProperty('--dw', dw + 'px');
-    const top = dev.getBoundingClientRect().top - host.getBoundingClientRect().top, aw = dev.clientWidth || w; let s = 1, DW = dw, nw = 360, nh = 540;
+    this.cv.style.aspectRatio = port ? '360 / 540' : '750 / 446';      // measure at the design screen size, never at the last window's: a stale canvas shape made the device read short, so it grew past the tab
+    const top = dev.getBoundingClientRect().top - host.getBoundingClientRect().top + host.scrollTop, aw = dev.clientWidth || w; let s = 1, DW = dw, nw = 360, nh = 540;
     if (short) { DW = Math.max(520, aw - 4); nw = DW - 230; nh = clamp(h - 2 * top - 150, 120, 420); }      // not scaled: the screen takes whatever the window gives
     else {
       const dh = (dev.querySelector('.device').offsetHeight || 700) + 8;      // the box; its drop shadow underneath may run off the bottom      // the device at its design size, so it can be scaled to fit the tab both ways
       s = Math.max(0.3, Math.min((aw - 4) / dw, (h - 2 * top - 4) / dh));      // the room inside the tab's own padding
       if (!port) { DW = clamp(Math.floor((aw - 4) / s), 1240, 2400); nw = DW - 490; nh = 446; }      // wide windows: the screen grows so the device fills the width, like the Piano tab
     }
-    dev.style.setProperty('--dw', DW + 'px'); dev.style.setProperty('--s', s.toFixed(4)); dev.style.setProperty('--dp', (1 / ((window.devicePixelRatio || 1) * s)).toFixed(4) + 'px');
+    this.cv.style.aspectRatio = ''; dev.style.setProperty('--dw', DW + 'px'); dev.style.setProperty('--s', s.toFixed(4)); dev.style.setProperty('--dp', (1 / ((window.devicePixelRatio || 1) * s)).toFixed(4) + 'px');
     { const d = window.devicePixelRatio || 1; dev.style.setProperty('--mesh-a', d >= 2.5 ? 0.26 : d >= 1.5 ? 0.18 : 0.1); dev.style.setProperty('--mesh-n', d >= 1.5 ? 3 : 2); }      // a phone's screen is dense, so its mesh is fine already; a desktop screen gets a lighter, finer one, so no squares show
     if (port !== this.narrow || short !== this.short || nw !== this.W || nh !== this.H || !this.cv.dataset.set) { this.narrow = port; this.short = short; this.W = nw; this.H = nh; this.cv.width = nw; this.cv.height = nh; this.cv.dataset.set = 1; this.g.imageSmoothingEnabled = false; }
     requestAnimationFrame(() => { const r = this.cv.getBoundingClientRect().width / this.W * (window.devicePixelRatio || 1); this.cv.style.imageRendering = r >= 1 && Math.abs(r - Math.round(r)) < 0.02 ? 'pixelated' : 'auto'; });
