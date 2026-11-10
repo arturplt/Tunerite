@@ -66,14 +66,20 @@
   filter:drop-shadow(0 5px 4px rgba(0,0,0,.45));transition:transform .07s ease-out,filter .07s ease-out;-webkit-tap-highlight-color:transparent;--face:linear-gradient(180deg,var(--teal-hi),var(--teal-lo));padding-bottom:10px}
 /* the same keycap as the Tuner: a matte top face (::after) over a darker front lip (::before), pressed straight down as one block */
 .pdev .cap button::before{content:"";position:absolute;left:0;right:0;top:40%;bottom:0;border-radius:0 0 11px 11px;z-index:-2;background:linear-gradient(180deg,color-mix(in srgb,var(--teal-lo) 55%,var(--ink)),var(--ink))}
-.pdev .cap button::after{content:"";position:absolute;left:0;right:0;top:0;bottom:10px;border-radius:11px 11px 8px 8px;z-index:-1;background:var(--face);
-  box-shadow:inset 0 3px 0 0 rgba(255,255,255,.04),inset -3px 0 0 0 rgba(0,0,0,.08),inset 0 -3px 0 0 rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.26)}
-.pdev .cap button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.pdev .cap button::after{content:"";position:absolute;left:0;right:0;top:0;bottom:10px;border-radius:11px 11px 8px 8px;z-index:-1;box-sizing:border-box;border:1px solid transparent;transition:transform .07s ease-out;
+  /* soft glints in the top corners, the face, and (in the 1px border only) a sharp specular line along the top edge that wraps the corners and fades down the sides */
+  background:radial-gradient(circle at 0 0,rgba(255,255,255,.12),transparent 14px) padding-box,radial-gradient(circle at 100% 0,rgba(255,255,255,.1),transparent 14px) padding-box,var(--face) padding-box,linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.06) 25px,transparent 50px) border-box;background-origin:border-box;
+  box-shadow:inset 0 3px 0 0 rgba(255,255,255,.04),inset -3px 0 0 0 rgba(0,0,0,.08),inset 0 -3px 0 0 rgba(0,0,0,.16)}
+.pdev .cap button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .07s ease-out}
 .pdev .cap button:hover:not(:disabled){filter:drop-shadow(0 5px 4px rgba(0,0,0,.45)) brightness(1.06)}
-.pdev .cap button:active:not(:disabled),.pdev .cap button.press{transform:translateY(5px);filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+/* pressed: the face sinks into the case over the front lip, which stays put, so less of the side shows */
+.pdev .cap button:active:not(:disabled)::after,.pdev .cap button.press::after{transform:translateY(6px)}
+.pdev .cap button:active:not(:disabled) svg,.pdev .cap button.press svg{transform:translateY(6px)}
+.pdev .cap button:active:not(:disabled),.pdev .cap button.press{filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
 .pdev .cap button:disabled{opacity:.45;cursor:default}
 /* no corner lamps on the keys; a key that is switched on (Exercises, Library) stays pressed in instead */
-.pdev .cap.go button:not(.big){transform:translateY(5px);filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));color:var(--clay)}
+.pdev .cap.go button:not(.big){filter:drop-shadow(0 3px 3px rgba(0,0,0,.45));color:var(--clay)}
+.pdev .cap.go button:not(.big)::after,.pdev .cap.go button:not(.big) svg{transform:translateY(6px)}
 .pdev .big{width:110px!important;height:60px!important;--face:linear-gradient(180deg,color-mix(in srgb,var(--clay) 80%,#fff),color-mix(in srgb,var(--clay) 62%,#000));color:var(--ink)!important}
 .pdev .big svg{width:30px;height:30px}
 /* small keys in the header (Map, Library) and beside SOUND SOURCE (Range) */

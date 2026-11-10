@@ -37,6 +37,8 @@ const Scale = {
     const host = $('#pnKey'); if (!host) return;
     const cap = (m, lab) => `<button class="synbtn kycap" type="button" data-m="${m}" aria-pressed="false" title="Choose the ${lab.toLowerCase()} on the screen">${lab}</button>`;
     host.innerHTML = `<div class="keycaps">${cap('key', 'Key')}${cap('scale', 'Scale')}${cap('chord', 'Chords')}<button class="synbtn kycap" id="pkLock" type="button" aria-pressed="true" aria-label="Lock" title="Lock: the keys outside the scale make no sound. Off, they are only greyed out.">Lock</button></div>`;
+    // the sustain pedal key lives here, next to Lock (Knobs builds it with the Dyn page's switches and keeps it in step with the pedal; it is only moved and given a cap's look)
+    const sus = $('#tgSus'); if (sus) { const cell = sus.closest('.tgcell'); sus.className = 'synbtn kycap'; sus.textContent = 'Pedal'; host.querySelector('.keycaps').appendChild(sus); if (cell) cell.remove(); }
     const glass = $('.synglass'), spec = $('.synpane[data-p="spec"]');
     const pane = document.createElement('div'); pane.className = 'synpane lcdlist'; pane.dataset.p = 'scale'; pane.hidden = true;
     pane.innerHTML = '<div class="pkhead"><b id="pkTitle"></b><button class="synbtn" id="pkClose" type="button" aria-label="Close" title="Back to the spectrogram">✕</button></div><div id="pkRows" class="lcdrows"></div><div class="lcd keychords" id="pkDeg" hidden></div>';

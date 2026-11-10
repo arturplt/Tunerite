@@ -14,13 +14,13 @@
 #s-piano .synhead{flex:none;display:flex;flex-direction:column;gap:0.5rem;padding:0;background:none;box-shadow:none;border:0}
 #s-piano .synhead .synlcdrow{flex:none;display:flex;flex-direction:column;gap:0.45rem;margin:0;width:100%}
 #s-piano .synhead .synlcd{flex:none;width:100%}
-#s-piano .synhbtns{display:flex;gap:0.6rem;justify-content:flex-start}
+#s-piano .synhbtns{display:flex;gap:0.6rem;justify-content:flex-start;padding:0.6rem 0.75rem 0.2rem}      /* the first row of keys sits well inside the case's rounded corner */
 #s-piano .synhead .synlcd .synbtn.ico{flex:none;width:2.3rem;height:2.3rem;min-width:0}
 #s-piano #pnKey .keyrow .synlcd{flex:1 1 0}
 #s-piano #pnKey .keyrow>.synbtn.ico{flex:none;align-self:center;width:2.3rem;height:2.3rem}
 
 /* page keys: hardware caps, the chosen one latched with its lamp lit */
-#s-piano .pntabs{flex:none;display:flex;gap:0.4rem}
+#s-piano .pntabs{flex:none;display:flex;gap:0.4rem;padding:0 0.6rem}      /* the first and last page keys keep clear of the case walls */
 #s-piano .pntabs button{flex:1;min-width:0;height:2.1rem;padding:0;border-radius:0.5rem;border:0.15rem solid var(--c-ink);cursor:pointer;position:relative;color:var(--c-print);
   font:400 0.5rem "Silkscreen",ui-monospace,monospace;letter-spacing:0;text-transform:uppercase;
   background:linear-gradient(180deg,var(--tn-key1,#3a3b40),var(--tn-key2,#2a2b2f));box-shadow:0 0.25rem 0 var(--c-ink),0 0.45rem 0 rgba(0,0,0,.25);transition:transform .06s,box-shadow .06s}
@@ -246,13 +246,22 @@
 
 /* effect switches: a long LED strip along the bottom of the key instead of a round dot (the dot's colours and glow still apply) */
 #s-piano .synbtn.pntgl{position:relative}
-#s-piano .synbtn.pntgl .kylamp{position:absolute;left:12px;right:12px;bottom:6px;width:auto;min-width:0;height:4px;border-radius:2px;flex:none}
-#s-piano .synbtn.pntgl.sq .kylamp{left:9px;right:9px;bottom:5px;width:auto;height:4px}
-#s-piano .synbtn.pntgl.envsw .kylamp{left:9px;right:9px;bottom:4px;width:auto;min-width:0;height:3px}
+#s-piano .synbtn.pntgl .kylamp{position:absolute;left:50%;right:auto;bottom:6px;width:max(16px,calc(100% - 24px));min-width:0;height:4px;border-radius:2px;flex:none;transform:translateX(-50%)}
+#s-piano .synbtn.pntgl.sq .kylamp{bottom:5px;width:max(14px,calc(100% - 18px));height:4px}
+#s-piano .synbtn.pntgl.envsw .kylamp{bottom:4px;width:max(14px,calc(100% - 18px));min-width:0;height:3px}
 
 /* the page keys' lamp too: a short strip along the top of the key, with larger labels below it (green when the page is chosen, blue while its effects are at work) */
-#s-piano .pntabs button::after{top:0.3rem;bottom:auto;left:0.9rem;right:0.9rem;width:auto;height:0.16rem;border:0;border-radius:0.08rem}
-#s-piano .pntabs button{font-size:0.68rem;padding-top:0.3rem}
+#s-piano .pntabs button::after{top:0.3rem;bottom:auto;left:50%;right:auto;width:max(1rem,calc(100% - 1.2rem));transform:translateX(-50%);height:0.16rem;border:0;border-radius:0.08rem}      /* a strip never shrinks below 1rem, so on narrow screens it stays a strip */
+#s-piano .pntabs{margin-top:1.3rem}
+/* the page name is printed above the key, not inside it, so it always fits; the key itself shows only its lamp strip. The Bypass key has no label at all. */
+#s-piano .pntabs button{font-size:0;padding:0}
+#s-piano .pntabs button::before{content:attr(data-name);position:absolute;left:50%;top:auto;bottom:calc(100% + 0.5rem);transform:translateX(-50%);font:400 0.6rem "Silkscreen",ui-monospace,monospace;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;color:var(--c-print);pointer-events:none;display:block;transition:transform .07s ease-out,color .15s}
+#s-piano .pntabs button.on::before{transform:translateX(-50%) translateY(-0.22rem);color:var(--c-acc)}
+#s-piano .pnbot .bypcell b{display:none}
+#s-piano .synhbtns{padding-bottom:0.2rem}
+/* with Bypass on the effects are not running, so the blue lamps go out (a chosen page keeps its green one) */
+#s-piano:has(#synBypass[aria-pressed="true"]) .pntabs button.fx::after{background:var(--tn-grn0,#18261a);box-shadow:inset 0 0.05rem 0.05rem #000}
+#s-piano:has(#synBypass[aria-pressed="true"]) .pntabs button.fx.on::after{background:var(--tn-grn,#7ee05a);box-shadow:0 0 0.4rem var(--tn-grn,#7ee05a)}
 #s-piano .pntabs button:not(.on):not(.fx)::after{box-shadow:inset 0 0.05rem 0.05rem #000}
 
 /* highlight rim: a thin line along the top that carries down both sides and fades out */
@@ -293,3 +302,6 @@
 
 /* a key that stays latched (Lock) sits only slightly in; the full travel is for the moment of the press */
 #s-piano .synbtn[aria-pressed=true]:not(:active){transform:translateY(0.1rem);box-shadow:0 0.15rem 0 var(--pklip),0 0.25rem 0.2rem rgba(0,0,0,.4)}
+
+/* the stepper arrows are drawn icons now, not text glyphs: centred in their keys */
+.synbtn:is(.prPP,.prPN,.sfFP,.sfFN,.sfPP,.sfPN)>svg{display:block;margin:auto;pointer-events:none}

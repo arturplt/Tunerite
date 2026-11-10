@@ -17,7 +17,7 @@ const PianoUI = {
     pages.append(area, $('#pnRev'), $('#pnVoice'), $('#pnEcho'), $('#pnPlay'), $('#pnArp'), $('#pnEnv'), $('#pnDisplay'));
     this.byp = area.querySelector('.synbyp'); this.bot = bot; this.cells = [...this.byp.querySelectorAll('.bypcell')]; this.tabs = tabs; bot.append(this.byp); const now = fx.querySelector('.synnow'); if (now) now.hidden = true;      // the played notes are drawn on the graph itself; the element stays so its text can still be set
     tabs.setAttribute('role', 'tablist');
-    tabs.innerHTML = this.PAGES.map(([id, name]) => '<button type="button" role="tab" data-pg="' + id + '">' + name + '</button>').join('');
+    tabs.innerHTML = this.PAGES.map(([id, name]) => '<button type="button" role="tab" data-pg="' + id + '" data-name="' + name + '">' + name + '</button>').join('');
     tabs.onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.pg) this.show(b.dataset.pg); };
     // Save, Init and Full screen: wide layout puts the first two on the preset row and the third on the key row; the stacked layout keeps the three together in their own row (see place)
     this.hb = head.querySelector('.synhbtns');
@@ -40,8 +40,8 @@ const PianoUI = {
     this.cells.forEach((c, i) => { if (jack[i].parentNode !== c) c.insertBefore(jack[i], c.firstChild); });
     if (narrow) { if (this.byp) this.hb.appendChild(this.byp); }
     else {
-      /* wide: Panic and Reset follow Full screen on the button row, and Bypass leads the page keys (Init already has a power icon, so Bypass sits with the effects) */
-      this.hb.appendChild(jack[1]); this.hb.appendChild(jack[2]); this.tabs.insertBefore(jack[0], this.tabs.firstChild); if (this.byp) this.bot.appendChild(this.byp); }
+      /* wide: Bypass, Panic and Reset follow Full screen on the top button row */
+      this.hb.appendChild(jack[0]); this.hb.appendChild(jack[1]); this.hb.appendChild(jack[2]); if (this.byp) this.bot.appendChild(this.byp); }
   },
   fit() {
     const s = $('#s-piano'), narrow = window.matchMedia('(max-width:899px),(max-aspect-ratio:5/4)').matches;
